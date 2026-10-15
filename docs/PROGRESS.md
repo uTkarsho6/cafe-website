@@ -8,9 +8,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 | Field | Value |
 |---|---|
-| Current phase | **Phase 6 — QR, feedback and supporting features** |
-| Status | **AWAITING TEAM VERIFICATION** (Round 2: admin session lifetime fixed) |
-| Branch | `phase-6` |
+| Current phase | **Phase 7 — Security hardening and full regression** |
+| Status | **IN PROGRESS** |
+| Branch | `phase-7` |
 | Latest report | `docs/PHASE_REPORTS/phase-6.md` |
 | Last updated | 2026-10-16 |
 
@@ -27,6 +27,7 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Phase 5A | 2026-10-15 | "approved, go to Phase 5B, pls do it quickly u are taking a hell lot of time" |
 | Phase 5B | 2026-10-16 | "approved, go to Phase 5C" |
 | Phase 5C | 2026-10-16 | "approved, go to Phase 6" |
+| Phase 6 | 2026-10-16 | "approved, go to Phase 7" |
 
 ## Open bugs
 

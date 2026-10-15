@@ -8,9 +8,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 | Field | Value |
 |---|---|
-| Current phase | **Phase 5C — Offers, banners, café information and gallery administration** |
-| Status | **AWAITING TEAM VERIFICATION** |
-| Branch | `phase-5c` |
+| Current phase | **Phase 6 — QR, feedback and supporting features** |
+| Status | **IN PROGRESS** |
+| Branch | `phase-6` |
 | Latest report | `docs/PHASE_REPORTS/phase-5c.md` |
 | Last updated | 2026-10-16 |
 
@@ -26,6 +26,7 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Phase 4B | 2026-10-15 | "approved, go to Phase 5A" |
 | Phase 5A | 2026-10-15 | "approved, go to Phase 5B, pls do it quickly u are taking a hell lot of time" |
 | Phase 5B | 2026-10-16 | "approved, go to Phase 5C" |
+| Phase 5C | 2026-10-16 | "approved, go to Phase 6" |
 
 ## Open bugs
 

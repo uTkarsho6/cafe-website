@@ -12,12 +12,12 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 5A — Authentication and admin shell |
-| **Phase status** | AWAITING TEAM VERIFICATION. Report written; signed-in E2E + TC-SEC-006 + dashboard baseline NOT RUN (need the team's accounts). Do **not** start Phase 5B until the team replies exactly `approved, go to Phase 5B`. |
-| **Git** | Branch `phase-5a` (from `main` after the 4B merge; tag `phase-4b-approved`). Local commits; push on the team's "push". |
-| **Last task completed** | Phase 5A Round 2: team setup verified, signup disabled confirmed, all signed-in tests pass, dashboard baselines recorded (2026-10-15). |
-| **Next action** | Wait for `approved, go to Phase 5B`. On approval: merge `phase-5a` → `main`, tag `phase-5a-approved`, start 5B. |
-| **Waiting on the team** | Approval phrase for Phase 5A; "push" for main, tags and phase-5a. |
+| **Current phase** | Phase 5B — Menu administration |
+| **Phase status** | AWAITING TEAM VERIFICATION. All checks pass; real Storage upload NOT RUN (no `SUPABASE_SECRET_KEY`/bucket yet). Do **not** start 5C until the team replies exactly `approved, go to Phase 5C`. |
+| **Git** | Branch `phase-5b` (from `main` after the 5A merge; tag `phase-5a-approved`). Local commits; push on the team's "push". |
+| **Last task completed** | Phase 5B built and verified (2026-10-16): menu/category admin, images, add-ons, relations, freshness fix (ADR-049). |
+| **Next action** | Wait for `approved, go to Phase 5C`. On approval: merge `phase-5b` → `main`, tag `phase-5b-approved`, start 5C. |
+| **Waiting on the team** | Approval phrase; Storage bucket + `SUPABASE_SECRET_KEY`; rotate the E2E admin password; "push". |
 | **Note** | This Mac runs under very high load (BTLEServer ~97 % CPU), so E2E with 4 workers can time out on static files. Run `npx playwright test --workers=2` locally. |
 
 ### On approval (the CLAUDE.md §0.2 step 8 routine)
@@ -35,8 +35,8 @@
 cd ~/projects/zorko-sangli
 git status && git log --oneline -5 && git tag
 npm ci && npm run check                 # lint, typecheck, format, unit tests, build
-npm run test:integration                # Docker test DB, expect 66 passed
-npm run test:e2e                        # Docker test DB + Playwright, expect 132 passed, 6 skipped
+npm run test:integration                # Docker test DB, expect 92 passed
+npm run test:e2e -- --workers=2         # Docker test DB + Playwright, expect 249 passed, 21 skipped
 ```
 
 ---

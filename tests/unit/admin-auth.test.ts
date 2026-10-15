@@ -29,7 +29,11 @@ describe('post-login redirect is internal-only (TC-SEC-051, no open redirect)', 
 
 describe('admin navigation (no dead links)', () => {
   it('lists only modules that exist in this phase', () => {
-    expect(liveAdminNav().map((i) => i.href)).toEqual(['/admin'])
+    expect(liveAdminNav().map((i) => i.href)).toEqual([
+      '/admin',
+      '/admin/menu',
+      '/admin/categories',
+    ])
   })
   it('marks the dashboard exactly and modules by prefix', () => {
     expect(isActiveAdminPath('/admin', '/admin')).toBe(true)

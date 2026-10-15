@@ -20,8 +20,22 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /admin-menu/ },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: /admin-menu/ },
+    // Menu admin tests change shared test data (prices, availability, new items) and sign in
+    // many times, so they run after the read-only suites instead of in parallel with them.
+    {
+      name: 'admin-menu-chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /admin-menu\.spec\.ts/,
+      dependencies: ['chromium', 'webkit'],
+    },
+    {
+      name: 'admin-menu-webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: /admin-menu\.spec\.ts/,
+      dependencies: ['admin-menu-chromium'],
+    },
   ],
   webServer: {
     command: `npm run build && npx next start -p ${PORT}`,

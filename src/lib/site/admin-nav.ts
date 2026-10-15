@@ -6,8 +6,8 @@ import type { NavItem } from './nav'
 
 export const ADMIN_NAV: NavItem[] = [
   { href: '/admin', label: 'Dashboard', live: true },
-  { href: '/admin/menu', label: 'Menu items', live: false }, // 5B
-  { href: '/admin/categories', label: 'Categories', live: false }, // 5B
+  { href: '/admin/menu', label: 'Menu items', live: true }, // 5B
+  { href: '/admin/categories', label: 'Categories', live: true }, // 5B
   { href: '/admin/offers', label: 'Offers & combos', live: false }, // 5C
   { href: '/admin/banners', label: 'Banners', live: false }, // 5C
   { href: '/admin/cafe', label: 'Café info', live: false }, // 5C

@@ -35,20 +35,20 @@ Requirement → design/module → implementation location (planned) → tests �
 | FR-031 Allowlist authorization | M | ADR-010, ADR-048 | `src/server/auth/admin.ts`, `src/proxy.ts`, `prisma/admin-allowlist.ts` | TC-SEC-001…006, TC-SEC-031 | 5A | Verified (Round 2: signed-in E2E in two engines, Supabase checks incl. signup disabled) | phase-5a.md |
 | FR-032 Login protection & expiry | M | ADR-014, ADR-048 | `src/server/rate-limit.ts`, login action, proxy `expired=1` | TC-INT-060, TC-SEC-008, TC-E2E-062 | 5A | Verified (rate limits incl. concurrency; HMAC keys; session-expired notice) | phase-5a.md |
 | FR-033 Dashboard | M | UI_SPEC §13 | `src/app/(admin)/admin/(shell)/{layout,page}.tsx`, `services/dashboard.ts`, `server/audit.ts` | TC-INT-061/062, TC-E2E-060 | 5A | Verified (Round 2: signed-in E2E in two engines, Supabase checks incl. signup disabled) | phase-5a.md |
-| FR-034 Categories | M | TRD §6 actions | `admin/categories/*`, `services/categories.ts` | TC-INT-003, TC-E2E-070 | 5B | Planned | — |
-| FR-035 Menu items | M | same | `admin/menu/*`, `services/menu-admin.ts` | TC-INT-001/002, TC-SEC-030, TC-E2E-070 | 5B | Planned | — |
-| FR-036 Availability toggle | M | ADR-013 | `item.setAvailability` | TC-E2E-050 | 5B | Planned | — |
-| FR-037 Item images | M | ADR-015 | `api/admin/uploads`, `server/storage.ts` | TC-UNIT-060, TC-SEC-060…064 | 5B | Planned | — |
-| FR-038 Add-on configuration | M | TRD §4 | `item.addOns.save` | TC-INT-070, TC-E2E-070 | 5B | Planned | — |
-| FR-039 Item relations | S | TRD §4 | `item.relations.*` | TC-E2E-070 | 5B | Planned | — |
+| FR-034 Categories | M | ADR-049 | `admin/(shell)/categories/page.tsx`, `features/admin/menu/category-manager.tsx`, `services/admin-menu.ts` | TC-INT-090, TC-E2E-070 | 5B | Verified (create/edit/archive/restore; delete only archived + empty; slug generated, ADR-049) | phase-5b.md |
+| FR-035 Menu items | M | ADR-049 | `admin/(shell)/menu/**`, `features/admin/menu-actions.ts`, `services/admin-menu.ts`, `lib/validation/admin-menu.ts` | TC-UNIT-090/091, TC-INT-090, TC-SEC-030/031, TC-E2E-070 | 5B | Verified | phase-5b.md |
+| FR-036 Availability toggle | M | ADR-013, ADR-049 | `setAvailabilityAction`, `AvailabilityToggle` | TC-INT-090, TC-E2E-050 | 5B | Verified (list switch + editor; public within 10 s) | phase-5b.md |
+| FR-037 Item images | M | ADR-015, ADR-049 | `server/media/{image-upload,storage}.ts`, `uploadItemImageAction`, `ImagesPanel` | TC-UNIT-060, TC-SEC-060…064, TC-INT-090, TC-E2E-070 (upload part) | 5B | Partly verified: validation, re-encoding, rows, reorder verified; real Storage upload NOT RUN (needs `SUPABASE_SECRET_KEY` + bucket) | phase-5b.md |
+| FR-038 Add-on configuration | M | ADR-049 | `saveAddOnsAction`, `AddOnsEditor` | TC-UNIT-090, TC-INT-070, TC-INT-090, TC-E2E-070 | 5B | Verified | phase-5b.md |
+| FR-039 Item relations | S | ADR-049 | `saveRelationsAction`, `RelationsEditor` | TC-INT-090, TC-E2E-070 | 5B | Verified | phase-5b.md |
 | FR-040 Offers admin | M | ADR-020 | `admin/offers/*` | TC-INT-002, TC-E2E-071 | 5C | Planned | — |
 | FR-041 Banners | M | TRD §6 | `admin/banners/*` | TC-UNIT-040, TC-SEC-050, TC-E2E-072 | 5C | Planned | — |
 | FR-042 Café info & hours | M | TRD §4 | `admin/cafe/*` | TC-UNIT-041, TC-INT-002, TC-E2E-072 | 5C | Planned | — |
 | FR-043 Gallery management | M | ADR-015 | `admin/gallery/*` | TC-SEC-060…064, TC-E2E-072 | 5C | Planned | — |
 | FR-044 Feedback moderation | M | TRD §6 | `admin/feedback/*` | TC-SEC-001/002, TC-E2E-073 | 6 | Planned | — |
-| FR-045 Audit log | M | TRD §4 | `server/audit.ts`, `admin/audit` | TC-INT-071, TC-E2E-075 | 5A–6 | Planned | — |
-| FR-046 Preview | S | UI_SPEC §13 | editor links | TC-E2E-070 | 5B | Planned | — |
-| FR-047 Revalidation | M | ADR-013 | `server/revalidate.ts` | TC-E2E-050/051/071/072 | 5B–5C | Planned | — |
+| FR-045 Audit log | M | TRD §4 | `server/audit.ts`, dashboard "Recent activity" | TC-INT-061, TC-INT-071, TC-E2E-070 | 5A–6 | Partly verified (sign-in + all menu actions audited; offers/café/gallery/feedback in 5C/6) | phase-5a.md, phase-5b.md |
+| FR-046 Preview | S | UI_SPEC §13 | "Preview on the public site" link in the item editor | TC-E2E-070 | 5B | Verified (link shown only when the item is publicly visible) | phase-5b.md |
+| FR-047 Revalidation | M | ADR-013, ADR-049 | `expireMenu()` in `menu-actions.ts` | TC-E2E-050/051/071/072 | 5B–5C | Menu: Verified (≤10 s measured, warm cache); offers/café: 5C | phase-5b.md |
 | FR-048 Veg marking | S | UI_SPEC §7.5 | `VegMark`, `dietType`, `isPureVegConfirmed` | TC-COMP-004 | 3, 4A | Verified (per-item mark; "100% VEG" only when the café flag is set) | phase-3.md, phase-4a.md |
 | FR-049 Admin QR | M | ADR-018 | `admin/qr` | TC-E2E-043 | 6 | Planned | — |
 | FR-050 Admin usability | M | UI_SPEC §8.4, §13 | `layout/AdminShell` etc. | TC-A11Y-002, TC-RESP-004 | 5A–6 | Planned | — |

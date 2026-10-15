@@ -11,6 +11,14 @@ const ACTION_LABEL: Record<string, string> = {
   LOGIN_REFUSED: 'Sign-in refused',
   LOGOUT: 'Signed out',
   ADMIN_ALLOWLISTED: 'Admin added',
+  CREATE: 'Created',
+  UPDATE: 'Updated',
+  AVAILABILITY: 'Availability',
+  ARCHIVE: 'Archived',
+  RESTORE: 'Restored',
+  DELETE: 'Deleted',
+  IMAGE_UPLOAD: 'Image uploaded',
+  IMAGE_REMOVE: 'Image removed',
 }
 
 /** Dashboard (UI_SPEC §13): real counts from the database and the latest audit entries. */

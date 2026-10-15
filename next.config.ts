@@ -16,6 +16,16 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  experimental: {
+    // Image uploads (5 MB max, checked again in the action) plus multipart overhead (ADR-049).
+    serverActions: { bodySizeLimit: '6mb' },
+  },
+  images: {
+    // Uploaded menu/gallery images are served from the Supabase Storage public bucket.
+    remotePatterns: supabaseOrigin
+      ? [new URL(`${supabaseOrigin}/storage/v1/object/public/**`)]
+      : [],
+  },
   turbopack: {
     // Pin the project root: an unrelated package-lock.json exists in a parent folder.
     root: path.resolve(__dirname),

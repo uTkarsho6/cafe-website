@@ -30,7 +30,7 @@ The full table is in TRD §8.
   - **`DIRECT_URL`:** Project → Connect → *Direct connection* or *Session pooler* (port 5432).
   - **`NEXT_PUBLIC_SUPABASE_URL`:** the project URL, `https://<project-ref>.supabase.co` (Project Settings → Data API). The app uses only its origin, so the REST URL (`…/rest/v1/`) also works, but prefer the plain project URL.
   - **`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`:** Project Settings → API Keys (publishable key, or the legacy anon key).
-  - **`SUPABASE_SECRET_KEY`:** Project Settings → API Keys → secret key (or the legacy service_role). Server only. **Not used in Phase 5A** (admin provisioning needs no secret key); first needed for Storage uploads in Phase 5B.
+  - **`SUPABASE_SECRET_KEY`:** Project Settings → API Keys → secret key (or the legacy service_role). Server only, never `NEXT_PUBLIC_`. Needed from Phase 5B for image uploads (Storage writes). Without it the app works, but the item editor shows "Image uploads are switched off".
   - **`RATE_LIMIT_SALT`:** generate with `openssl rand -hex 32`. Required from Phase 5A (admin login rate limiting).
   - **`E2E_ADMIN_EMAIL`/`E2E_ADMIN_PASSWORD`, `E2E_USER_EMAIL`/`E2E_USER_PASSWORD`:** development only, for the automated admin tests: two dedicated test accounts in the **dev** Supabase project (one becomes an admin in the throwaway test database only, one stays a normal user). Never set these in production.
   - **`NEXT_PUBLIC_SITE_URL`:** `http://localhost:3000` locally; the https production domain in production.
@@ -98,9 +98,12 @@ ALLOW_DEMO_SEED=true npm run db:seed    # demo data; refuses without the flag an
 
 ## 7. Storage *(Phase 5B)*
 
-- Create bucket `public-media`, **Public: on**, file size limit 5 MB, allowed MIME `image/webp,image/jpeg,image/png`.
-- Do **not** add insert/update/delete policies for `anon`/`authenticated`.
-- `next.config` `images.remotePatterns` must contain the project host.
+1. Supabase → Storage → **New bucket**: name `public-media`, **Public bucket: on**, file size limit `5 MB`, allowed MIME types `image/webp, image/jpeg, image/png`.
+2. Do **not** add any insert/update/delete policy for `anon` or `authenticated`. Only the server writes, using `SUPABASE_SECRET_KEY` after `requireAdmin()` and validation (ADR-049).
+3. Put `SUPABASE_SECRET_KEY` in `.env.local` (and later in Vercel, Production only). Restart `npm run dev`.
+4. Check: open `/admin/menu`, open an item, and upload a JPEG/PNG/WebP under **Images**. The photo appears on `/menu/<slug>` straight away.
+- `next.config.ts` allows images from `<project>.supabase.co/storage/v1/object/public/**` automatically (derived from `NEXT_PUBLIC_SUPABASE_URL`).
+- Uploaded files are stored as `items/<itemId>/<uuid>.webp` (re-encoded, metadata stripped). Removing or replacing an image deletes the old file.
 
 ## 8. Build, test, deploy *(Phase 2+ / Phase 8)*
 

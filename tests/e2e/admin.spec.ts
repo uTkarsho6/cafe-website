@@ -1,42 +1,20 @@
-import { randomUUID } from 'node:crypto'
-import { existsSync } from 'node:fs'
 import AxeBuilder from '@axe-core/playwright'
-import { createClient } from '@supabase/supabase-js'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import { Client } from 'pg'
+import {
+  ADMIN,
+  TEST_DB,
+  USER,
+  allowlistTestAdmin,
+  asClient,
+  hasAccounts,
+  signIn,
+} from './admin-helpers'
 
-/**
- * Admin authentication E2E (Phase 5A). The app server uses the local test database for data and
- * the team's DEVELOPMENT Supabase project for Auth. Tests that sign in need the test accounts in
- * .env.local (E2E_ADMIN_EMAIL/PASSWORD, E2E_USER_EMAIL/PASSWORD); without them they are skipped
- * and reported as NOT RUN. Credentials are never printed.
- */
-if (existsSync('.env.local')) process.loadEnvFile('.env.local')
-const ADMIN = { email: process.env.E2E_ADMIN_EMAIL, password: process.env.E2E_ADMIN_PASSWORD }
-const USER = { email: process.env.E2E_USER_EMAIL, password: process.env.E2E_USER_PASSWORD }
-const hasAccounts = Boolean(ADMIN.email && ADMIN.password && USER.email && USER.password)
-const TEST_DB = 'postgresql://zorko_test:zorko_test@127.0.0.1:54329/zorko_test'
+/** Admin authentication E2E (Phase 5A). Account requirements: see admin-helpers.ts. */
 
-/**
- * Each test gets its own client IP (x-forwarded-for is trusted on Vercel, where the edge sets
- * it; see ADR-048), so tests don't share one per-IP login budget.
- */
-let ipCounter = 0
-async function asClient(page: Page) {
-  ipCounter += 1
-  await page.setExtraHTTPHeaders({
-    'x-forwarded-for': `198.51.100.${(process.pid % 200) + ipCounter}`,
-  })
-}
-
-async function signIn(page: Page, email: string, password: string, path = '/admin/login') {
-  await page.goto(path)
-  await page.waitForLoadState('networkidle')
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Password').fill(password)
-  await page.getByRole('button', { name: 'Sign in' }).click()
-}
-
+// Traces record typed values, including the test password: never keep them for admin specs.
+test.use({ trace: 'off' })
 test.describe('admin access without signing in (TC-SEC-001, TC-E2E-060)', () => {
   test.beforeEach(({ page }) => asClient(page))
 
@@ -122,34 +100,7 @@ test.describe('signed-in flows (TC-SEC-002/007/009, TC-E2E-060/061)', () => {
   )
   test.describe.configure({ mode: 'serial' })
 
-  test.beforeAll(async () => {
-    // Allowlist the test admin in the TEST database (never in Supabase or the dev database).
-    const supabase = createClient(
-      new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).origin, // origin only (ADR-048)
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-      {
-        auth: { persistSession: false },
-      },
-    )
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: ADMIN.email!,
-      password: ADMIN.password!,
-    })
-    if (error || !data.user)
-      throw new Error(
-        `E2E admin account could not sign in: ${error?.code ?? error?.status ?? 'no user'} (check .env.local)`,
-      )
-    await supabase.auth.signOut({ scope: 'local' })
-    const db = new Client({ connectionString: TEST_DB })
-    await db.connect()
-    await db.query(
-      `INSERT INTO "AdminUser" (id, "authUserId", email, "displayName", "isActive", "updatedAt")
-       VALUES ($1, $2, $3, 'E2E Admin', true, now())
-       ON CONFLICT ("authUserId") DO UPDATE SET "isActive" = true`,
-      [randomUUID(), data.user.id, ADMIN.email!.toLowerCase()],
-    )
-    await db.end()
-  })
+  test.beforeAll(allowlistTestAdmin)
   test.beforeEach(({ page }) => asClient(page))
 
   test('admin signs in, sees real counts and the audit entry; cookies are HttpOnly', async ({

@@ -70,6 +70,14 @@ Added in Phase 3:
 | TC-UNIT-071 | `mediaUrl`: demo path, storage path, traversal, absolute/external URL, SVG, Storage unconfigured | Local/bucket URL or null |
 | TC-UNIT-080 | Error mapping: Prisma P2002/P2025/P2003/P1001/unknown, Zod, ApiError | 409/404/409/503/500/400; no internal text |
 
+Added in Phase 5B:
+
+| ID | Case | Expected |
+|---|---|---|
+| TC-UNIT-090 | Admin menu schemas: rupees → paise (`149.5` → 14950; `-1`, `1.999`, `1e3`, `0` for items rejected); slugify; item/category fields dropped; add-on rules (min ≤ max ≤ options, ≤10 groups, strict keys); relation limits; list-query fallbacks | As specified (`tests/unit/admin-menu-validation.test.ts`) |
+| TC-UNIT-091 | Every exported menu Server Action calls `requireAdmin()` first and writes nothing when refused; forged IDs/booleans rejected; delete succeeds when Storage cleanup fails | Pass (`tests/unit/admin-menu-actions.test.ts`) |
+| TC-INT-090 | Menu admin service on Postgres: unique slugs, stable slug on rename, price/availability visible to the public service, archive hides / restore shows, delete guards (archived, not in an offer), add-ons replace atomically, relations (no self, unknown → rollback), images (replace in place, IDOR-scoped removal, max 4, reorder, free slot reuse), categories (archive hides items, delete only when empty) | Pass (`tests/integration/admin-menu.test.ts`) |
+
 Added in Phase 4A: menu URL state (invalid values dropped, hrefs keep filters, chips), navigation gating (`liveNav`, `isActivePath`), 12-hour time formatting, price-band `where` clauses (TC-UNIT-012), in `tests/unit/menu-page.test.ts`. Menu card states (TC-COMP-002) in `tests/component/menu-card.test.tsx`.
 
 ### 4.2 Component (TC-COMP)
@@ -130,7 +138,7 @@ Added in Phase 4A: menu URL state (invalid values dropped, hrefs keep filters, c
 | TC-SEC-020 | Supabase REST `GET/POST/PATCH/DELETE /rest/v1/<each table>` with the publishable key (and with an authenticated user token) | No rows / permission denied; no write succeeds |
 | TC-SEC-022 | RLS at DB level (local Postgres with Supabase roles): RLS on every `public` table, no policies; `anon`/`authenticated` SELECT/DELETE/INSERT | `permission denied` everywhere; fails if a new table lacks RLS |
 | TC-SEC-021 | Storage upload to `public-media` with the publishable key | Denied |
-| TC-SEC-030 | Mass assignment: extra fields (`id`, `isArchived`, `createdAt`, `adminUserId`, `status`) in action/API payloads | 400 rejected |
+| TC-SEC-030 | Mass assignment: extra fields (`id`, `isArchived`, `createdAt`, `adminUserId`, `status`) in action/API payloads | API: 400 rejected. Server Action forms: extra fields dropped, never written (forms carry Next's `$ACTION_*` fields; ADR-049); JSON payloads (add-ons): rejected |
 | TC-SEC-031 | Role escalation: client sends `isAdmin`/`role` fields or a different `authUserId` | Ignored/rejected; no escalation |
 | TC-SEC-040 | XSS payloads in feedback (`<script>`, `<img onerror>`, `"><svg onload>`) shown after approval | Rendered as text; no dialog fires (Playwright) |
 | TC-SEC-041 | XSS payloads in admin text fields (item name, banner title, about text) | Rendered as text |
@@ -141,6 +149,8 @@ Added in Phase 4A: menu URL state (invalid values dropped, hrefs keep filters, c
 | TC-SEC-062 | Upload >5 MB | 413 |
 | TC-SEC-063 | Upload truncated/corrupt JPEG | 400/415 |
 | TC-SEC-064 | Upload JPEG with GPS EXIF | Stored WebP has no EXIF; filename is a generated UUID |
+
+Phase 5B note: uploads go through a Server Action, so TC-SEC-060…063 are refused with a clear message in the form instead of an HTTP status. Covered in `tests/unit/image-upload.test.ts`. E2E repeats TC-SEC-060 once Storage is configured.
 | TC-SEC-070 | Feedback flood (4 in 10 min); honeypot filled | 429; honeypot silently dropped (201 without storing, or 400, as documented) |
 | TC-SEC-080 | Cross-origin POST to feedback/uploads/logout (bad `Origin`) | 403 `BAD_ORIGIN` |
 | TC-SEC-081 | Server Action invoked with a foreign `Origin` | Rejected by Next |

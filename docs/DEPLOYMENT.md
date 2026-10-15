@@ -105,6 +105,15 @@ ALLOW_DEMO_SEED=true npm run db:seed    # demo data; refuses without the flag an
 - `next.config.ts` allows images from `<project>.supabase.co/storage/v1/object/public/**` automatically (derived from `NEXT_PUBLIC_SUPABASE_URL`).
 - Uploaded files are stored as `items/<itemId>/<uuid>.webp` (re-encoded, metadata stripped). Removing or replacing an image deletes the old file.
 
+## 7a. QR code and testing it on a phone *(Phase 6)*
+
+- The QR code always encodes `NEXT_PUBLIC_SITE_URL` + `/menu?src=qr`. In production, set `NEXT_PUBLIC_SITE_URL` to the https domain before printing. `/admin/qr` warns about localhost, LAN or http addresses.
+- **Phone test on the local network (testing only; never commit this value):**
+  1. Find the Mac's LAN address: `ipconfig getifaddr en0` (for example `192.168.1.20`).
+  2. Build and start with that URL: `NEXT_PUBLIC_SITE_URL=http://192.168.1.20:3000 npm run build && NEXT_PUBLIC_SITE_URL=http://192.168.1.20:3000 npx next start -H 0.0.0.0 -p 3000`.
+  3. Put the phone on the same Wi-Fi, open `http://192.168.1.20:3000/qr` on the laptop, and scan the code with the phone camera. The menu opens with no login.
+  4. Stop the server afterwards. Nothing needs changing in `.env.local`.
+
 ## 8. Build, test, deploy *(Phase 2+ / Phase 8)*
 
 ```bash

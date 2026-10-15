@@ -9,9 +9,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Field | Value |
 |---|---|
 | Current phase | **Phase 6 — QR, feedback and supporting features** |
-| Status | **IN PROGRESS** |
+| Status | **AWAITING TEAM VERIFICATION** |
 | Branch | `phase-6` |
-| Latest report | `docs/PHASE_REPORTS/phase-5c.md` |
+| Latest report | `docs/PHASE_REPORTS/phase-6.md` |
 | Last updated | 2026-10-16 |
 
 ## Approved phases
@@ -45,9 +45,9 @@ None open. Fixed in 5A: TC-SEC-020 false pass (REST URL), see the errata in phas
 - Page-level caching + on-demand revalidation (≤30 s freshness) is designed with the pages in 4A/5B (ADR-035).
 - Real menu, prices, address, phone and map are in (ADR-044, ADR-046). Opening hours (Q-05), real offers (Q-07), WhatsApp/email/social (Q-03/Q-04) are still placeholders.
 - Visual baselines exist only for macOS (`-darwin`); record Linux baselines when CI is set up (Q-16).
-- Switch on `/feedback`, `/qr` in `src/lib/site/nav.ts` in Phase 6 (ADR-042); all 4B pages are live.
 - Structured data (JSON-LD, FR-023) once hours and the remaining café facts are confirmed (ADR-047).
-- Gallery lightbox E2E once real photos exist (5C); admin café form needs the "Google Maps place" field (ADR-046).
+- Gallery lightbox E2E with real uploaded photos once Storage is set up.
+- Team: scan the QR code with a real phone (DEPLOYMENT.md §7a).
 - New admin actions: use `expirePublic()` from `action-utils.ts` and return `redirectTo` instead of calling `redirect()` (ADR-050).
 - Real Storage uploads (items, banners, gallery, offers) are NOT RUN in E2E until `SUPABASE_SECRET_KEY` and the `public-media` bucket exist (DEPLOYMENT §7).
 

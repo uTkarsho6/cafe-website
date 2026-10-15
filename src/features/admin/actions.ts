@@ -1,12 +1,12 @@
 'use server'
 
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { safeAdminNext } from '@/lib/auth/redirect'
 import { checkAllowlist, getAdminCheck } from '@/server/auth/admin'
 import { createSupabaseServerClient } from '@/server/auth/supabase'
 import { recordAudit } from '@/server/audit'
+import { clientIp } from '@/server/client-ip'
 import { getDb } from '@/server/db'
 import { log } from '@/server/log'
 import { RULES, hitRateLimit } from '@/server/rate-limit'
@@ -23,12 +23,6 @@ const loginSchema = z
     next: z.string().max(300).optional(),
   })
   .strip() // any extra field (e.g. role=admin) is dropped, never trusted
-
-async function clientIp(): Promise<string> {
-  const h = await headers()
-  // First hop of x-forwarded-for is the client on Vercel; locally there is none.
-  return h.get('x-forwarded-for')?.split(',')[0]?.trim() || h.get('x-real-ip') || 'local'
-}
 
 /** Admin sign-in (Server Action: POST-only, Origin-checked by Next.js, ADR-011). */
 export async function loginAction(_prev: LoginState, form: FormData): Promise<LoginState> {

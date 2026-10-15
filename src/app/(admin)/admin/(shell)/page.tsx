@@ -19,6 +19,8 @@ const ACTION_LABEL: Record<string, string> = {
   DELETE: 'Deleted',
   IMAGE_UPLOAD: 'Image uploaded',
   IMAGE_REMOVE: 'Image removed',
+  APPROVE: 'Approved',
+  REJECT: 'Rejected',
 }
 
 /** Dashboard (UI_SPEC §13): real counts from the database and the latest audit entries. */

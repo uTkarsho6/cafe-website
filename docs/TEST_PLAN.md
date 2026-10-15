@@ -86,6 +86,14 @@ Added in Phase 5C:
 | TC-UNIT-093 | Every 5C Server Action calls `requireAdmin()` first; forged IDs/values refused; `javascript:` banner refused before any upload; delete works when Storage cleanup fails | Pass (`tests/unit/admin-content-actions.test.ts`) |
 | TC-INT-091 | 5C services on Postgres: offer states (draft/scheduled/active/expired), unique stable slug, item replace + rollback, expire/reactivate rules, delete keeps menu items; banner window and image replacement; café + 7-day hours shown by the public service; gallery publish/order/delete | Pass (`tests/integration/admin-content.test.ts`) |
 
+Added in Phase 6:
+
+| ID | Case | Expected |
+|---|---|---|
+| TC-UNIT-094 | Feedback schema (lengths, control/zero-width/bidi characters removed, HTML kept as text, unknown fields dropped); QR target = configured URL, decoded payload equals it, SVG/PNG valid, localhost/LAN/http warnings; moderation actions require an admin; public action: pending only, honeypot, rate limit, generic DB error | Pass (`tests/unit/feedback-qr.test.ts`) |
+| TC-INT-040/041 | Feedback on Postgres: pending → not public; approve → public text (XSS stored as text); reject → hidden; delete; "Guest" fallback; 3/10 min limit per IP; 90-day purge of rejected feedback | Pass (`tests/integration/feedback.test.ts`) |
+| TC-E2E-042/043/044/073 | `/qr` image + downloads + destination opens the menu; feedback submit, validation, honeypot, 4th submission refused; approve → home shows payload as text (not executed) → reject hides → delete; admin QR warnings; axe + overflow; baselines | Pass (`tests/e2e/admin-feedback.spec.ts`) |
+
 Added in Phase 4A: menu URL state (invalid values dropped, hrefs keep filters, chips), navigation gating (`liveNav`, `isActivePath`), 12-hour time formatting, price-band `where` clauses (TC-UNIT-012), in `tests/unit/menu-page.test.ts`. Menu card states (TC-COMP-002) in `tests/component/menu-card.test.tsx`.
 
 ### 4.2 Component (TC-COMP)

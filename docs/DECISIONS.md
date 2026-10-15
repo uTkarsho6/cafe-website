@@ -399,3 +399,26 @@ Prisma parameterises `contains`, but it does **not** escape `%`, `_` and `\`. A 
 - **Gallery.**
   - Upload uses the same validation and re-encoding as item images (ADR-049), stored at `gallery/<uuid>.webp`.
   - Alt text is required; the caption is optional. Photos can be published or unpublished, moved earlier or later (renumbered in one transaction), and removed (Storage cleanup is best effort). Maximum 200 photos.
+
+## ADR-051 QR menu, feedback and moderation as built — Accepted (2026-10-16, Phase 6)
+- **QR (ADR-018 as built).**
+  - `qrcode` 1.5.4 (and `@types/qrcode` 1.5.6), both pinned exactly; `npm audit` shows 0 production findings.
+  - `src/server/qr.ts` encodes `new URL('/menu?src=qr', NEXT_PUBLIC_SITE_URL)` with error correction level M and a 4-module quiet zone. It never uses the request's host, so a printed code cannot point at whatever address served the page.
+  - `GET /api/v1/qr?format=svg|png[&download=1]` serves the image, with `nosniff`. The SVG also gets a sandboxing CSP.
+  - `/qr` shows it as an `<img>`, so there is no `dangerouslySetInnerHTML`.
+  - `/admin/qr` warns when the URL is localhost, a LAN address or plain http.
+  - Production still refuses a localhost or http site URL at startup (`src/lib/config/env.ts`).
+- **Feedback is a Server Action, not `POST /api/v1/feedback`.** Next.js makes it POST-only and checks the Origin header (CSRF); it uses the same validation as an API would.
+  - Message 10–1000 characters, optional name up to 40. Control, zero-width and bidi-override characters are removed, because they can hide or reverse text shown to moderators. Line breaks are kept.
+  - Every submission is stored as `PENDING`; a client cannot set the status.
+- **Abuse protection.**
+  - **Honeypot.** A hidden `website` field: when filled, the guest sees "thanks" but nothing is stored, and no rate-limit count is spent.
+  - **Rate limit.** 3 submissions per 10 minutes per IP (`RULES.feedbackPerIp`, Postgres with HMAC keys, ADR-014).
+  - **Length limits and moderation.** Nothing is public before an admin approves it.
+- **Moderation.**
+  - `/admin/feedback` has pending, approved and rejected tabs with counts, 20 per page. Approve and Reject take one click; Delete asks for confirmation.
+  - Each change records who moderated it and when. The audit entry never includes the guest's text or name.
+  - Approve and reject expire the `home` tag and the page shells, so the home and contact pages change immediately.
+  - Guest text is rendered by React as text (`whitespace-pre-line`), never as HTML. E2E checks that an `<img onerror>` payload is shown literally and never runs.
+- **Retention (SECURITY.md §10).** Rejected feedback is deleted 90 days after it was rejected, by `purgeOldRejectedFeedback()` when an admin opens the moderation page. That is one indexed delete, so no scheduler is needed.
+- **Navigation.** `/feedback` and `/qr` are live in the footer and the mobile "More" sheet; Feedback and QR code are live in the admin sidebar.

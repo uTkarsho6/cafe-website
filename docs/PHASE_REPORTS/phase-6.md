@@ -57,7 +57,7 @@ ADR-051. In short:
 - Screenshot tests run in Chromium only.
 - The real Storage upload tests are NOT RUN: Storage isn't configured yet (from 5B/5C).
 
-**NOT RUN (needs the team):** scanning the code with a real phone. Steps are in DEPLOYMENT.md §7a and below.
+**Phone scan: PASS (team, 2026-10-16).** The team built with `NEXT_PUBLIC_SITE_URL=http://<LAN IP>:3000`, opened `/qr` on the laptop and scanned it with a phone on the same Wi-Fi. The menu opened on the phone without login. Steps are in DEPLOYMENT.md §7a.
 
 ## Security checks
 - **XSS:** the payload `<img src=x onerror=…>` was submitted, approved and shown on the home page. It appeared as plain text and never ran (`window.__xss` stayed undefined; no `<img src="x">` element was created).

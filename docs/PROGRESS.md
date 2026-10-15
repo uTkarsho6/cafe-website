@@ -47,7 +47,6 @@ None open. Fixed in 5A: TC-SEC-020 false pass (REST URL), see the errata in phas
 - Visual baselines exist only for macOS (`-darwin`); record Linux baselines when CI is set up (Q-16).
 - Structured data (JSON-LD, FR-023) once hours and the remaining café facts are confirmed (ADR-047).
 - Gallery lightbox E2E with real uploaded photos once Storage is set up.
-- Team: scan the QR code with a real phone (DEPLOYMENT.md §7a).
 - New admin actions: use `expirePublic()` from `action-utils.ts` and return `redirectTo` instead of calling `redirect()` (ADR-050).
 - Real Storage uploads (items, banners, gallery, offers) are NOT RUN in E2E until `SUPABASE_SECRET_KEY` and the `public-media` bucket exist (DEPLOYMENT §7).
 

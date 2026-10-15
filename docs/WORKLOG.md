@@ -13,11 +13,11 @@
 | | |
 |---|---|
 | **Current phase** | Phase 6 — QR, feedback and supporting features |
-| **Phase status** | AWAITING TEAM VERIFICATION. All checks pass; phone QR scan is the team's test; Storage uploads still NOT RUN. Do **not** start Phase 7 until the team replies exactly `approved, go to Phase 7`. |
+| **Phase status** | AWAITING TEAM VERIFICATION. All checks pass; phone QR scan PASSED by the team; Storage uploads still NOT RUN. Do **not** start Phase 7 until the team replies exactly `approved, go to Phase 7`. |
 | **Git** | Branch `phase-6` (from `main` after the 5C merge; tag `phase-5c-approved`). Local commits; push on the team's "push". |
 | **Last task completed** | Phase 6 built and verified (2026-10-16): /qr + /admin/qr, /feedback with honeypot + rate limit, moderation, 90-day retention (ADR-051). |
 | **Next action** | Wait for `approved, go to Phase 7`. On approval: merge `phase-6` → `main`, tag `phase-6-approved`, start Phase 7 (security hardening + full regression). |
-| **Waiting on the team** | Approval phrase; phone QR scan; Storage bucket + `SUPABASE_SECRET_KEY`; "push". |
+| **Waiting on the team** | Approval phrase; Storage bucket + `SUPABASE_SECRET_KEY`; "push". |
 | **Note** | This Mac runs under very high load (BTLEServer ~97 % CPU), so E2E with 4 workers can time out on static files. Run `npx playwright test --workers=2` locally. |
 
 ### On approval (the CLAUDE.md §0.2 step 8 routine)

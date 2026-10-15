@@ -37,6 +37,8 @@ describe('admin navigation (no dead links)', () => {
       '/admin/banners',
       '/admin/cafe',
       '/admin/gallery',
+      '/admin/feedback',
+      '/admin/qr',
     ])
   })
   it('marks the dashboard exactly and modules by prefix', () => {

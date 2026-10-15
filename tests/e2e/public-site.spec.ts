@@ -418,11 +418,15 @@ test.describe('about & contact (TC-E2E-041)', () => {
     // No unverified address is sent to Google: no map, no directions (ADR-046).
     await expect(page.locator('iframe')).toHaveCount(0)
     await expect(page.getByRole('link', { name: /Get directions/ })).toHaveCount(0)
-    // About text from the database; feedback CTA hidden until its page exists (Phase 6).
+    // About text from the database.
     await expect(
       page.getByText('Demo text: replace with the café’s approved description.'),
     ).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Share feedback' })).toHaveCount(0)
+    // Phase 6: the feedback page exists, so the contact page links to it.
+    await expect(page.getByRole('link', { name: 'Share feedback' })).toHaveAttribute(
+      'href',
+      '/feedback',
+    )
   })
 })
 
@@ -461,13 +465,22 @@ test.describe('SEO: metadata, sitemap and robots (TC-E2E-045)', () => {
     const res = await request.get('/sitemap.xml')
     expect(res.status()).toBe(200)
     const urls = [...(await res.text()).matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1])
-    for (const path of ['/', '/menu', '/offers', '/student-zone', '/gallery', '/contact'])
+    for (const path of [
+      '/',
+      '/menu',
+      '/offers',
+      '/student-zone',
+      '/gallery',
+      '/contact',
+      '/feedback',
+      '/qr',
+    ])
       expect(urls).toContain(`${BASE}${path}`)
     expect(urls).toContain(`${BASE}/menu/classic-veg-burger`)
     expect(urls).toContain(`${BASE}/offers/burger-fries-combo`)
     expect(urls).toContain(`${BASE}/offers/weekend-dessert-special`) // scheduled: page exists
-    // Never: unpublished items, expired or draft offers, pages from later phases.
-    for (const hidden of ['pink-sauce-pasta', 'old-pasta-offer', 'draft-offer', '/feedback', '/qr'])
+    // Never: unpublished items, expired or draft offers, admin or API routes.
+    for (const hidden of ['pink-sauce-pasta', 'old-pasta-offer', 'draft-offer', '/admin', '/api/'])
       expect(urls.join(' ')).not.toContain(hidden)
     // Every listed page really exists.
     for (const u of urls) expect((await request.get(u)).status(), u).toBe(200)

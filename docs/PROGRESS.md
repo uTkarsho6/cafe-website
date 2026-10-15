@@ -8,10 +8,10 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 | Field | Value |
 |---|---|
-| Current phase | **Phase 6 — QR, feedback and supporting features** |
+| Current phase | **Phase 7 — Security hardening and full regression** |
 | Status | **IN PROGRESS** |
-| Branch | `phase-6` |
-| Latest report | `docs/PHASE_REPORTS/phase-5c.md` |
+| Branch | `phase-7` |
+| Latest report | `docs/PHASE_REPORTS/phase-6.md` |
 | Last updated | 2026-10-16 |
 
 ## Approved phases
@@ -27,10 +27,11 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Phase 5A | 2026-10-15 | "approved, go to Phase 5B, pls do it quickly u are taking a hell lot of time" |
 | Phase 5B | 2026-10-16 | "approved, go to Phase 5C" |
 | Phase 5C | 2026-10-16 | "approved, go to Phase 6" |
+| Phase 6 | 2026-10-16 | "approved, go to Phase 7" |
 
 ## Open bugs
 
-None open. Fixed in 5A: TC-SEC-020 false pass (REST URL), see the errata in phase-3.md / phase-4b.md and ADR-048.
+None open. Fixed in Phase 6 Round 2: admin stayed signed in across visits (ADR-052).
 
 ## Deferred backlog (outside current phase scope)
 
@@ -45,9 +46,8 @@ None open. Fixed in 5A: TC-SEC-020 false pass (REST URL), see the errata in phas
 - Page-level caching + on-demand revalidation (≤30 s freshness) is designed with the pages in 4A/5B (ADR-035).
 - Real menu, prices, address, phone and map are in (ADR-044, ADR-046). Opening hours (Q-05), real offers (Q-07), WhatsApp/email/social (Q-03/Q-04) are still placeholders.
 - Visual baselines exist only for macOS (`-darwin`); record Linux baselines when CI is set up (Q-16).
-- Switch on `/feedback`, `/qr` in `src/lib/site/nav.ts` in Phase 6 (ADR-042); all 4B pages are live.
 - Structured data (JSON-LD, FR-023) once hours and the remaining café facts are confirmed (ADR-047).
-- Gallery lightbox E2E once real photos exist (5C); admin café form needs the "Google Maps place" field (ADR-046).
+- Gallery lightbox E2E with real uploaded photos once Storage is set up.
 - New admin actions: use `expirePublic()` from `action-utils.ts` and return `redirectTo` instead of calling `redirect()` (ADR-050).
 - Real Storage uploads (items, banners, gallery, offers) are NOT RUN in E2E until `SUPABASE_SECRET_KEY` and the `public-media` bucket exist (DEPLOYMENT §7).
 

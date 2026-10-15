@@ -19,6 +19,8 @@ export type AuditAction =
   | 'DELETE'
   | 'IMAGE_UPLOAD'
   | 'IMAGE_REMOVE'
+  | 'APPROVE'
+  | 'REJECT'
 
 export async function recordAudit(entry: {
   adminUserId: string | null

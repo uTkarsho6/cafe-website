@@ -76,7 +76,9 @@ describe('navigation gating (CLAUDE.md rule 7: no dead links)', () => {
       '/gallery',
       '/contact',
     ])
-    expect(isLive('/feedback')).toBe(false)
+    // Phase 6: every page exists now, including the secondary links.
+    expect(isLive('/feedback')).toBe(true)
+    expect(isLive('/qr')).toBe(true)
     expect(NAV_ITEMS).toHaveLength(6) // the full nav is defined once; phases switch pages on
   })
   it('marks the active section, exact for home', () => {

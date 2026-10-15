@@ -28,7 +28,7 @@
 ## 3. Attack surface
 
 - Public GET pages and `/api/v1/*` (query parsing, search).
-- POST `/api/v1/feedback`.
+- Feedback submission: a Server Action on `/feedback` (POST-only, Origin-checked; ADR-051).
 - `/admin/login` Server Action.
 - All admin Server Actions.
 - POST `/api/admin/uploads`.
@@ -122,7 +122,7 @@ Scales: L(ikelihood) and I(mpact) are 1–3; Risk = L×I.
 | API3 | Broken Object Property Level Authorization | Explicit DTO `select`; Zod `.strict()` input | Planned |
 | API4 | Unrestricted Resource Consumption | pageSize ≤48, q ≤60, body ≤8 KB (JSON) / 5 MB (upload), rate limits | Planned |
 | API5 | Broken Function Level Authorization | Admin functions only in `(admin)` actions with `requireAdmin` | Planned |
-| API6 | Unrestricted Access to Sensitive Business Flows | Feedback flow limited (honeypot + rate limit + moderation) | Planned |
+| API6 | Unrestricted Access to Sensitive Business Flows | Feedback flow limited (honeypot + rate limit + moderation) | Verified (Phase 6: unit, integration, E2E) |
 | API7 | Server-Side Request Forgery | The server fetches no user-supplied URLs (banner links are only rendered) | N/A by design |
 | API8 | Security Misconfiguration | Headers, CORS not enabled (same-origin only), env checks | Planned |
 | API9 | Improper Inventory Management | All endpoints listed in TRD §6; no undocumented routes; `/dev/*` 404 in production | Planned |

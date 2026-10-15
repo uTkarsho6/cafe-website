@@ -15,8 +15,8 @@ export const NAV_ITEMS: NavItem[] = [
 
 /** Secondary links (footer, mobile "More" sheet). */
 export const MORE_ITEMS: NavItem[] = [
-  { href: '/feedback', label: 'Feedback', live: false }, // Phase 6
-  { href: '/qr', label: 'QR Menu', live: false }, // Phase 6
+  { href: '/feedback', label: 'Feedback', live: true },
+  { href: '/qr', label: 'QR Menu', live: true },
 ]
 
 export const liveNav = () => NAV_ITEMS.filter((i) => i.live)

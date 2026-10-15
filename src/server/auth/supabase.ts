@@ -1,6 +1,7 @@
 import 'server-only'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { sessionOnly } from './activity'
 import { getAuthEnv } from './env'
 
 /**
@@ -18,7 +19,7 @@ export async function createSupabaseServerClient() {
       getAll: () => store.getAll(),
       setAll: (toSet) => {
         try {
-          for (const { name, value, options } of toSet) store.set(name, value, options)
+          for (const { name, value, options } of toSet) store.set(name, value, sessionOnly(options)) // browser-session cookies (ADR-052)
         } catch {
           // Called from a Server Component: cookies are read-only there (see the proxy).
         }

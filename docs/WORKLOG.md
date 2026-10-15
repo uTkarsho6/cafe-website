@@ -12,12 +12,12 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 6 — QR, feedback and supporting features |
-| **Phase status** | AWAITING TEAM VERIFICATION. All checks pass; phone QR scan PASSED by the team; Storage uploads still NOT RUN. Do **not** start Phase 7 until the team replies exactly `approved, go to Phase 7`. |
-| **Git** | Branch `phase-6` (from `main` after the 5C merge; tag `phase-5c-approved`). Local commits; push on the team's "push". |
-| **Last task completed** | Phase 6 built and verified (2026-10-16): /qr + /admin/qr, /feedback with honeypot + rate limit, moderation, 90-day retention (ADR-051). |
-| **Next action** | Wait for `approved, go to Phase 7`. On approval: merge `phase-6` → `main`, tag `phase-6-approved`, start Phase 7 (security hardening + full regression). |
-| **Waiting on the team** | Approval phrase; Storage bucket + `SUPABASE_SECRET_KEY`; "push". |
+| **Current phase** | Phase 7 — Security hardening and full regression |
+| **Phase status** | AWAITING TEAM VERIFICATION. All suites pass (check 302, integration 103, Supabase 46, E2E 312). Do **not** start Phase 8 until the team replies exactly `approved, go to Phase 8`. |
+| **Git** | Branch `phase-7` (from `main` after the Phase 6 merge; tag `phase-6-approved`). Local commits; push on the team's "push". |
+| **Last task completed** | Phase 7 (2026-10-16): scans, attack replays, authz guard, CSP evaluation (ADR-053), Zod jitless, favicon, TC-E2E-090/091, Lighthouse. |
+| **Next action** | Wait for `approved, go to Phase 8`. Phase 8 needs from the team: Vercel account, production Supabase project, domain (if any). |
+| **Waiting on the team** | Approval phrase; confirm accepted risks R-07/R-12; Storage setup; Phase 8 accounts; "push". |
 | **Note** | This Mac runs under very high load (BTLEServer ~97 % CPU), so E2E with 4 workers can time out on static files. Run `npx playwright test --workers=2` locally. |
 
 ### On approval (the CLAUDE.md §0.2 step 8 routine)
@@ -36,7 +36,7 @@ cd ~/projects/zorko-sangli
 git status && git log --oneline -5 && git tag
 npm ci && npm run check                 # lint, typecheck, format, unit tests, build
 npm run test:integration                # Docker test DB, expect 103 passed
-npm run test:e2e -- --workers=2         # Docker test DB + Playwright, expect ~288 passed, 24 skipped
+npm run test:e2e -- --workers=2         # Docker test DB + Playwright, expect 312 passed, 25 skipped
 ```
 
 ---

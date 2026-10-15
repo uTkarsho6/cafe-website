@@ -9,9 +9,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Field | Value |
 |---|---|
 | Current phase | **Phase 7 — Security hardening and full regression** |
-| Status | **IN PROGRESS** |
+| Status | **AWAITING TEAM VERIFICATION** |
 | Branch | `phase-7` |
-| Latest report | `docs/PHASE_REPORTS/phase-6.md` |
+| Latest report | `docs/PHASE_REPORTS/phase-7.md` |
 | Last updated | 2026-10-16 |
 
 ## Approved phases
@@ -38,10 +38,10 @@ None open. Fixed in Phase 6 Round 2: admin stayed signed in across visits (ADR-0
 - Loyalty and Reward Program: future work (synopsis methodology lists it as future expansion). Confirm with guide.
 - Online ordering, payment, customer accounts, delivery/order tracking: future work (synopsis + CLAUDE.md 3.0).
 - Secret scanning: gitleaks runs via Docker (`ghcr.io/gitleaks/gitleaks`); CI uses gitleaks-action once a GitHub remote exists (Q-16).
-- Re-check dev-only advisory `braces` ≤3.0.3 each phase; adopt the patched release when published (ADR-032).
+- Re-check dev-only advisory `braces` ≤3.0.3 (still no patched release on 2026-10-16); adopt it when published (ADR-032, R-12).
 - Team machine: `~/.npm` cache has root-owned files; fix with `sudo chown -R $(whoami) ~/.npm` (ADR-030).
 - Visual regression baselines start in Phase 4A.
-- Finalise CSP script policy in Phase 7 (ADR-016).
+- CSP keeps `'unsafe-inline'` scripts (R-07, ADR-053); revisit if Next ships a static-compatible strict CSP.
 - Remove the `deepmerge-ts` / `mysql2` npm overrides once Prisma ships patched dependencies (ADR-036, review in Phase 7).
 - Page-level caching + on-demand revalidation (≤30 s freshness) is designed with the pages in 4A/5B (ADR-035).
 - Real menu, prices, address, phone and map are in (ADR-044, ADR-046). Opening hours (Q-05), real offers (Q-07), WhatsApp/email/social (Q-03/Q-04) are still placeholders.

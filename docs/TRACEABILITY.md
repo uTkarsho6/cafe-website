@@ -52,18 +52,18 @@ Requirement → design/module → implementation location (planned) → tests �
 | FR-048 Veg marking | S | UI_SPEC §7.5 | `VegMark`, `dietType`, `isPureVegConfirmed` | TC-COMP-004 | 3, 4A | Verified (per-item mark; "100% VEG" only when the café flag is set) | phase-3.md, phase-4a.md |
 | FR-049 Admin QR | M | ADR-018, ADR-051 | `admin/(shell)/qr/page.tsx` | TC-UNIT-030, TC-E2E-043 | 6 | Verified (code, downloads, localhost/LAN/http warnings) | phase-6.md |
 | FR-050 Admin usability | M | UI_SPEC §8.4, §13 | `layout/AdminShell` etc. | TC-A11Y-002, TC-RESP-004 | 5A–6 | Planned | — |
-| NFR-001 Responsive | M | UI_SPEC §17 | all pages | TC-RESP-001…004 | 4A–7 | In progress (core pages verified at 375/430/768/1024/1440) | phase-4a.md |
-| NFR-002 Accessibility | M | UI_SPEC §2.3, §11 | all | TC-A11Y-001…006 | 4A–7 | In progress (core pages: axe 0 serious/critical at 390 and 1440, keyboard dialog checks) | phase-4a.md |
-| NFR-003 Performance | S | TRD §13 | — | TC-PERF-001/002 | 7 | Planned | — |
-| NFR-004 Security | M | SECURITY.md | — | TC-SEC-* | 3–7 | In progress (Phase 3: RLS deny-all, injection, safe errors, bundle scan verified; full review in 7) | phase-3.md |
+| NFR-001 Responsive | M | UI_SPEC §17 | all pages | TC-RESP-001…004 | 4A–7 | Verified (Phase 7 full regression: every public and admin page has no horizontal scroll at 375/768/1440; core pages also at 430/1024) | phase-4a.md … phase-7.md |
+| NFR-002 Accessibility | M | UI_SPEC §2.3, §11 | all | TC-A11Y-001…006 | 4A–7 | Verified (axe 0 serious/critical on every public and admin page; Lighthouse accessibility 100 on 7 key pages, mobile and desktop; keyboard dialog and focus tests) | phase-4a.md … phase-7.md |
+| NFR-003 Performance | S | TRD §13 | — | TC-PERF-001/002 | 7 | Verified (Lighthouse 13.5 on a local production build: desktop performance 100 on 7 pages; mobile 88–96 on a heavily loaded machine; CLS ≤0.054; TBT ≤280 ms) | phase-7.md |
+| NFR-004 Security | M | SECURITY.md | — | TC-SEC-* | 3–7 | Verified (Phase 7 review: OWASP Top 10 and API Top 10 verified; R-07 CSP accepted; see SECURITY.md §11) | phase-3.md, phase-7.md |
 | NFR-005 Privacy | M | SECURITY §10 | feedback, rate-limit pruning | TC-SEC-130, TC-INT-060 | 3, 6 | Verified (no contact fields, HMAC-only rate-limit keys, rejected feedback purged after 90 days) | phase-3.md, phase-6.md |
-| NFR-006 Maintainability | M | TRD §3 | `eslint.config.mjs`, `tsconfig.json` (strict), Prettier, CI workflow | lint, typecheck, format:check | 2+ | In progress (tooling verified) | phase-2.md |
+| NFR-006 Maintainability | M | TRD §3 | `eslint.config.mjs`, `tsconfig.json` (strict), Prettier, CI workflow | lint, typecheck, format:check | 2+ | Verified (lint, strict typecheck, Prettier and static authorization guard in `npm run check`) | phase-2.md, phase-7.md |
 | NFR-007 Reliability | M | TRD §7 | `src/app/api/health/route.ts`, error boundaries | E2E health tests; TC-INT-080 (DB up/down) | 2–3 | Verified (app + DB health) | phase-2.md, phase-3.md |
-| NFR-008 Freshness | M | ADR-013 | — | TC-E2E-050 | 5B | In progress (30 s tagged cache implemented, ADR-040; timing test in 5B) | phase-4a.md |
-| NFR-009 Browser support | M | TEST_PLAN §1 | `playwright.config.ts` (Chromium + WebKit) | All E2E on both engines | 2+ | In progress (all E2E on Chromium + WebKit through Phase 4A) | phase-2.md … phase-4a.md |
-| NFR-010 Content honesty | M | CLAUDE.md 6.2 | seed + UI | TC-E2E-090, TC-E2E-001/031/041, review | 3–7 | In progress (4B: unconfirmed details labelled "To be confirmed"; no coupons, ratings or ID checks; illustrative photos credited) | phase-3.md, phase-4b.md |
+| NFR-008 Freshness | M | ADR-013 | — | TC-E2E-050 | 5B | Verified (on-demand expiry ~0.1–0.2 s measured; ≤30 s fallback; ADR-049/050) | phase-5b.md, phase-5c.md |
+| NFR-009 Browser support | M | TEST_PLAN §1 | `playwright.config.ts` (Chromium + WebKit) | All E2E on both engines | 2+ | Verified (all E2E on Chromium + WebKit through Phase 7) | phase-2.md … phase-7.md |
+| NFR-010 Content honesty | M | CLAUDE.md 6.2 | seed + UI | TC-E2E-090, TC-E2E-001/031/041, review | 3–7 | Verified (no ordering/coupon/rating UI (TC-E2E-090); unconfirmed details labelled; demo data badged; real offers start as drafts) | phase-4b.md, phase-7.md |
 | NFR-011 Deployability | M | DEPLOYMENT.md | — | Phase 8 checklist | 8 | Planned | — |
-| NFR-012 Data integrity | M | TRD §4 | Prisma schema + SQL CHECKs | TC-INT-001…003, 070 | 3 | In progress (DB CHECK/UNIQUE/FK verified, TC-INT-001…004; admin transactions TC-INT-070 in 5B) | phase-3.md |
+| NFR-012 Data integrity | M | TRD §4 | Prisma schema + SQL CHECKs | TC-INT-001…003, 070 | 3 | Verified (DB CHECK/UNIQUE/FK; admin multi-record changes in transactions with rollback tests, 5B/5C) | phase-3.md, phase-5b.md, phase-5c.md |
 
 **Phase 1 documentation deliverables** (CLAUDE.md §12): PRD, TRD, UI_SPEC, SECURITY, TEST_PLAN, TRACEABILITY, DEPLOYMENT, DECISIONS, OPEN_QUESTIONS, `design/reference/*` — Implemented in Phase 1; verified by team review.
 

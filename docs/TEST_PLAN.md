@@ -94,6 +94,17 @@ Added in Phase 6:
 | TC-INT-040/041 | Feedback on Postgres: pending → not public; approve → public text (XSS stored as text); reject → hidden; delete; "Guest" fallback; 3/10 min limit per IP; 90-day purge of rejected feedback | Pass (`tests/integration/feedback.test.ts`) |
 | TC-E2E-042/043/044/073 | `/qr` image + downloads + destination opens the menu; feedback submit, validation, honeypot, 4th submission refused; approve → home shows payload as text (not executed) → reject hides → delete; admin QR warnings; axe + overflow; baselines | Pass (`tests/e2e/admin-feedback.spec.ts`) |
 
+Added in Phase 7:
+
+| ID | Case | Expected |
+|---|---|---|
+| TC-SEC-031 (static) | Every admin page and exported admin Server Action awaits `requireAdmin()` before anything else | Pass (`tests/unit/authz-guard.test.ts`) |
+| TC-SEC-001/090 (live) | Captured admin action replayed without a session, and with the admin's cookies from a foreign Origin; positive control from the own origin | Refused, refused, works (`tests/e2e/security.spec.ts`) |
+| TC-SEC-011 | 7 MB Server Action body | Refused, nothing stored |
+| TC-SEC-120 | Junk API inputs (negative page, quote injection, path traversal, 5000-char slug, bad QR format) | <500 status, no stack traces or internals |
+| TC-E2E-090 | No ordering/cart/coupon UI and none of the CLAUDE.md §6.2/§6.3 mockup claims on 13 public pages | Pass (`tests/e2e/regression.spec.ts`, both engines) |
+| TC-E2E-091 | No console errors, page errors or failed same-origin requests on the same 13 pages | Pass |
+
 Added in Phase 4A: menu URL state (invalid values dropped, hrefs keep filters, chips), navigation gating (`liveNav`, `isActivePath`), 12-hour time formatting, price-band `where` clauses (TC-UNIT-012), in `tests/unit/menu-page.test.ts`. Menu card states (TC-COMP-002) in `tests/component/menu-card.test.tsx`.
 
 ### 4.2 Component (TC-COMP)

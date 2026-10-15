@@ -439,3 +439,15 @@ Prisma parameterises `contains`, but it does **not** escape `%`, `_` and `\`. A 
   - an edited timestamp ends the session and clears the Supabase cookies;
   - a missing activity cookie ends the session.
 - **Trade-off.** An admin who stays idle for 30 minutes must sign in again; unsaved form input is lost. Acceptable for a few admins on a small site. The limits are constants in `activity.ts`.
+
+## ADR-053 Phase 7 hardening decisions — Accepted (2026-10-16)
+- **CSP script policy (closes ADR-016).** `'unsafe-inline'` stays in `script-src`; it is accepted as residual risk R-07.
+  - **Tested option 1, experimental SRI with `script-src 'self'`:** the build works, but Next 16 streams page data through inline `<script>` tags, so the policy blocks 24 scripts on `/` and pages stop hydrating.
+  - **Option 2, nonces:** these force every page to render dynamically and disable PPR/caching (Next CSP guide), which conflicts with ADR-013.
+  - **What remains in the policy:** `'unsafe-eval'` is not allowed in production, plus `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, and `img-src` / `connect-src` limited to the app and the Supabase host.
+  - **Main XSS defence:** React escaping, plus the lint ban on `dangerouslySetInnerHTML`, verified with stored-XSS E2E tests.
+- **Zod jitless.** Zod 4 probes `new Function()` the first time it runs. In the browser that is a CSP violation (found by Lighthouse on `/menu` and `/feedback`). `z.config({ jitless: true })` runs in `src/lib/validation/zod-setup.ts`, which every validation module imports first.
+- **Metadata streaming.** Next 16 streams metadata to browsers and to Googlebot (Google runs JavaScript), but sends it blocking to Bingbot, Facebook, WhatsApp, Twitter, Slack and others (its default list). Lighthouse therefore reports "no meta description" on the dish page, a known false negative: the tag is in the HTML, and in `<head>` for the bots that need it. Default kept, as Next recommends.
+- **Favicon:** `src/app/icon.svg` (the header "Z" mark). It removes a 404 on every page.
+- **Static authorization guard:** `tests/unit/authz-guard.test.ts` fails if an admin page or exported Server Action does not await `requireAdmin()` before anything else.
+- **Lighthouse** runs from a temporary folder outside the repository (like ADR-027): `lighthouse` 13.5.0 using Playwright's Chromium. It is not a project dependency.

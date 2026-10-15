@@ -2,8 +2,10 @@
  * Security response headers (SECURITY.md §10, DECISIONS ADR-016).
  *
  * CSP follows the Next.js 16 "Without Nonces" guide: nonces would force every page to render
- * dynamically, which conflicts with cached public pages. `'unsafe-inline'` for scripts is a
- * documented residual risk (R-07) to be revisited in Phase 7 (experimental SRI).
+ * dynamically, which conflicts with cached public pages. `'unsafe-inline'` for scripts is an
+ * accepted residual risk (R-07). Phase 7 tested experimental SRI with `script-src 'self'`: Next
+ * still streams page data through inline scripts, which that policy blocks (24 violations on
+ * the home page, no hydration), so it was not adopted (ADR-053).
  */
 
 type HeaderOptions = {

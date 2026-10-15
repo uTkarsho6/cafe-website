@@ -85,12 +85,12 @@ Scales: L(ikelihood) and I(mpact) are 1–3; Risk = L×I.
 | ID | Risk | L | I | Risk | Mitigation | Residual |
 |---|---|---|---|---|---|---|
 | R-01 | Supabase REST exposes tables | 2 | 3 | 6 | ADR-009, TC-SEC-020 against the dev project | Low |
-| R-02 | Missing `requireAdmin` in a new action | 2 | 3 | 6 | Lint/test: every exported admin action is covered by the authorization-matrix test that enumerates actions | Low |
+| R-02 | Missing `requireAdmin` in a new action | 2 | 3 | 6 | Static guard test (`authz-guard.test.ts`: every admin page and every exported action awaits `requireAdmin()` first) + per-module enumeration tests + E2E replay | Low |
 | R-03 | Secret committed or bundled | 2 | 3 | 6 | `.gitignore`, gitleaks, bundle scan, `.claude/settings.json` deny on `.env` | Low |
-| R-04 | Credential stuffing on admin | 2 | 3 | 6 | Rate limit, strong passwords, optional MFA (Q-14) | Low–Med |
+| R-04 | Credential stuffing on admin | 2 | 3 | 6 | Rate limit, strong passwords, browser-session cookies, 30 min idle / 12 h max sessions (ADR-052), optional MFA (Q-14) | Low–Med |
 | R-05 | Stored XSS via admin/feedback text | 1 | 3 | 3 | Escaping, CSP, tests | Low |
 | R-06 | Malicious upload | 1 | 2 | 2 | ADR-015 | Low |
-| R-07 | CSP needs `'unsafe-inline'` scripts | 2 | 2 | 4 | ADR-016 evaluation in Phase 7 | Med until resolved |
+| R-07 | CSP needs `'unsafe-inline'` scripts | 2 | 2 | 4 | Evaluated in Phase 7 (ADR-053): nonces would make every page dynamic; SRI with `script-src 'self'` breaks Next's inline streaming scripts. Compensating controls: React escaping, no `dangerouslySetInnerHTML` (lint rule), no `eval` (`'unsafe-eval'` blocked, Zod jitless), `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, admin text and feedback rendered as text | Low–Med (accepted) |
 | R-08 | Destructive migration on prod | 1 | 3 | 3 | Rule 14, separate projects, `pg_dump` before deploy | Low |
 | R-09 | Free-tier pause or outage during demo | 2 | 2 | 4 | Wake before the demo; health check | Low |
 | R-10 | Vulnerable dependency | 2 | 2 | 4 | `npm audit` in CI, pinned lockfile, minimal deps | Low–Med |
@@ -102,36 +102,36 @@ Scales: L(ikelihood) and I(mpact) are 1–3; Risk = L×I.
 
 | # | Category | Controls in this project | Status |
 |---|---|---|---|
-| A01 | Broken Access Control | `requireAdmin` in every operation; deny by default; RLS deny-all; IDOR-safe (no per-user data; admin-wide scope); safe `next` redirect | Planned (5A) |
-| A02 | Security Misconfiguration | Env validation; security headers; Supabase signup disabled; production checks (https site URL); no debug output | Planned (2, 7, 8) |
-| A03 | Software Supply Chain Failures | Lockfile, `npm ci`, `npm audit`, minimal deps, gitleaks, pinned versions, no RCs | Planned (2, 7) |
-| A04 | Cryptographic Failures | HTTPS/HSTS; Supabase password hashing; HMAC for rate-limit keys; no custom crypto | Planned |
-| A05 | Injection | Prisma parameterised queries; Zod; React escaping; no raw SQL with input | Planned (3, 4A) |
-| A06 | Insecure Design | Threat model (this doc); no ordering/payment surface; least data | In progress (1) |
-| A07 | Authentication Failures | Supabase Auth; rate limit; generic errors; session expiry; logout revokes | Planned (5A) |
-| A08 | Software or Data Integrity Failures | Audit log; transactions; re-encoded uploads; no untrusted deserialisation | Planned (5B) |
-| A09 | Logging & Alerting Failures | Audit log; structured server logs without secrets; failed-login audit | Planned (5A) |
-| A10 | Mishandling of Exceptional Conditions | Central error mapping; safe 5xx; error boundaries; DB-down health status | Planned (2, 3) |
+| A01 | Broken Access Control | `requireAdmin` in every operation; deny by default; RLS deny-all; IDOR-safe (no per-user data; admin-wide scope); safe `next` redirect | Verified (5A–7: authz matrix, static guard, E2E anonymous replay, IDOR tests) |
+| A02 | Security Misconfiguration | Env validation; security headers; Supabase signup disabled; production checks (https site URL); no debug output | Verified (headers E2E, env validation, signup disabled, prod URL checks); Phase 8 re-checks Vercel settings |
+| A03 | Software Supply Chain Failures | Lockfile, `npm ci`, `npm audit`, minimal deps, gitleaks, pinned versions, no RCs | Verified (lockfile, pinned deps, prod audit 0, gitleaks history clean); dev-only R-12 accepted |
+| A04 | Cryptographic Failures | HTTPS/HSTS; Supabase password hashing; HMAC for rate-limit keys; no custom crypto | Verified (HMAC keys/cookies, Supabase hashing, HSTS on https); no custom crypto |
+| A05 | Injection | Prisma parameterised queries; Zod; React escaping; no raw SQL with input | Verified (Prisma only, Zod everywhere, injection payload tests, React escaping) |
+| A06 | Insecure Design | Threat model (this doc); no ordering/payment surface; least data | Verified (threat model reviewed in Phase 7; no ordering/payment surface) |
+| A07 | Authentication Failures | Supabase Auth; rate limit; generic errors; session expiry; logout revokes | Verified (rate limits, generic errors, getUser validation, forged/expired tokens, idle/max sessions) |
+| A08 | Software or Data Integrity Failures | Audit log; transactions; re-encoded uploads; no untrusted deserialisation | Verified (audit log on every admin change, transactions, re-encoded uploads, Origin-checked actions) |
+| A09 | Logging & Alerting Failures | Audit log; structured server logs without secrets; failed-login audit | Verified for the app (audit log, structured logs without secrets); alerting is Phase 8 (Vercel logs) |
+| A10 | Mishandling of Exceptional Conditions | Central error mapping; safe 5xx; error boundaries; DB-down health status | Verified (generic 5xx, error boundaries, health 503, no stack traces: E2E probe) |
 
 ## 9. OWASP API Security Top 10:2023 checklist
 
 | # | Category | Controls | Status |
 |---|---|---|---|
-| API1 | Broken Object Level Authorization | Public objects are public by design; admin objects behind `requireAdmin`; unpublished/expired filtered server-side | Planned |
-| API2 | Broken Authentication | Supabase JWT validation; rate limits | Planned |
-| API3 | Broken Object Property Level Authorization | Explicit DTO `select`; Zod `.strict()` input | Planned |
-| API4 | Unrestricted Resource Consumption | pageSize ≤48, q ≤60, body ≤8 KB (JSON) / 5 MB (upload), rate limits | Planned |
-| API5 | Broken Function Level Authorization | Admin functions only in `(admin)` actions with `requireAdmin` | Planned |
+| API1 | Broken Object Level Authorization | Public objects are public by design; admin objects behind `requireAdmin`; unpublished/expired filtered server-side | Verified (unpublished/expired filtered; admin objects behind requireAdmin; IDOR-scoped image/item operations) |
+| API2 | Broken Authentication | Supabase JWT validation; rate limits | Verified (getUser + allowlist; forged/expired tokens; rate limits) |
+| API3 | Broken Object Property Level Authorization | Explicit DTO `select`; Zod `.strict()` input | Verified (strict DTOs; form fields dropped, JSON strict) |
+| API4 | Unrestricted Resource Consumption | pageSize ≤48, q ≤60, body ≤8 KB (JSON) / 5 MB (upload), rate limits | Verified (caps; 6 MB action body limit, oversized request refused in E2E; rate limits) |
+| API5 | Broken Function Level Authorization | Admin functions only in `(admin)` actions with `requireAdmin` | Verified (static guard + E2E replay) |
 | API6 | Unrestricted Access to Sensitive Business Flows | Feedback flow limited (honeypot + rate limit + moderation) | Verified (Phase 6: unit, integration, E2E) |
 | API7 | Server-Side Request Forgery | The server fetches no user-supplied URLs (banner links are only rendered) | N/A by design |
-| API8 | Security Misconfiguration | Headers, CORS not enabled (same-origin only), env checks | Planned |
-| API9 | Improper Inventory Management | All endpoints listed in TRD §6; no undocumented routes; `/dev/*` 404 in production | Planned |
-| API10 | Unsafe Consumption of APIs | Only Supabase SDK responses; typed and checked | Planned |
+| API8 | Security Misconfiguration | Headers, CORS not enabled (same-origin only), env checks | Verified (headers, no CORS, env checks) |
+| API9 | Improper Inventory Management | All endpoints listed in TRD §6; no undocumented routes; `/dev/*` 404 in production | Verified (route inventory: 8 GET route handlers + 5 Server Action modules, all documented) |
+| API10 | Unsafe Consumption of APIs | Only Supabase SDK responses; typed and checked | Verified (typed Supabase SDK use only) |
 
 ## 10. Specific controls (summary)
 
 - **Headers:** see ADR-016. CORS: no `Access-Control-Allow-Origin` header on any route (same-origin only).
-- **Cookies:** set by `@supabase/ssr`: `HttpOnly`, `Secure` (production), `SameSite=Lax`, path `/`. Verified in Phase 5A (TC-SEC-007).
+- **Cookies:** set by `@supabase/ssr`: `HttpOnly`, `Secure` (production), `SameSite=Lax`, path `/`, browser-session only (no Max-Age). A signed activity cookie enforces 30 min idle / 12 h maximum admin sessions (ADR-052). Verified in Phases 5A and 6.
 - **Secrets:**
   - `.env.example` contains placeholders only; `.env*` is git-ignored.
   - `.claude/settings.json` denies the assistant reading `.env` files.
@@ -164,3 +164,16 @@ Scales: L(ikelihood) and I(mpact) are 1–3; Risk = L×I.
 | `npm audit --omit=dev` (TC-SEC-102) | 3 | PASS: 0. Full audit: only the accepted dev-only `braces` chain (ADR-032). Prisma CLI advisories fixed with overrides (ADR-036) |
 
 Manual threat-model review: initial version written in Phase 1; to be re-reviewed with the team in Phase 7. Automated scans cannot prove security.
+| **Phase 7 regression and hardening (2026-10-16)** | 7 | |
+| `npm audit --omit=dev` | 7 | PASS: 0 vulnerabilities. Full audit: the same 5 dev-only highs (`braces` ≤3.0.3 via ESLint tooling; no patched release yet, R-12) |
+| gitleaks: git history | 7 | PASS: no leaks |
+| gitleaks: working tree | 7 | PASS for tracked files. 13 hits, all in git-ignored files: `.env.local` (the real local secrets, expected) and `.next/` build output (Next's own per-build preview/encryption keys, server-side only) |
+| Client bundle scan (`.next/static`, 42 files) for the values of every secret env var and for `sb_secret_`, `service_role`, `postgres://` | 7 | PASS: 0 values. The text `SUPABASE_SECRET_KEY` appears only as a variable name in the admin "uploads are switched off" message |
+| Code review: `dangerouslySetInnerHTML`, `eval`/`new Function`, raw SQL, `target=_blank` without `rel`, `console.*`, sensitive log fields | 7 | PASS: none in app code (raw SQL only in Prisma's generated client) |
+| Static authorization guard: 15 admin pages and 26 admin Server Actions await `requireAdmin()` first (`authz-guard.test.ts`) | 7 | PASS |
+| Real-server attack replays (`security.spec.ts`): captured admin action replayed without a session → refused, nothing changed; replayed with the admin's cookies from a foreign Origin → refused, nothing changed; same request from the site's own origin → works (positive control); 7 MB body → refused, nothing stored; bad API inputs → no stack traces or internals | 7 | PASS |
+| Supabase REST denial and auth-token suite against the dev project | 7 | PASS: 46 passed, 3 skipped (placeholder tables) |
+| CSP strictness evaluation (ADR-053): SRI + `script-src 'self'` | 7 | Not adoptable: 24 blocked inline scripts on `/`, pages stop hydrating. `'unsafe-inline'` kept (R-07 accepted) |
+| CSP violation found by Lighthouse: Zod's `new Function` probe on pages with forms | 7 | FIXED: Zod runs jitless (`src/lib/validation/zod-setup.ts`); 0 CSP issues on `/menu`, `/feedback` |
+| Missing favicon (404 on every page) | 7 | FIXED (`src/app/icon.svg`) |
+

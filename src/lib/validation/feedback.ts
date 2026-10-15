@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import './zod-setup'
 
 /**
  * Public feedback form (FR-019, ADR-026). Only a message and an optional display name: no email,

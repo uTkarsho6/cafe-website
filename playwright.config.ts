@@ -20,9 +20,9 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /admin-menu/ },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: /admin-menu/ },
-    // Menu admin tests change shared test data (prices, availability, new items) and sign in
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /admin-(menu|content)/ },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: /admin-(menu|content)/ },
+    // Menu and content admin tests change shared test data (prices, availability, new items) and sign in
     // many times, so they run after the read-only suites instead of in parallel with them.
     {
       name: 'admin-menu-chromium',
@@ -35,6 +35,18 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
       testMatch: /admin-menu\.spec\.ts/,
       dependencies: ['admin-menu-chromium'],
+    },
+    {
+      name: 'admin-content-chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /admin-content\.spec\.ts/,
+      dependencies: ['admin-menu-webkit'],
+    },
+    {
+      name: 'admin-content-webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: /admin-content\.spec\.ts/,
+      dependencies: ['admin-content-chromium'],
     },
   ],
   webServer: {

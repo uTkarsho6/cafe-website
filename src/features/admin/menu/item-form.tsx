@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { startTransition, useActionState, useEffect, useRef, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox, Select, TextArea, TextField } from '@/components/ui/field'
@@ -27,12 +28,14 @@ const initial: FormState = { ok: false, message: null, errors: {} }
 /** Shows a toast when a form action finishes; field errors stay next to the fields. */
 export function useFormToast(state: FormState) {
   const toast = useToast()
+  const router = useRouter()
   const last = useRef(state)
   useEffect(() => {
-    if (state !== last.current && state.message)
-      toast.show(state.message, state.ok ? 'success' : 'error')
+    if (state === last.current) return
     last.current = state
-  }, [state, toast])
+    if (state.message) toast.show(state.message, state.ok ? 'success' : 'error')
+    if (state.redirectTo) router.push(state.redirectTo)
+  }, [state, toast, router])
 }
 
 /**

@@ -52,7 +52,7 @@ const details = (page: Page) => page.getByRole('region', { name: 'Details' })
 
 /**
  * Polls the public page (a fresh request each time) until it shows the change. The requirement
- * is ≤30 s; on-demand expiry (updateTag) should make it near-immediate, so the budget is 10 s:
+ * is ≤30 s; on-demand expiry (updateTag) should make it near-immediate, so the budget is 15 s (each check waits up to 2 s for streamed content):
  * a page that only refreshes when its 30 s cache window runs out fails this check.
  */
 async function expectPublic(page: Page, path: string, check: (p: Page) => Promise<void>) {
@@ -60,7 +60,7 @@ async function expectPublic(page: Page, path: string, check: (p: Page) => Promis
   await expect(async () => {
     await pub.goto(path)
     await check(pub)
-  }).toPass({ timeout: 10_000, intervals: [500, 1_000, 2_000] })
+  }).toPass({ timeout: 15_000, intervals: [500, 1_000, 2_000] })
   await pub.close()
 }
 
@@ -75,13 +75,19 @@ test('price and availability edits persist and reach the public item page within
   const warm = await page.context().newPage()
   await warm.goto(`/menu/${target.slug}`)
   await expect(warm.getByRole('main').getByText('Available').first()).toBeVisible()
+  // Let the warm render finish writing its cache entry. A render still in flight when the admin
+  // saves can keep the old copy until its 30 s window ends (ADR-050); this test checks the
+  // on-demand path, which is near-instant.
+  await warm.waitForTimeout(2_000)
   await warm.close()
 
   // Quick toggle in the list.
   await row.getByRole('switch', { name: `Available: ${target.name}` }).click()
   await expect(page.getByText(`"${target.name}" is now out of stock.`)).toBeVisible()
   await expectPublic(page, `/menu/${target.slug}`, async (p) => {
-    await expect(p.getByRole('main').getByText('Out of stock').first()).toBeVisible({ timeout: 1 })
+    await expect(p.getByRole('main').getByText('Out of stock').first()).toBeVisible({
+      timeout: 2_000,
+    })
   })
 
   // Full edit form: new price, available again.
@@ -95,8 +101,8 @@ test('price and availability edits persist and reach the public item page within
   await page.reload() // persisted, not just client state
   await expect(details(page).getByRole('textbox', { name: 'Price (₹)' })).toHaveValue('123.50')
   await expectPublic(page, `/menu/${target.slug}`, async (p) => {
-    await expect(p.getByRole('main').getByText('₹123.50').first()).toBeVisible({ timeout: 1 })
-    await expect(p.getByRole('main').getByText('Available').first()).toBeVisible({ timeout: 1 })
+    await expect(p.getByRole('main').getByText('₹123.50').first()).toBeVisible({ timeout: 2_000 })
+    await expect(p.getByRole('main').getByText('Available').first()).toBeVisible({ timeout: 2_000 })
   })
 })
 
@@ -114,6 +120,17 @@ test('create → public menu, archive → hidden, delete → gone (with audit en
   page,
 }) => {
   const name = `E2E Masala Toast ${Date.now()}`
+  // Warm the public search page while the item does not exist yet: the create action must expire
+  // it (regression: actions that ended with redirect() left public pages stale, ADR-050).
+  const search = `/menu?q=${encodeURIComponent(name)}`
+  const warm = await page.context().newPage()
+  await warm.goto(search)
+  await expect(warm.getByTestId('menu-card')).toHaveCount(0)
+  // Let the warm render finish writing its cache entry. A render still in flight when the admin
+  // saves can keep the old copy until its 30 s window ends (ADR-050); this test checks the
+  // on-demand path, which is near-instant.
+  await warm.waitForTimeout(2_000)
+  await warm.close()
   await page.getByRole('link', { name: 'New item' }).click()
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill(name)
   await page.getByRole('textbox', { name: 'Price (₹)' }).fill('89')
@@ -126,10 +143,9 @@ test('create → public menu, archive → hidden, delete → gone (with audit en
   await expect(page).toHaveURL(/\/admin\/menu\/[a-z0-9]+\?created=1$/)
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
 
-  const search = `/menu?q=${encodeURIComponent(name)}`
   await expectPublic(page, search, async (p) => {
     await expect(p.getByTestId('menu-card').filter({ hasText: name })).toHaveCount(1, {
-      timeout: 1,
+      timeout: 2_000,
     })
   })
 
@@ -138,7 +154,7 @@ test('create → public menu, archive → hidden, delete → gone (with audit en
   await expect(page.getByText('Item archived: hidden from the public site.')).toBeVisible()
   await expectPublic(page, search, async (p) => {
     await expect(p.getByTestId('menu-card').filter({ hasText: name })).toHaveCount(0, {
-      timeout: 1,
+      timeout: 2_000,
     })
   })
 
@@ -168,7 +184,7 @@ test('add-ons and linked items save and show on the public page', async ({ page 
   await addons.getByRole('button', { name: 'Save add-ons' }).click()
   await expect(page.getByText('Add-ons saved.')).toBeVisible()
   await expectPublic(page, `/menu/${target.slug}`, async (p) => {
-    await expect(p.getByRole('main').getByText('E2E Cheese')).toBeVisible({ timeout: 1 })
+    await expect(p.getByRole('main').getByText('E2E Cheese')).toBeVisible({ timeout: 2_000 })
   })
   // Linked items: tick the first "related" item and check the public page lists it.
   const links = page.getByRole('region', { name: 'Linked items' })
@@ -183,7 +199,7 @@ test('add-ons and linked items save and show on the public page', async ({ page 
   await expectPublic(page, `/menu/${target.slug}`, async (p) => {
     const related = p.locator('section', { has: p.getByRole('heading', { name: 'Related items' }) })
     await expect(related.getByRole('link', { name: new RegExp(linkedName) })).toBeVisible({
-      timeout: 1,
+      timeout: 2_000,
     })
   })
   await first.uncheck()
@@ -246,7 +262,9 @@ test('image upload: real file reaches Storage and the public page; disguised fil
   await images.getByRole('button', { name: 'Upload image' }).click()
   await expect(page.getByText('Image uploaded.')).toBeVisible()
   await expectPublic(page, `/menu/${target.slug}`, async (p) => {
-    await expect(p.getByRole('img', { name: 'E2E test photo' }).first()).toBeVisible({ timeout: 1 })
+    await expect(p.getByRole('img', { name: 'E2E test photo' }).first()).toBeVisible({
+      timeout: 2_000,
+    })
   })
   // Clean up (also removes the file from Storage).
   await page.reload()

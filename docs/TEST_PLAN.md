@@ -78,6 +78,14 @@ Added in Phase 5B:
 | TC-UNIT-091 | Every exported menu Server Action calls `requireAdmin()` first and writes nothing when refused; forged IDs/booleans rejected; delete succeeds when Storage cleanup fails | Pass (`tests/unit/admin-menu-actions.test.ts`) |
 | TC-INT-090 | Menu admin service on Postgres: unique slugs, stable slug on rename, price/availability visible to the public service, archive hides / restore shows, delete guards (archived, not in an offer), add-ons replace atomically, relations (no self, unknown → rollback), images (replace in place, IDOR-scoped removal, max 4, reorder, free slot reuse), categories (archive hides items, delete only when empty) | Pass (`tests/integration/admin-menu.test.ts`) |
 
+Added in Phase 5C:
+
+| ID | Case | Expected |
+|---|---|---|
+| TC-UNIT-092 | Content schemas: safe links (internal/http(s) only; `javascript:`, `data:`, `//host`, backslash, credentials, control chars refused), social hosts, IST date parsing, offer rules (kind/price/dates/items), banner button pairs and window, café fields, hours (closing after opening, 00:00 = midnight), gallery alt text | As specified (`tests/unit/admin-content-validation.test.ts`) |
+| TC-UNIT-093 | Every 5C Server Action calls `requireAdmin()` first; forged IDs/values refused; `javascript:` banner refused before any upload; delete works when Storage cleanup fails | Pass (`tests/unit/admin-content-actions.test.ts`) |
+| TC-INT-091 | 5C services on Postgres: offer states (draft/scheduled/active/expired), unique stable slug, item replace + rollback, expire/reactivate rules, delete keeps menu items; banner window and image replacement; café + 7-day hours shown by the public service; gallery publish/order/delete | Pass (`tests/integration/admin-content.test.ts`) |
+
 Added in Phase 4A: menu URL state (invalid values dropped, hrefs keep filters, chips), navigation gating (`liveNav`, `isActivePath`), 12-hour time formatting, price-band `where` clauses (TC-UNIT-012), in `tests/unit/menu-page.test.ts`. Menu card states (TC-COMP-002) in `tests/component/menu-card.test.tsx`.
 
 ### 4.2 Component (TC-COMP)

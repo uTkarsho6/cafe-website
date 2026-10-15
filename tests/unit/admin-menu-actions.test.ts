@@ -9,7 +9,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const requireAdmin = vi.fn()
 vi.mock('@/server/auth/admin', () => ({ requireAdmin: (...a: unknown[]) => requireAdmin(...a) }))
 vi.mock('next/cache', () => ({ updateTag: vi.fn(), revalidatePath: vi.fn() }))
-vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 vi.mock('@/server/audit', () => ({ recordAudit: vi.fn() }))
 vi.mock('@/server/media/storage', () => ({ getMediaStore: vi.fn() }))
 vi.mock('@/server/services/admin-menu', () => {
@@ -35,7 +34,6 @@ vi.mock('@/server/services/admin-menu', () => {
 })
 
 const actions = await import('@/features/admin/menu-actions')
-const navigation = await import('next/navigation')
 const storage = await import('@/server/media/storage')
 const services = await import('@/server/services/admin-menu')
 
@@ -99,7 +97,7 @@ describe('menu actions require an admin (authorization on every action)', () => 
     vi.mocked(storage.getMediaStore).mockImplementation(() => {
       throw new Error('SUPABASE_SECRET_KEY is required')
     })
-    await actions.deleteItemAction(ID)
-    expect(navigation.redirect).toHaveBeenCalledWith('/admin/menu?deleted=1')
+    const r = await actions.deleteItemAction(ID)
+    expect(r).toMatchObject({ ok: true, redirectTo: '/admin/menu?deleted=1' })
   })
 })

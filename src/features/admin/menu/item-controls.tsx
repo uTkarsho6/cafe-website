@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { Archive, ArchiveRestore, Trash2 } from 'lucide-react'
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
@@ -16,12 +17,15 @@ import {
 /** Runs a Server Action and reports the result as a toast. */
 export function useActionToast() {
   const toast = useToast()
+  const router = useRouter()
   const [pending, start] = useTransition()
   const run = (fn: () => Promise<FormState>, onDone?: (r: FormState) => void) =>
     start(async () => {
       const result = await fn()
-      if (result.message) toast.show(result.message, result.ok ? 'success' : 'error')
+      if (result.message && !result.redirectTo)
+        toast.show(result.message, result.ok ? 'success' : 'error')
       onDone?.(result)
+      if (result.redirectTo) router.push(result.redirectTo)
     })
   return { pending, run }
 }

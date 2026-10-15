@@ -9,9 +9,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Field | Value |
 |---|---|
 | Current phase | **Phase 5C — Offers, banners, café information and gallery administration** |
-| Status | **IN PROGRESS** |
+| Status | **AWAITING TEAM VERIFICATION** |
 | Branch | `phase-5c` |
-| Latest report | `docs/PHASE_REPORTS/phase-5b.md` |
+| Latest report | `docs/PHASE_REPORTS/phase-5c.md` |
 | Last updated | 2026-10-16 |
 
 ## Approved phases
@@ -47,9 +47,8 @@ None open. Fixed in 5A: TC-SEC-020 false pass (REST URL), see the errata in phas
 - Switch on `/feedback`, `/qr` in `src/lib/site/nav.ts` in Phase 6 (ADR-042); all 4B pages are live.
 - Structured data (JSON-LD, FR-023) once hours and the remaining café facts are confirmed (ADR-047).
 - Gallery lightbox E2E once real photos exist (5C); admin café form needs the "Google Maps place" field (ADR-046).
-- Phase 5C admin actions: use `updateTag` + `revalidatePath('/', 'layout')` like `expireMenu()` (ADR-049).
-- Real Storage upload E2E is NOT RUN until `SUPABASE_SECRET_KEY` and the `public-media` bucket exist (DEPLOYMENT §7).
-- Team: rotate the E2E admin test account password (it appeared in session output, phase-5b.md).
+- New admin actions: use `expirePublic()` from `action-utils.ts` and return `redirectTo` instead of calling `redirect()` (ADR-050).
+- Real Storage uploads (items, banners, gallery, offers) are NOT RUN in E2E until `SUPABASE_SECRET_KEY` and the `public-media` bucket exist (DEPLOYMENT §7).
 
 ## Assumptions waiting for team confirmation
 

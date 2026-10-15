@@ -1,7 +1,5 @@
 'use server'
 
-import { revalidatePath, updateTag } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import {
   addOnGroupsSchema,
@@ -14,11 +12,19 @@ import {
 } from '@/lib/validation/admin-menu'
 import { requireAdmin } from '@/server/auth/admin'
 import { recordAudit, type AuditAction } from '@/server/audit'
-import { log } from '@/server/log'
-import { UploadRejected, itemImagePath, processImageUpload } from '@/server/media/image-upload'
+import { itemImagePath, processImageUpload } from '@/server/media/image-upload'
 import { getMediaStore } from '@/server/media/storage'
 import { TAGS } from '@/server/public-data'
 import * as menu from '@/server/services/admin-menu'
+import {
+  expirePublic,
+  fail,
+  guarded,
+  ok,
+  parseId,
+  removeStoredFiles,
+  type FormState,
+} from './action-utils'
 
 /**
  * Menu administration Server Actions (Phase 5B, ADR-049).
@@ -30,40 +36,10 @@ import * as menu from '@/server/services/admin-menu'
  * Server Actions are POST-only and Origin-checked by Next.js (CSRF, ADR-011).
  */
 
-export type FormState = { ok: boolean; message: string | null; errors: Record<string, string> }
-const idle: FormState = { ok: false, message: null, errors: {} }
-const fail = (message: string, errors: Record<string, string> = {}): FormState => ({
-  ok: false,
-  message,
-  errors,
-})
-const GENERIC = 'Something went wrong. Nothing was saved; please try again.'
+export type { FormState } from './action-utils'
 
-/** Runs a mutation and turns rule violations into messages (never internals). */
-async function guarded(name: string, fn: () => Promise<FormState>): Promise<FormState> {
-  try {
-    return await fn()
-  } catch (error) {
-    if (error instanceof menu.AdminRuleError || error instanceof UploadRejected)
-      return fail(error.message)
-    log('error', 'admin.action_failed', { action: name })
-    return fail(GENERIC)
-  }
-}
-
-/**
- * Makes the change visible to customers on their next request (FR-035, ADR-049):
- * - `updateTag` expires the cached data loaders (`'use cache'` entries tagged menu / item:slug);
- * - `revalidatePath('/', 'layout')` expires the prerendered page shells. Tested on Next 16.4:
- *   with `updateTag` alone, /menu/[slug] kept serving its stored shell until the 30 s window ran
- *   out. The site is small, so re-rendering every public page once after an edit is cheap.
- * Do not add `refresh()`: it downgrades the action's revalidation to "dynamic only".
- */
-function expireMenu(...slugs: string[]) {
-  updateTag(TAGS.menu)
-  for (const slug of slugs) updateTag(`item:${slug}`)
-  revalidatePath('/', 'layout')
-}
+const expireMenu = (...slugs: string[]) =>
+  expirePublic(TAGS.menu, ...slugs.map((slug) => `item:${slug}`))
 
 async function audit(
   adminUserId: string,
@@ -73,23 +49,6 @@ async function audit(
   summary: string,
 ) {
   await recordAudit({ adminUserId, action, entityType, entityId, summary })
-}
-
-const parseId = (value: unknown) => idSchema.safeParse(value)
-
-/**
- * Best-effort cleanup of uploaded files after their rows are gone. Demo/stock images are local
- * files and are skipped. Never fails the action: the database change has already happened, and a
- * leftover file is harmless (unguessable name, nothing points at it).
- */
-async function removeStoredFiles(paths: string[]) {
-  const uploaded = paths.filter((p) => p.startsWith('items/'))
-  if (uploaded.length === 0) return
-  try {
-    await getMediaStore().remove(uploaded)
-  } catch {
-    log('warn', 'storage.cleanup_skipped', { count: uploaded.length })
-  }
 }
 
 // ── Items ────────────────────────────────────────────────────────────────────
@@ -103,8 +62,7 @@ export async function saveItemAction(_prev: FormState, form: FormData): Promise<
   if (!parsed.success) return fail('Please fix the highlighted fields.', fieldErrors(parsed.error))
   const input = parsed.data
 
-  let createdId: string | null = null
-  const result = await guarded('item.save', async () => {
+  return guarded('item.save', async () => {
     if (id) {
       const item = await menu.updateItem(id.data, input)
       await audit(admin.id, 'UPDATE', 'menu_item', item.id, `Updated item "${item.name}"`)
@@ -114,11 +72,8 @@ export async function saveItemAction(_prev: FormState, form: FormData): Promise<
     const item = await menu.createItem(input)
     await audit(admin.id, 'CREATE', 'menu_item', item.id, `Created item "${item.name}"`)
     expireMenu(item.slug)
-    createdId = item.id
-    return { ok: true, message: 'Item created.', errors: {} }
+    return ok('Item created.', `/admin/menu/${item.id}?created=1`)
   })
-  if (createdId) redirect(`/admin/menu/${createdId}?created=1`)
-  return result
 }
 
 export async function setAvailabilityAction(itemId: string, isAvailable: boolean) {
@@ -171,17 +126,13 @@ export async function deleteItemAction(itemId: string): Promise<FormState> {
   const admin = await requireAdmin(`/admin/menu/${itemId}`)
   const id = parseId(itemId)
   if (!id.success) return fail('Invalid request.')
-  let deleted = false
-  const result = await guarded('item.delete', async () => {
+  return guarded('item.delete', async () => {
     const item = await menu.deleteItem(id.data)
     await removeStoredFiles(item.paths)
     await audit(admin.id, 'DELETE', 'menu_item', id.data, `Deleted item "${item.name}"`)
     expireMenu(item.slug)
-    deleted = true
-    return idle
+    return ok('Item deleted.', '/admin/menu?deleted=1')
   })
-  if (deleted) redirect('/admin/menu?deleted=1')
-  return result
 }
 
 export async function saveAddOnsAction(
@@ -287,7 +238,7 @@ export async function updateImageAltAction(itemId: string, imageId: string, altT
   return guarded('item.image_alt', async () => {
     await menu.updateItemImageAlt(ids.data[0], ids.data[1], alt.data)
     await audit(admin.id, 'UPDATE', 'menu_item', ids.data[0], 'Updated image alt text')
-    updateTag(TAGS.menu)
+    expireMenu()
     return { ok: true, message: 'Alt text saved.', errors: {} }
   })
 }

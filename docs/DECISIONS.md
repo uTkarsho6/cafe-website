@@ -369,3 +369,33 @@ Prisma parameterises `contains`, but it does **not** escape `%`, `_` and `\`. A 
   - **Without the key.** If the key is not set, the editor says uploads are off, instead of showing a form that fails.
 - **Server Action body limit** is raised to 6 MB (`experimental.serverActions.bodySizeLimit`), for the 5 MB image plus multipart overhead. The action checks the size again.
 - **Not built:** drag-and-drop ordering, and bulk edit. Neither is in the PRD.
+
+## ADR-050 Offers, banners, café info and gallery administration as built — Accepted (2026-10-16, Phase 5C)
+- **Same action pattern as ADR-049.** `src/features/admin/content-actions.ts`: `requireAdmin` → Zod (`src/lib/validation/admin-content.ts`) → service (`src/server/services/admin-content.ts`) → audit → cache expiry. The shared helpers now live in `src/features/admin/action-utils.ts` (a server-only module, not `'use server'`, so nothing in it can be called from the browser). A unit test fails if an action is exported without the authorization check.
+- **No `redirect()` in data-changing actions.** Create and delete actions return `redirectTo`, and the client navigates with `router.push`.
+  - Why: Next 16.4's action handler (`app-render/action-handler.js`) passes a redirecting action's pending cache invalidations to the internal render of the redirect target, instead of completing them like a normal action response.
+  - Returning a URL keeps one code path for every mutation. The E2E tests warm `/offers` and `/menu?q=…` before creating content and check that the new entry appears.
+  - Sign-in and sign-out still redirect: they change no public data.
+- **Freshness limits, measured.**
+  - A warmed public page shows the change about 0.1–0.2 s after the save (item availability 140 ms, new offer 104 ms).
+  - Edge case: a public page whose render is still being written to the cache at the moment of the save can keep the old copy until its 30 s window ends. That is still within FR-047 (≤30 s).
+  - The tests wait 2 s after warming, so they check the on-demand path. Each public check also waits up to 2 s, because the page content arrives streamed.
+- **Offers.**
+  - Types: COMBO (needs at least one item and a price), DISCOUNT (needs a price), INFO (has no price). This matches the `Offer_price_matches_kind` CHECK.
+  - "Ends" must be after "Starts". Admins type dates in **India time** (`datetime-local`, parsed as UTC+5:30), and dates are stored in UTC.
+  - Items are chosen with quantities 0–20; at most 10 items, no duplicates, and the IDs are re-checked in the transaction.
+  - "Expire now" sets `expiredAt`, and the public site hides the offer at once. "Reactivate" works only while the end date is in the future.
+  - Delete removes the offer and its item links, never the menu items. The slug is generated and stable (ADR-049).
+- **Banners.**
+  - The link must be an internal path (`/offers`, not `//host`, no backslashes) or an `http(s)` URL without credentials. `javascript:`, `data:`, `vbscript:` and control characters are refused (`isSafeHref`, CLAUDE.md §4.4 / §9.5).
+  - Button text and link go together. The optional show window must be in order.
+  - An image is required (Storage).
+- **Café info.**
+  - Instagram and Facebook links must be https on the network's own domain, with a path.
+  - Other rules: WhatsApp is digits only (the DB CHECK); PIN is 6 digits; latitude/longitude are given both or neither, within range, with up to 6 decimals.
+  - The "verified" checkboxes control the placeholder labels on the public site.
+  - Saving sets `isDemo = false`.
+- **Opening hours.** All 7 days are saved in one transaction, as same-day ranges (past-midnight ranges are Q-05). A time picker cannot show 24:00, so a closing time of "00:00" means midnight.
+- **Gallery.**
+  - Upload uses the same validation and re-encoding as item images (ADR-049), stored at `gallery/<uuid>.webp`.
+  - Alt text is required; the caption is optional. Photos can be published or unpublished, moved earlier or later (renumbered in one transaction), and removed (Storage cleanup is best effort). Maximum 200 photos.

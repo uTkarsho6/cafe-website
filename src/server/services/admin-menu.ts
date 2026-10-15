@@ -10,6 +10,7 @@ import {
   type ItemInput,
   type RelationsInput,
 } from '@/lib/validation/admin-menu'
+import { AdminRuleError } from '../admin-errors'
 import { getDb } from '../db'
 
 /**
@@ -18,8 +19,7 @@ import { getDb } from '../db'
  * Functions take only those typed inputs, so no request field can reach Prisma unfiltered.
  */
 
-/** A rule violation the admin can fix; the message is safe to show. */
-export class AdminRuleError extends Error {}
+export { AdminRuleError }
 
 export const ADMIN_PAGE_SIZE = 20
 const MAX_IMAGES_PER_ITEM = 4 // matches the MenuItemImage_sort_range CHECK (0–3)

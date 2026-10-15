@@ -64,3 +64,8 @@ export function itemImagePath(itemId: string): string {
   if (!/^[a-z0-9]{20,40}$/.test(itemId)) throw new Error('invalid item id')
   return `items/${itemId}/${randomUUID()}.webp`
 }
+
+/** Generated path for gallery, banner and offer images (also matches `STORAGE_PATH`). */
+export function mediaPath(folder: 'gallery' | 'banners' | 'offers'): string {
+  return `${folder}/${randomUUID()}.webp`
+}

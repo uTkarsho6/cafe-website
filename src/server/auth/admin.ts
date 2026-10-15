@@ -1,6 +1,9 @@
 import 'server-only'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getDb } from '../db'
+import { ACTIVITY_COOKIE, checkActivity } from './activity'
+import { getRateLimitSalt } from './env'
 import { createSupabaseServerClient } from './supabase'
 
 /**
@@ -45,7 +48,24 @@ export async function getAdminCheck(): Promise<AdminCheck> {
 /** For pages and Server Actions: returns the admin or redirects (never renders admin data). */
 export async function requireAdmin(nextPath = '/admin'): Promise<AdminIdentity> {
   const check = await getAdminCheck()
-  if (check.status === 'admin') return check.admin
+  if (check.status === 'admin') {
+    // Idle / maximum session time, checked here too so the proxy is never the only check
+    // (ADR-052). Read-only: the proxy refreshes the activity cookie.
+    if (!(await activityValid()))
+      redirect(`/admin/login?expired=1&next=${encodeURIComponent(nextPath)}`)
+    return check.admin
+  }
   if (check.status === 'forbidden') redirect('/admin/login?error=forbidden')
   redirect(`/admin/login?next=${encodeURIComponent(nextPath)}`)
+}
+
+async function activityValid(): Promise<boolean> {
+  const supabase = await createSupabaseServerClient()
+  const { data } = await supabase.auth.getClaims()
+  const sessionId = data?.claims?.session_id
+  const value = (await cookies()).get(ACTIVITY_COOKIE)?.value
+  return (
+    checkActivity(value, typeof sessionId === 'string' ? sessionId : undefined, getRateLimitSalt())
+      .result === 'ok'
+  )
 }

@@ -100,4 +100,36 @@ ADR-051. In short:
 
 **If something fails:** send the command output, a screenshot, and any browser console error.
 
+## Round 2 (2026-10-16)
+
+**Team report:** "I visited the admin panel but it didn't ask me to sign in; the previous login was still there."
+
+**Cause:** the Supabase auth cookies lasted 400 days, and the refresh token kept the session alive for weeks.
+
+**Fix (ADR-052):**
+- **Cookies end with the browser.** All admin cookies are now browser-session cookies, so closing the browser signs the admin out.
+- **Idle and maximum time.** A signed activity cookie, bound to the Supabase session, ends the session after **30 minutes without activity** or **12 hours** after sign-in. This holds even if the browser restores old tabs.
+- **What the admin sees.** The session is signed out on the server and the login page says "Your session expired. Please sign in again."
+- **Second check.** `requireAdmin()` checks the cookie again, so the proxy is never the only check.
+
+**Regression tests:**
+- `tests/unit/admin-activity.test.ts` (6 tests): idle, maximum, tampered, foreign-session, wrong-key and future-dated cookies, plus session-only cookie options.
+- A new E2E test in `tests/e2e/admin.spec.ts`, run twice in Chromium and WebKit:
+  - the cookies have no expiry date;
+  - a tampered timestamp ends the session and clears the Supabase cookies;
+  - a missing activity cookie ends the session.
+
+**Re-run of all checks:**
+
+| Check | Result |
+|---|---|
+| `npm run check` | PASS: 300 unit/component tests, build OK |
+| `npm run test:integration` | PASS: 103 |
+| `npm run test:e2e -- --workers=2` (all projects, both engines) | PASS: 281 passed, 0 failed, 25 skipped (Chromium-only baselines in WebKit; Storage uploads NOT RUN) |
+
+**How to check it yourself:**
+1. Sign in at `/admin`.
+2. Quit the browser completely (Cmd+Q), reopen it and go to `/admin`. It asks you to sign in.
+3. Or sign in, leave the tab for more than 30 minutes, then click anything. You are sent to the login page with "Your session expired".
+
 Phase 6 complete. Waiting for your approval or bug reports before starting Phase 7. To approve, reply exactly: approved, go to Phase 7

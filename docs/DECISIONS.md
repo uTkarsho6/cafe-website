@@ -422,3 +422,20 @@ Prisma parameterises `contains`, but it does **not** escape `%`, `_` and `\`. A 
   - Guest text is rendered by React as text (`whitespace-pre-line`), never as HTML. E2E checks that an `<img onerror>` payload is shown literally and never runs.
 - **Retention (SECURITY.md §10).** Rejected feedback is deleted 90 days after it was rejected, by `purgeOldRejectedFeedback()` when an admin opens the moderation page. That is one indexed delete, so no scheduler is needed.
 - **Navigation.** `/feedback` and `/qr` are live in the footer and the mobile "More" sheet; Feedback and QR code are live in the admin sidebar.
+
+## ADR-052 Admin session lifetime: browser session, 30 min idle, 12 h maximum — Accepted (2026-10-16, Phase 6 Round 2)
+- **Team report:** opening `/admin` after a break went straight in without asking for a password. Supabase refresh tokens last weeks, and `@supabase/ssr` stores them in cookies that last 400 days.
+- **Decision:**
+  1. **Browser-session cookies.** Every admin cookie, including the Supabase auth cookies, has no `Max-Age`/`Expires` (`sessionOnly()` in `src/server/auth/activity.ts`), so closing the browser signs the admin out. Cookie deletions keep `Max-Age=0`, so sign-out still works.
+  2. **Server-enforced idle and maximum time.** A browser that restores the previous session would keep session cookies alive, so the server also enforces limits with an HMAC-signed `zorko_admin_activity` cookie (HttpOnly, path `/admin`).
+     - Contents: Supabase `session_id`, sign-in time, last activity.
+     - Signing key: derived from `RATE_LIMIT_SALT`, so there is no new variable to set.
+     - The cookie is bound to the session ID, so one copied from another session is refused.
+     - The proxy refreshes it on every admin request. When it is missing, invalid, idle for more than **30 min**, or older than **12 h**, the proxy signs the Supabase session out and redirects to `/admin/login?expired=1` ("Your session expired").
+  3. **`requireAdmin()` checks it again** (read-only), so the proxy is never the only check (ADR-010).
+- **Login** sets the cookie only after the allowlist check. **Logout** deletes it.
+- **Tests:** unit (idle, maximum, tampering, foreign session, wrong key, future date, cookie options); E2E in Chromium and WebKit:
+  - cookies have no expiry;
+  - an edited timestamp ends the session and clears the Supabase cookies;
+  - a missing activity cookie ends the session.
+- **Trade-off.** An admin who stays idle for 30 minutes must sign in again; unsaved form input is lost. Acceptable for a few admins on a small site. The limits are constants in `activity.ts`.

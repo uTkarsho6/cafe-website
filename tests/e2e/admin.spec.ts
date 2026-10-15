@@ -150,6 +150,41 @@ test.describe('signed-in flows (TC-SEC-002/007/009, TC-E2E-060/061)', () => {
     await expect(page).toHaveURL(/\/admin\/login/)
   })
 
+  test('session ends with the browser, after idle time, or when the activity cookie is tampered with (ADR-052)', async ({
+    page,
+    context,
+  }) => {
+    await signIn(page, ADMIN.email!, ADMIN.password!, '/admin/login?next=/admin')
+    await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible()
+    const cookies = await context.cookies()
+    const auth = cookies.filter((c) => /^sb-.+-auth-token/.test(c.name))
+    const activity = cookies.find((c) => c.name === 'zorko_admin_activity')
+    expect(auth.length).toBeGreaterThan(0)
+    // Browser-session cookies: no expiry date, so closing the browser signs the admin out.
+    for (const c of [...auth, activity!]) expect(c.expires, c.name).toBe(-1)
+    expect(activity).toMatchObject({ httpOnly: true, path: '/admin' })
+
+    // A tampered "last seen" time (trying to dodge the idle timeout) ends the session.
+    const [sid, iat, , mac] = activity!.value.split('.')
+    await context.addCookies([
+      { ...activity!, value: `${sid}.${iat}.${Date.now() + 3_600_000}.${mac}` },
+    ])
+    await page.goto('/admin/menu')
+    await expect(page).toHaveURL(/\/admin\/login\?next=%2Fadmin%2Fmenu&expired=1$/)
+    await expect(page.getByText('Your session expired. Please sign in again.')).toBeVisible()
+    // The Supabase session itself was signed out, not just hidden.
+    expect((await context.cookies()).filter((c) => /^sb-.+-auth-token/.test(c.name))).toEqual([])
+
+    // Same for a missing activity cookie with a still-valid Supabase session.
+    await signIn(page, ADMIN.email!, ADMIN.password!, '/admin/login?next=/admin')
+    await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible()
+    // Background prefetches of sidebar links also refresh the cookie: let them finish first.
+    await page.waitForLoadState('networkidle')
+    await context.clearCookies({ name: 'zorko_admin_activity' })
+    await page.goto('/admin')
+    await expect(page).toHaveURL(/\/admin\/login\?next=%2Fadmin&expired=1$/)
+  })
+
   test('dashboard visual baselines (TC-VIS, admin dashboard)', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'baselines are recorded in Chromium')
     test.skip(process.platform !== 'darwin', 'visual baselines are recorded on macOS')

@@ -1,9 +1,17 @@
 'use server'
 
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { safeAdminNext } from '@/lib/auth/redirect'
+import {
+  ACTIVITY_COOKIE,
+  activityCookieOptions,
+  encodeActivity,
+  sessionIdFromAccessToken,
+} from '@/server/auth/activity'
 import { checkAllowlist, getAdminCheck } from '@/server/auth/admin'
+import { getRateLimitSalt } from '@/server/auth/env'
 import { createSupabaseServerClient } from '@/server/auth/supabase'
 import { recordAudit } from '@/server/audit'
 import { clientIp } from '@/server/client-ip'
@@ -65,6 +73,19 @@ export async function loginAction(_prev: LoginState, form: FormData): Promise<Lo
     return { error: GENERIC, email }
   }
 
+  // Start the idle / maximum session clock (ADR-052), bound to this Supabase session.
+  const sessionId = data.session ? sessionIdFromAccessToken(data.session.access_token) : undefined
+  if (!sessionId) {
+    await supabase.auth.signOut({ scope: 'local' })
+    return { error: GENERIC, email }
+  }
+  const now = Date.now()
+  ;(await cookies()).set(
+    ACTIVITY_COOKIE,
+    encodeActivity(sessionId, now, now, getRateLimitSalt()),
+    activityCookieOptions(),
+  )
+
   await getDb().adminUser.update({
     where: { id: check.admin.id },
     data: { lastLoginAt: new Date() },
@@ -83,6 +104,7 @@ export async function logoutAction(): Promise<void> {
   const check = await getAdminCheck()
   const supabase = await createSupabaseServerClient()
   await supabase.auth.signOut({ scope: 'local' })
+  ;(await cookies()).set(ACTIVITY_COOKIE, '', { ...activityCookieOptions(), maxAge: 0 })
   if (check.status === 'admin') {
     await recordAudit({
       adminUserId: check.admin.id,

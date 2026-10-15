@@ -9,7 +9,7 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Field | Value |
 |---|---|
 | Current phase | **Phase 6 — QR, feedback and supporting features** |
-| Status | **AWAITING TEAM VERIFICATION** |
+| Status | **AWAITING TEAM VERIFICATION** (Round 2: admin session lifetime fixed) |
 | Branch | `phase-6` |
 | Latest report | `docs/PHASE_REPORTS/phase-6.md` |
 | Last updated | 2026-10-16 |
@@ -30,7 +30,7 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 ## Open bugs
 
-None open. Fixed in 5A: TC-SEC-020 false pass (REST URL), see the errata in phase-3.md / phase-4b.md and ADR-048.
+None open. Fixed in Phase 6 Round 2: admin stayed signed in across visits (ADR-052).
 
 ## Deferred backlog (outside current phase scope)
 

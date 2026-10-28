@@ -1,7 +1,8 @@
 /**
  * Imports the REAL Sangli menu and outlet details (prisma/data/sangli-menu.ts, ADR-044).
  * Run: `npm run db:import-menu`. Development project; production only with written team
- * approval (CLAUDE.md rule 14) — refused when NODE_ENV/VERCEL_ENV is production.
+ * approval (CLAUDE.md rule 14): with NODE_ENV/VERCEL_ENV=production it is refused unless
+ * `--production` is added on purpose (DEPLOYMENT.md §14, the same rule as the admin scripts).
  *
  * - Create-only by slug: existing categories/items (including admin edits) are never changed.
  * - Refuses while demo menu items exist, so real and demo items are never mixed
@@ -15,8 +16,10 @@ import { scriptClient } from './client'
 import { sangliCafe, sangliMenu, slugify, stockAlt, stockPath } from './data/sangli-menu'
 
 async function main() {
-  if (process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production') {
-    console.error('Refused: run imports against production only via the Phase 8 procedure.')
+  const isProduction =
+    process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production'
+  if (isProduction && !process.argv.includes('--production')) {
+    console.error('Refused: add --production to import into production (DEPLOYMENT.md §14).')
     process.exit(1)
   }
   const db = scriptClient()

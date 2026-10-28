@@ -1,3 +1,4 @@
+import { FeedbackTagList } from '@/features/feedback/tag-list'
 import type { ReviewDto } from '@/server/services/home'
 
 /** Approved guest feedback only (FR-020): unapproved feedback never reaches this component. */
@@ -10,6 +11,7 @@ export function ReviewList({ reviews }: { reviews: ReviewDto[] }) {
           className="flex flex-col gap-space-sm rounded-2xl bg-surface-container-lowest p-space-lg shadow-sm"
         >
           <blockquote className="text-body-md italic">“{r.message}”</blockquote>
+          <FeedbackTagList tags={r.tags} />
           <p className="mt-auto flex items-center gap-space-sm">
             <span
               aria-hidden="true"

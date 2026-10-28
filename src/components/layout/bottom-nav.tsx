@@ -7,6 +7,7 @@ import { Suspense, useState } from 'react'
 import { Dialog } from '@/components/ui/dialog'
 import { isActivePath, type NavItem } from '@/lib/site/nav'
 import { cn } from '@/lib/utils'
+import { StaffLink } from './staff-link'
 
 const ICONS: Record<string, LucideIcon> = {
   '/': House,
@@ -102,6 +103,7 @@ function BottomNavView({
               </li>
             ))}
           </ul>
+          <StaffLink onNavigate={() => setOpen(false)} />
         </Dialog>
       )}
     </nav>

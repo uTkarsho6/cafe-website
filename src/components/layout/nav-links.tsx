@@ -23,19 +23,21 @@ function NavLinksLive({ items }: { items: NavItem[] }) {
 function NavLinksView({ items, pathname }: { items: NavItem[]; pathname: string }) {
   return (
     <nav aria-label="Main" className="hidden xl:block">
-      <ul className="flex items-center gap-1 rounded-full bg-surface-container-low p-1">
+      <ul className="flex items-center gap-1">
         {items.map((item) => {
           const active = isActivePath(pathname, item.href)
           return (
             <li key={item.href}>
+              {/* Current page: orange text and underline bar on the black header (6.97:1, ADR-059). */}
               <Link
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'inline-flex min-h-10 items-center rounded-full px-space-md text-label-lg whitespace-nowrap transition-colors',
+                  'relative inline-flex min-h-12 items-center px-space-sm font-heading text-label-lg whitespace-nowrap transition-colors',
+                  'after:absolute after:inset-x-space-sm after:bottom-1 after:h-[3px] after:rounded-full after:bg-brand-orange after:transition-transform motion-reduce:after:transition-none',
                   active
-                    ? 'bg-primary-container font-bold text-on-primary-container'
-                    : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface',
+                    ? 'font-bold text-brand-orange after:scale-x-100'
+                    : 'text-brand-ink-soft after:scale-x-0 hover:text-white hover:after:scale-x-100',
                 )}
               >
                 {item.label}

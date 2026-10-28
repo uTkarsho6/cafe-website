@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import './zod-setup'
 import { MAX_PRICE_PAISE, idSchema, rupeesToPaise } from './admin-menu'
 import { cleanText } from './public'
 

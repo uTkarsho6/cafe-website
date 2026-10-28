@@ -8,11 +8,11 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 | Field | Value |
 |---|---|
-| Current phase | **Phase 7 — Security hardening and full regression** |
-| Status | **IN PROGRESS** |
-| Branch | `phase-7` |
-| Latest report | `docs/PHASE_REPORTS/phase-6.md` |
-| Last updated | 2026-10-16 |
+| Current phase | **Phase 7 — Round 2A (team-requested changes: UI port from the unofficial copy)** |
+| Status | **AWAITING TEAM VERIFICATION** (2B and 2C committed `677fc8e`; 2D–2F done, uncommitted) |
+| Branch | `phase-7-round2` (from `phase-7`) |
+| Latest report | `docs/PHASE_REPORTS/phase-7.md` → "Round 2F" |
+| Last updated | 2026-10-28 |
 
 ## Approved phases
 
@@ -29,6 +29,19 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Phase 5C | 2026-10-16 | "approved, go to Phase 6" |
 | Phase 6 | 2026-10-16 | "approved, go to Phase 7" |
 
+## Team-requested changes (Phase 7 Round 2, 2026-10-28)
+
+The team asked to keep this project and bring over the UI changes from an unofficial copy (Downloads folder), securely, in rounds verified one at a time:
+- **2A:** Next.js 16.4.3 security upgrade, official logo, 1480 px page width, "Staff portal" link, outlet gallery photos (ADR-054…057).
+- **2A fixes:** admin login (invalid Supabase key from the copy, admin reset), gallery repair + brand photos, footer logo (ADR-058).
+- **2B:** brand redesign of header and footer in the zorko.in style, site-wide (ADR-059). Inserted at the team's request on 2026-10-28.
+- **2C:** admin menu quick editing (inline ₹ price, quick flags), table QR cards 1–20 with bulk print and PNG/SVG (ADR-061). Done 2026-10-28; Ice Tea category photo added the same day.
+- **2D:** feedback quick highlights stored as an enum array (ADR-062, migration `20261028120000_feedback_tags`, applied to the dev database), full regression. Done 2026-10-28, uncommitted.
+- **2E:** final homepage polish (ADR-063): no eyebrow dashes, authentic ZORKO hero photo, lighter icons, Popular Picks photos edge to edge. Done 2026-10-29, uncommitted.
+- **2F:** hero refinement (ADR-064): tighter burger crop, 6/6 columns, no hero hours chip, count badge on the frame edge; team's test review deleted from the dev database. Done 2026-10-29, uncommitted.
+- **2G:** team-supplied hero burger photo (ADR-065), portrait 4:5 frame. Done 2026-10-29, uncommitted. Open: photo looks non-veg against the "100% VEG" badge; licence unknown.
+- **Commits:** only with the team's explicit permission (team instruction, 2026-10-28). 2A is commit `ad65c16`; 2A fixes, 2B and 2C (incl. signed-in admin verification) committed on 2026-10-28 with permission ("yes procedd and commit this").
+
 ## Open bugs
 
 None open. Fixed in Phase 6 Round 2: admin stayed signed in across visits (ADR-052).
@@ -38,10 +51,10 @@ None open. Fixed in Phase 6 Round 2: admin stayed signed in across visits (ADR-0
 - Loyalty and Reward Program: future work (synopsis methodology lists it as future expansion). Confirm with guide.
 - Online ordering, payment, customer accounts, delivery/order tracking: future work (synopsis + CLAUDE.md 3.0).
 - Secret scanning: gitleaks runs via Docker (`ghcr.io/gitleaks/gitleaks`); CI uses gitleaks-action once a GitHub remote exists (Q-16).
-- Re-check dev-only advisory `braces` ≤3.0.3 each phase; adopt the patched release when published (ADR-032).
+- Re-check dev-only advisory `braces` ≤3.0.3 (still no patched release on 2026-10-16); adopt it when published (ADR-032, R-12).
 - Team machine: `~/.npm` cache has root-owned files; fix with `sudo chown -R $(whoami) ~/.npm` (ADR-030).
 - Visual regression baselines start in Phase 4A.
-- Finalise CSP script policy in Phase 7 (ADR-016).
+- CSP keeps `'unsafe-inline'` scripts (R-07, ADR-053); revisit if Next ships a static-compatible strict CSP.
 - Remove the `deepmerge-ts` / `mysql2` npm overrides once Prisma ships patched dependencies (ADR-036, review in Phase 7).
 - Page-level caching + on-demand revalidation (≤30 s freshness) is designed with the pages in 4A/5B (ADR-035).
 - Real menu, prices, address, phone and map are in (ADR-044, ADR-046). Opening hours (Q-05), real offers (Q-07), WhatsApp/email/social (Q-03/Q-04) are still placeholders.
@@ -49,7 +62,8 @@ None open. Fixed in Phase 6 Round 2: admin stayed signed in across visits (ADR-0
 - Structured data (JSON-LD, FR-023) once hours and the remaining café facts are confirmed (ADR-047).
 - Gallery lightbox E2E with real uploaded photos once Storage is set up.
 - New admin actions: use `expirePublic()` from `action-utils.ts` and return `redirectTo` instead of calling `redirect()` (ADR-050).
-- Real Storage uploads (items, banners, gallery, offers) are NOT RUN in E2E until `SUPABASE_SECRET_KEY` and the `public-media` bucket exist (DEPLOYMENT §7).
+- ~~Real Storage uploads NOT RUN in E2E~~ Done 2026-10-28: `SUPABASE_SECRET_KEY` and `public-media` exist; item, banner and gallery uploads PASS.
+- `getAdminCheck()` (`src/server/auth/admin.ts`) treats a failed `getUser()` call (Supabase unreachable) as signed out without logging it. Failing closed is correct, but log non-session errors like the login action does (`admin.login_auth_service_error`, status only) so an outage is not mistaken for a logout. Seen in Round 2D E2E on a flaky network.
 
 ## Assumptions waiting for team confirmation
 

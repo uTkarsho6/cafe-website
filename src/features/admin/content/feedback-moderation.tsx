@@ -5,6 +5,8 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/dialog'
+import { FeedbackTagList } from '@/features/feedback/tag-list'
+import type { FeedbackTagKey } from '@/lib/validation/feedback'
 import { deleteFeedbackAction, moderateFeedbackAction } from '../feedback-actions'
 import { useActionToast } from '../menu/item-controls'
 
@@ -12,6 +14,7 @@ export type FeedbackRow = {
   id: string
   displayName: string | null
   message: string
+  tags: FeedbackTagKey[]
   status: string
   isDemo: boolean
   createdAt: string
@@ -57,6 +60,7 @@ export function FeedbackModeration({ items }: { items: FeedbackRow[] }) {
               )}
             </div>
             <p className="text-body-md break-words whitespace-pre-line">{f.message}</p>
+            <FeedbackTagList tags={f.tags} />
             <div className="flex flex-wrap gap-space-sm">
               {f.status !== 'APPROVED' && (
                 <Button

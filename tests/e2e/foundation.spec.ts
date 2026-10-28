@@ -35,7 +35,7 @@ test.describe('Foundation (Phase 2)', () => {
     expect(errors).toEqual([])
   })
 
-  test('fonts: headings use Sora, body uses Plus Jakarta Sans (self-hosted)', async ({ page }) => {
+  test('fonts: headings use Inter, body uses DM Sans (self-hosted, ADR-060)', async ({ page }) => {
     const external: string[] = []
     page.on('request', (r) => {
       if (!r.url().startsWith('http://localhost')) external.push(r.url())
@@ -46,8 +46,8 @@ test.describe('Foundation (Phase 2)', () => {
       .getByRole('heading', { level: 1 })
       .evaluate((el) => getComputedStyle(el).fontFamily)
     const bodyFont = await page.locator('body').evaluate((el) => getComputedStyle(el).fontFamily)
-    expect(h1Font.toLowerCase()).toContain('sora')
-    expect(bodyFont.toLowerCase()).toContain('jakarta')
+    expect(h1Font.toLowerCase()).toContain('inter')
+    expect(bodyFont.toLowerCase()).toContain('dm sans')
     expect(
       await page.evaluate(
         () =>

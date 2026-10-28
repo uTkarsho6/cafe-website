@@ -7,6 +7,7 @@ import {
   type AddOnGroupsInput,
   type AdminItemQuery,
   type CategoryInput,
+  type ItemFlag,
   type ItemInput,
   type RelationsInput,
 } from '@/lib/validation/admin-menu'
@@ -31,6 +32,7 @@ export type AdminItemRow = {
   slug: string
   name: string
   priceLabel: string
+  pricePaise: number
   categoryName: string
   isAvailable: boolean
   isPublished: boolean
@@ -78,6 +80,7 @@ export async function listAdminItems(query: AdminItemQuery) {
   ])
   const items: AdminItemRow[] = rows.map(({ pricePaise, category, updatedAt, ...r }) => ({
     ...r,
+    pricePaise,
     priceLabel: formatRupees(pricePaise),
     categoryName: category.name,
     updatedAt: updatedAt.toISOString(),
@@ -187,6 +190,20 @@ export async function updateItem(id: string, input: ItemInput) {
 
 export async function setItemAvailability(id: string, isAvailable: boolean) {
   const res = await getDb().menuItem.updateMany({ where: { id }, data: { isAvailable } })
+  if (res.count === 0) throw new AdminRuleError('This item no longer exists.')
+  return getDb().menuItem.findUniqueOrThrow({ where: { id }, select: { slug: true, name: true } })
+}
+
+/** Inline price edit (Round 2C). `pricePaise` is already validated (> 0, ≤ MAX_PRICE_PAISE). */
+export async function setItemPrice(id: string, pricePaise: number) {
+  const res = await getDb().menuItem.updateMany({ where: { id }, data: { pricePaise } })
+  if (res.count === 0) throw new AdminRuleError('This item no longer exists.')
+  return getDb().menuItem.findUniqueOrThrow({ where: { id }, select: { slug: true, name: true } })
+}
+
+/** One-click label toggle (Round 2C). `flag` comes from a fixed enum, never from free text. */
+export async function setItemFlag(id: string, flag: ItemFlag, value: boolean) {
+  const res = await getDb().menuItem.updateMany({ where: { id }, data: { [flag]: value } })
   if (res.count === 0) throw new AdminRuleError('This item no longer exists.')
   return getDb().menuItem.findUniqueOrThrow({ where: { id }, select: { slug: true, name: true } })
 }

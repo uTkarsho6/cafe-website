@@ -3,14 +3,17 @@ import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Spinner } from './spinner'
 
-// UI_SPEC §7.1 — classes from design/stitch code.html; primary hover per ADR-004.
+// UI_SPEC §7.1, restyled in ADR-060: primary = ZORKO orange with near-black text (white on this
+// orange fails WCAG AA); secondary = white with a subtle border and brown text.
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-full whitespace-nowrap transition motion-safe:active:scale-95 disabled:pointer-events-none aria-disabled:pointer-events-none'
+  'inline-flex items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-colors motion-safe:active:scale-[0.98] disabled:pointer-events-none aria-disabled:pointer-events-none'
 
 const variants = {
-  primary: 'bg-primary text-on-primary shadow-lg shadow-primary/25 hover:bg-primary-container',
-  secondary: 'bg-surface-container text-primary hover:bg-surface-container-high',
-  ghost: 'bg-surface-container-low text-primary hover:bg-primary hover:text-on-primary',
+  primary: 'bg-cta text-on-cta shadow-sm hover:bg-cta-hover',
+  secondary:
+    'border border-border bg-surface-container-lowest text-primary hover:border-primary/40 hover:bg-surface-warm-cream',
+  ghost:
+    'border border-border bg-surface-container-lowest text-primary group-hover:border-cta hover:border-cta',
   inverse: 'bg-surface-container-lowest text-primary shadow-md hover:bg-surface-container-low',
   whatsapp: 'bg-veg-pure-green text-on-tertiary hover:opacity-90',
   destructive: 'bg-error text-on-error hover:opacity-90',

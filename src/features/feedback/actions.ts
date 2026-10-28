@@ -23,7 +23,11 @@ export async function submitFeedbackAction(
   _prev: FeedbackState,
   form: FormData,
 ): Promise<FeedbackState> {
-  const parsed = feedbackInputSchema.safeParse(Object.fromEntries(form))
+  // getAll: the quick-highlight checkboxes send one `tags` entry each.
+  const parsed = feedbackInputSchema.safeParse({
+    ...Object.fromEntries(form),
+    tags: form.getAll('tags'),
+  })
   if (!parsed.success) {
     const errors: Record<string, string> = {}
     for (const issue of parsed.error.issues) errors[String(issue.path[0])] ??= issue.message

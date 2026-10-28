@@ -399,6 +399,40 @@ test.describe('gallery on mobile', () => {
   })
 })
 
+test.describe('branding and staff entry (TC-E2E-092, ADR-055)', () => {
+  test('header shows the official logo; footer links to staff sign-in', async ({ page }) => {
+    await gotoReady(page, '/')
+    const home = page.getByRole('banner').getByRole('link', { name: 'ZORKO Sangli — home' })
+    await expect(home.locator('img')).toHaveAttribute('src', /logo\.webp/)
+    expect(
+      await home.locator('img').evaluate((i: HTMLImageElement) => i.naturalWidth),
+    ).toBeGreaterThan(0)
+    const footerLogo = page.getByRole('contentinfo').getByRole('img', { name: /ZORKO/ })
+    await footerLogo.scrollIntoViewIfNeeded()
+    // next/image lazy-loads below the fold: wait for the load instead of reading it at once.
+    await expect
+      .poll(() => footerLogo.evaluate((i: HTMLImageElement) => (i.complete ? i.naturalWidth : 0)))
+      .toBeGreaterThan(0)
+    await page.getByRole('contentinfo').getByRole('link', { name: 'Staff portal' }).click()
+    await expect(page).toHaveURL(/\/admin\/login$/)
+  })
+  test('phone "More" sheet has the staff link, and it only opens sign-in', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await gotoReady(page, '/')
+    await page
+      .getByRole('navigation', { name: 'Bottom' })
+      .getByRole('button', { name: 'More' })
+      .click()
+    await page
+      .getByRole('dialog', { name: 'More' })
+      .getByRole('link', { name: 'Staff portal' })
+      .click()
+    // Without a session the admin stays closed: the sign-in form is shown.
+    await expect(page).toHaveURL(/\/admin\/login$/)
+    await expect(page.getByLabel('Password')).toBeVisible()
+  })
+})
+
 test.describe('about & contact (TC-E2E-041)', () => {
   test('shows hours with today highlighted and labels unconfirmed details', async ({ page }) => {
     await gotoReady(page, '/')

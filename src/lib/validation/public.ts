@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import './zod-setup'
 
 /**
  * Query/param schemas for the public read API (TRD §6). Shared with client code later (no server

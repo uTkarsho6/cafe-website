@@ -63,13 +63,23 @@ export function VegMark({
  * "100% VEG" claim pill. Renders only when the café has confirmed the outlet is fully
  * vegetarian (CafeInformation.isPureVegConfirmed, open question Q-06).
  */
-export function PureVegPill({ confirmed, className }: { confirmed: boolean; className?: string }) {
+export function PureVegPill({
+  confirmed,
+  className,
+  tone = 'light',
+}: {
+  confirmed: boolean
+  className?: string
+  /** `dark` for black brand surfaces (header bar, footer): white pill, 6.75:1 (ADR-059). */
+  tone?: 'light' | 'dark'
+}) {
   if (!confirmed) return null
   return (
     <span
       className={cn(
         // Text uses tertiary (#006947): DESIGN.md's #15803D on this tint fails AA (UI_SPEC V-12).
-        'inline-flex items-center gap-1.5 rounded-full bg-[rgba(16,185,129,0.12)] px-2.5 py-1 text-label-sm text-tertiary',
+        'inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-label-sm whitespace-nowrap text-tertiary',
+        tone === 'dark' ? 'bg-white' : 'bg-[rgba(16,185,129,0.12)]',
         className,
       )}
     >

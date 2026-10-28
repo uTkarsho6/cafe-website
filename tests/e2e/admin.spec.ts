@@ -46,8 +46,11 @@ test.describe('admin access without signing in (TC-SEC-001, TC-E2E-060)', () => 
 
   test('wrong credentials show one generic message (no account enumeration)', async ({ page }) => {
     await signIn(page, 'nobody-here@example.invalid', 'wrong-password-123')
+    // The answer needs a round trip to Supabase Auth; under heavy local load WebKit exceeded the
+    // default 5 s twice (Round 2A/2B). Same assertion, longer wait.
     await expect(page.getByRole('main').getByRole('alert')).toHaveText(
       'Email or password is incorrect.',
+      { timeout: 15_000 },
     )
     await expect(page).toHaveURL(/\/admin\/login/)
     await expect(page.getByLabel('Password')).toHaveValue('')
@@ -165,6 +168,9 @@ test.describe('signed-in flows (TC-SEC-002/007/009, TC-E2E-060/061)', () => {
     expect(activity).toMatchObject({ httpOnly: true, path: '/admin' })
 
     // A tampered "last seen" time (trying to dodge the idle timeout) ends the session.
+    // Leave the admin page first: in-flight background prefetches would otherwise refresh the
+    // cookie (from the still-valid value they were sent with) right after we tamper with it.
+    await page.goto('about:blank')
     const [sid, iat, , mac] = activity!.value.split('.')
     await context.addCookies([
       { ...activity!, value: `${sid}.${iat}.${Date.now() + 3_600_000}.${mac}` },
@@ -178,8 +184,7 @@ test.describe('signed-in flows (TC-SEC-002/007/009, TC-E2E-060/061)', () => {
     // Same for a missing activity cookie with a still-valid Supabase session.
     await signIn(page, ADMIN.email!, ADMIN.password!, '/admin/login?next=/admin')
     await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible()
-    // Background prefetches of sidebar links also refresh the cookie: let them finish first.
-    await page.waitForLoadState('networkidle')
+    await page.goto('about:blank') // no admin requests in flight (see above)
     await context.clearCookies({ name: 'zorko_admin_activity' })
     await page.goto('/admin')
     await expect(page).toHaveURL(/\/admin\/login\?next=%2Fadmin&expired=1$/)

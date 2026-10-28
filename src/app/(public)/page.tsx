@@ -21,6 +21,7 @@ import { Suspense } from 'react'
 import { buttonClasses, LinkButton } from '@/components/ui/button'
 import { Container } from '@/components/ui/container'
 import { SectionHeading } from '@/components/ui/section-heading'
+import { categoryPhoto } from '@/features/menu/category-photos'
 import { Skeleton } from '@/components/ui/skeleton'
 import { shortAddress } from '@/components/layout/site-header'
 import { DAY_NAMES, hoursLabel, todayHours } from '@/features/cafe/hours'
@@ -48,10 +49,15 @@ export const metadata: Metadata = pageMetadata({
 })
 
 /** Homepage (UI_SPEC §12.1). Sections without real data are left out rather than faked. */
-/** Licence and credit: src/lib/site/image-credits.json (shown on /credits). */
+/**
+ * Hero photo supplied by the team (2026-10-29, ADR-065): portrait 736×1308, re-encoded to WebP
+ * without metadata. It is illustrative, not a specific ZORKO dish, so the alt text names no menu
+ * item or price. An admin banner image still takes precedence.
+ */
 const HERO_FALLBACK = {
-  url: '/stock/burger-tikki.webp',
-  altText: 'A veg burger with cheese, tomato and lettuce (illustrative photo)',
+  url: '/photos/hero-burger.webp',
+  altText:
+    'Tall stacked burger with melted cheese, grilled onions and tomato on a wooden board (illustrative photo)',
 }
 
 export default function HomePage() {
@@ -108,7 +114,7 @@ async function HomeContent() {
 
   return (
     <>
-      <Hero cafe={cafe} itemCount={extras.itemCount} heroImage={heroImage} />
+      <Hero itemCount={extras.itemCount} heroImage={heroImage} />
       <FactsStrip cafe={cafe} minComboPaise={minCombo} />
 
       {extras.banners.length > 0 && (
@@ -152,8 +158,9 @@ async function HomeContent() {
         </section>
       )}
 
-      {categories.length > 0 && (
-        <section className="bg-surface py-space-2xl">
+      {categories.some((c) => c.itemCount > 0) && (
+        // Extra top space so the heading does not sit tight under the black strip (ADR-064).
+        <section className="bg-surface pt-space-2xl pb-space-2xl md:pt-[4.5rem]">
           <Container>
             <SectionHeading
               eyebrow="Explore menu categories"
@@ -167,30 +174,52 @@ async function HomeContent() {
                 </Link>
               }
             />
-            <ul className="grid grid-cols-2 gap-space-sm sm:grid-cols-3 md:gap-space-md lg:grid-cols-6">
-              {categories.map((c) => (
-                <li key={c.slug}>
-                  <Link
-                    href={`/menu?category=${c.slug}`}
-                    className="flex h-full flex-col items-center gap-space-sm rounded-2xl bg-surface-container-lowest p-space-md text-center shadow-sm transition hover:shadow-md motion-safe:hover:-translate-y-1"
-                  >
-                    <span className="flex size-16 items-center justify-center rounded-full bg-primary-fixed text-primary">
-                      <CategoryIcon iconKey={c.iconKey} className="size-7" />
-                    </span>
-                    <span className="text-label-lg text-on-surface">{c.name}</span>
-                    <span className="text-body-sm text-on-surface-variant">
-                      {c.itemCount} {c.itemCount === 1 ? 'item' : 'items'}
-                    </span>
-                  </Link>
-                </li>
-              ))}
+            <ul className="grid grid-cols-2 gap-space-sm sm:grid-cols-3 md:grid-cols-4 md:gap-space-md lg:grid-cols-6">
+              {/* Categories with no visible items are skipped here so a card never leads to an
+                  empty list; the menu page still lists every category. */}
+              {categories
+                .filter((c) => c.itemCount > 0)
+                .map((c) => {
+                  const photo = categoryPhoto(c.slug)
+                  return (
+                    <li key={c.slug}>
+                      {/* Whole card is the link (ADR-060): photo (or icon fallback), name, count. */}
+                      <Link
+                        href={`/menu?category=${c.slug}`}
+                        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface-container-lowest transition-colors hover:border-cta"
+                      >
+                        <span className="relative block aspect-[4/3] overflow-hidden bg-surface-container-low">
+                          {photo ? (
+                            <Image
+                              src={photo}
+                              alt=""
+                              fill
+                              sizes="(min-width: 1024px) 220px, (min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
+                              className="object-cover transition-transform duration-300 motion-safe:group-hover:scale-105"
+                            />
+                          ) : (
+                            <span className="flex size-full items-center justify-center text-primary">
+                              <CategoryIcon iconKey={c.iconKey} className="size-9" />
+                            </span>
+                          )}
+                        </span>
+                        <span className="flex flex-col gap-0.5 px-space-md py-space-sm">
+                          <span className="text-label-lg text-on-surface">{c.name}</span>
+                          <span className="text-body-sm text-on-surface-variant">
+                            {c.itemCount} {c.itemCount === 1 ? 'item' : 'items'}
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  )
+                })}
             </ul>
           </Container>
         </section>
       )}
 
       {trending.items.length > 0 && (
-        <section className="bg-surface-warm-cream py-space-2xl">
+        <section className="border-y border-border bg-surface-warm-cream py-space-2xl md:py-[4.5rem]">
           <Container>
             <SectionHeading
               eyebrow="Trending & best sellers"
@@ -233,7 +262,7 @@ async function HomeContent() {
           <Container>
             <SectionHeading
               eyebrow="Gallery"
-              title="Inside ZORKO Sangli"
+              title="A Look Around ZORKO"
               action={
                 isLive('/gallery') ? (
                   <Link
@@ -268,15 +297,12 @@ async function HomeContent() {
 }
 
 function Hero({
-  cafe,
   itemCount,
   heroImage,
 }: {
-  cafe: CafeDto | null
   itemCount: number
   heroImage: { url: string; altText: string } | null
 }) {
-  const today = cafe ? todayHours(cafe) : null
   const qrLive = isLive('/qr')
   const tiles = [
     qrLive
@@ -284,107 +310,71 @@ function Hero({
           icon: QrCode,
           title: 'QR Digital Menu',
           text: 'Scan to browse',
-          tint: 'bg-smart-cyan/10 text-[#00658d]',
         }
       : {
           icon: Search,
           title: 'Digital Menu',
           text: 'Search & filter',
-          tint: 'bg-smart-cyan/10 text-[#00658d]',
         },
     {
       icon: GraduationCap,
       title: 'Student Zone',
       text: 'Offers for students',
-      tint: 'bg-mustard-gold/10 text-secondary',
     },
     {
       icon: Zap,
       title: 'Live Availability',
       text: "See what's in stock",
-      tint: 'bg-veg-pure-green/10 text-tertiary',
     },
   ]
+  // Today's hours are not repeated here: the top info bar, the "At a glance" strip, Visit us and
+  // the footer already show them with the "(to be confirmed)" note (ADR-064).
   return (
-    <section className="relative overflow-hidden bg-surface-container-low pt-space-xl pb-space-2xl">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-32 -right-32 size-96 rounded-full bg-primary-container/10 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-10 size-72 rounded-full bg-secondary-container/15 blur-2xl"
-      />
-      <Container className="relative grid items-center gap-space-xl lg:grid-cols-12">
-        <div className="flex flex-col items-start gap-space-lg lg:col-span-7">
-          {today && (
-            <p className="inline-flex items-center gap-1 rounded-full bg-surface-container-high px-space-md py-1 text-label-md text-on-surface-variant">
-              <Clock aria-hidden="true" className="size-4 text-tertiary" />
-              {today.label ? `Open today ${today.label}` : 'Closed today'}
-              {!today.verified && ' (to be confirmed)'}
-            </p>
-          )}
-          <div className="flex flex-col gap-space-sm">
-            <p className="flex items-center gap-2 text-label-lg tracking-widest text-primary uppercase">
-              <span aria-hidden="true" className="h-[2px] w-8 bg-primary" />
-              ZORKO Sangli
-            </p>
-            <h1 className="text-display-hero-mobile text-on-surface md:text-display-hero">
-              Hungry? Bite Into Joy at <span className="text-primary">ZORKO Sangli!</span>
-            </h1>
-            <p className="max-w-xl text-body-lg leading-relaxed text-on-surface-variant">
-              Browse the full menu, see what&apos;s available right now and check the latest offers
-              and combos — all in one place.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-space-md">
-            <LinkButton
-              href="/menu"
-              iconEnd={<UtensilsCrossed aria-hidden="true" className="size-[18px]" />}
-            >
-              View Menu
-            </LinkButton>
+    <section className="bg-surface py-space-xl md:py-space-2xl">
+      <Container className="grid items-center gap-space-xl lg:grid-cols-2 lg:gap-space-2xl">
+        <div className="flex flex-col items-start">
+          <p className="text-label-md tracking-[0.14em] text-primary uppercase">ZORKO Sangli</p>
+          <h1 className="mt-space-sm max-w-[17ch] text-display-hero-mobile text-balance text-on-surface md:text-display-hero">
+            Hungry? Bite Into Joy at <span className="text-primary">ZORKO Sangli!</span>
+          </h1>
+          <p className="mt-space-md max-w-xl text-body-lg text-on-surface-variant">
+            Browse the full menu, see what&apos;s available right now and check the latest offers
+            and combos — all in one place.
+          </p>
+          <div className="mt-space-lg flex flex-wrap items-center gap-space-sm sm:gap-space-md">
+            <LinkButton href="/menu">View Menu</LinkButton>
             {isLive('/offers') && (
-              <LinkButton
-                href="/offers"
-                variant="secondary"
-                icon={<Tag aria-hidden="true" className="size-[18px]" />}
-              >
+              <LinkButton href="/offers" variant="secondary">
                 View Offers
               </LinkButton>
             )}
           </div>
-          <ul className="grid w-full max-w-lg grid-cols-1 gap-space-sm sm:grid-cols-3">
+          {/* Plain feature list (ADR-063): one small icon each, separated by a hairline, no boxes. */}
+          <ul className="mt-space-xl grid w-full max-w-xl grid-cols-1 gap-space-md border-t border-border pt-space-lg sm:grid-cols-3">
             {tiles.map((t) => (
-              <li
-                key={t.title}
-                className="flex items-center gap-2.5 rounded-xl bg-surface-container/70 p-space-sm"
-              >
-                <span
-                  className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${t.tint}`}
-                >
-                  <t.icon aria-hidden="true" className="size-5" />
-                </span>
+              <li key={t.title} className="flex items-start gap-2">
+                <t.icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />
                 <span className="min-w-0">
-                  <span className="block text-label-sm text-on-surface uppercase">{t.title}</span>
-                  <span className="block truncate text-body-sm text-on-surface-variant">
-                    {t.text}
-                  </span>
+                  <span className="block text-label-md text-on-surface">{t.title}</span>
+                  <span className="block text-body-sm text-on-surface-variant">{t.text}</span>
                 </span>
               </li>
             ))}
           </ul>
         </div>
-        <div className="relative flex justify-center lg:col-span-5">
-          <div className="relative aspect-[4/5] w-full max-w-[460px] overflow-hidden rounded-3xl bg-surface-container shadow-2xl">
+        {/* pb leaves room for the count label, which sits on the frame's bottom edge. Portrait 4:5
+            frame for the portrait photo; object-position keeps the whole burger stack (bun to
+            board) in view and trims mostly background above it (ADR-065). */}
+        <div className="relative mx-auto w-full max-w-[400px] pb-space-lg md:max-w-[440px] lg:mr-0 lg:max-w-[480px] xl:max-w-[520px]">
+          <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl bg-brand-ink">
             {heroImage ? (
               <Image
                 src={heroImage.url}
                 alt={heroImage.altText}
                 fill
                 priority
-                sizes="(min-width: 1024px) 460px, 90vw"
-                className="object-cover"
+                sizes="(min-width: 1280px) 520px, (min-width: 1024px) 480px, (min-width: 768px) 440px, 92vw"
+                className="object-cover object-[50%_40%]"
               />
             ) : (
               <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary to-primary-container text-on-primary">
@@ -392,19 +382,13 @@ function Hero({
               </div>
             )}
           </div>
+          {/* Real count of published items, on the frame's bottom edge so it never covers the food. */}
           {itemCount > 0 && (
-            <p className="absolute -top-4 left-0 flex items-center gap-3 rounded-2xl bg-surface-container-lowest px-space-md py-space-sm shadow-xl sm:left-2">
-              <span className="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary">
-                <UtensilsCrossed aria-hidden="true" className="size-6" />
+            <p className="absolute bottom-0 left-space-lg flex items-baseline gap-2 rounded-xl border border-border bg-surface-container-lowest px-space-md py-space-sm shadow-sm">
+              <span className="font-heading text-headline-md leading-none font-extrabold text-on-surface">
+                {itemCount}
               </span>
-              <span className="flex flex-col">
-                <span className="font-heading text-title-price leading-none font-extrabold">
-                  {itemCount}
-                </span>
-                <span className="text-label-sm text-on-surface-variant uppercase">
-                  items on the menu
-                </span>
-              </span>
+              <span className="text-label-md text-on-surface-variant">items on the menu</span>
             </p>
           )}
         </div>
@@ -438,17 +422,19 @@ function FactsStrip({
     },
   ].filter(Boolean) as { icon: typeof Clock; title: string; text: string }[]
   return (
-    <section aria-label="At a glance" className="bg-primary py-space-lg text-on-primary">
+    // Black brand band with an orange rule, matching the header bar and footer (ADR-059).
+    <section
+      aria-label="At a glance"
+      className="border-y-[3px] border-brand-orange bg-brand-ink py-space-lg text-white"
+    >
       <Container>
         <ul className="grid grid-cols-1 gap-space-md sm:grid-cols-2 lg:grid-cols-4">
           {facts.map((f) => (
-            <li key={f.title} className="flex items-center gap-space-sm">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-on-primary/15">
-                <f.icon aria-hidden="true" className="size-5" />
-              </span>
+            <li key={f.title} className="flex items-start gap-space-sm">
+              <f.icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-orange" />
               <span className="flex min-w-0 flex-col">
                 <span className="text-label-lg">{f.title}</span>
-                <span className="truncate text-body-sm">{f.text}</span>
+                <span className="truncate text-body-sm text-brand-ink-soft">{f.text}</span>
               </span>
             </li>
           ))}

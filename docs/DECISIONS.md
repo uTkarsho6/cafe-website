@@ -14,7 +14,7 @@ Format: ID · decision · alternatives · rationale · consequences. Status: **A
 
 | Package | Pinned | Note |
 |---|---|---|
-| next / eslint-config-next | 16.4.0 | Template default `cacheComponents: true`, `partialPrefetching: true`, Turbopack + `@tailwindcss/turbopack` (no PostCSS) |
+| next / eslint-config-next | 16.4.3 (was 16.4.0; security upgrade, ADR-057) | Template default `cacheComponents: true`, `partialPrefetching: true`, Turbopack + `@tailwindcss/turbopack` (no PostCSS) |
 | react / react-dom | 19.3.0 | |
 | typescript | **5.9.3** | Official Next 16.4 template uses `^5`; TypeScript 7 **not** used |
 | eslint | **9.39.5** | Template uses `^9`; ESLint 10 not used |
@@ -439,3 +439,107 @@ Prisma parameterises `contains`, but it does **not** escape `%`, `_` and `\`. A 
   - an edited timestamp ends the session and clears the Supabase cookies;
   - a missing activity cookie ends the session.
 - **Trade-off.** An admin who stays idle for 30 minutes must sign in again; unsaved form input is lost. Acceptable for a few admins on a small site. The limits are constants in `activity.ts`.
+
+## ADR-053 Phase 7 hardening decisions — Accepted (2026-10-16)
+- **CSP script policy (closes ADR-016).** `'unsafe-inline'` stays in `script-src`; it is accepted as residual risk R-07.
+  - **Tested option 1, experimental SRI with `script-src 'self'`:** the build works, but Next 16 streams page data through inline `<script>` tags, so the policy blocks 24 scripts on `/` and pages stop hydrating.
+  - **Option 2, nonces:** these force every page to render dynamically and disable PPR/caching (Next CSP guide), which conflicts with ADR-013.
+  - **What remains in the policy:** `'unsafe-eval'` is not allowed in production, plus `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, and `img-src` / `connect-src` limited to the app and the Supabase host.
+  - **Main XSS defence:** React escaping, plus the lint ban on `dangerouslySetInnerHTML`, verified with stored-XSS E2E tests.
+- **Zod jitless.** Zod 4 probes `new Function()` the first time it runs. In the browser that is a CSP violation (found by Lighthouse on `/menu` and `/feedback`). `z.config({ jitless: true })` runs in `src/lib/validation/zod-setup.ts`, which every validation module imports first.
+- **Metadata streaming.** Next 16 streams metadata to browsers and to Googlebot (Google runs JavaScript), but sends it blocking to Bingbot, Facebook, WhatsApp, Twitter, Slack and others (its default list). Lighthouse therefore reports "no meta description" on the dish page, a known false negative: the tag is in the HTML, and in `<head>` for the bots that need it. Default kept, as Next recommends.
+- **Favicon:** `src/app/icon.svg` (the header "Z" mark). It removes a 404 on every page.
+- **Static authorization guard:** `tests/unit/authz-guard.test.ts` fails if an admin page or exported Server Action does not await `requireAdmin()` before anything else.
+- **Lighthouse** runs from a temporary folder outside the repository (like ADR-027): `lighthouse` 13.5.0 using Playwright's Chromium. It is not a project dependency.
+
+## ADR-054 Page width 1480 px through one token — Accepted (2026-10-28, Phase 7 Round 2A)
+- **Context.** The team asked for less empty space at the sides on wide monitors and when zooming out (a change first tried in an unofficial copy of the project).
+- **Decision.** One theme token `--container-page: 1480px` (Tailwind class `max-w-page`) replaces every hard-coded `max-w-[1280px]`: `Container`, header rows, demo ribbon and footer. Side margins (16/24/40 px) and breakpoints are unchanged.
+- **Consequences.** Every page row widens together, so header, sections and footer stay aligned. Visual baselines were re-recorded as a deliberate design change. UI_SPEC §4 updated.
+
+## ADR-055 Official logo and "Staff portal" link — Accepted (2026-10-28, Phase 7 Round 2A)
+- **Logo.** The team supplied the ZORKO logo and asked for it on the site (answers Q-09 for this student project). `public/logo.webp` (246×105) replaces the "Z" text mark in `Logo` (header and admin sign-in); the original file is kept in `design/brand/`. The image is decorative (`alt=""`) because the link's `aria-label` names it. The favicon stays the "Z" mark.
+- **Staff portal.** A link to `/admin/login` in the footer, the phone "More" sheet and the tablet drawer (shared `StaffLink`). It is only a shortcut: admin access is still decided by `requireAdmin()` on the server (ADR-010). Showing where the sign-in page is does not weaken it; the page already existed at a guessable URL and is rate-limited.
+- **Not adopted from the unofficial copy:** its separate admin cookie holding the raw admin ID (forgeable, bypassed Supabase Auth), its raw-SQL password check against `auth.users`, the fake newsletter form, and its footer colours outside the design tokens.
+
+## ADR-056 Outlet photos from the team as local files — Accepted (2026-10-28, Phase 7 Round 2A)
+- **Context.** Storage uploads are still off (no `SUPABASE_SECRET_KEY`), but the team supplied photos of the outlet.
+- **Decision.** Five photos in `public/photos/` (WebP, ≤1600 px, metadata such as GPS stripped). `mediaUrl()` accepts `photos/<name>.webp` like the other local prefixes (same strict pattern, no `..` or sub-folders). `npm run gallery:outlet-photos -- add` registers them as real (`isDemo=false`), published gallery rows; it only adds missing rows and never deletes. Admins then manage them in Admin → Gallery (order, alt text, publish, remove; removing a local photo deletes only the row).
+- **Excluded on purpose.** Three images in the unofficial copy (`central-aisle`, `order-counter`, `dining-table`) are AI-generated re-imaginings of the room (wine glasses, staged diners, unreadable menu boards). Showing them as the café would be fabricated outlet content (CLAUDE.md rule 12). Three other photos (`PLACE 3/4/5`) show interiors that differ from the rest; they wait for the team to confirm they are the Sangli outlet (Q-21).
+
+## ADR-057 Next.js 16.4.3 security upgrade — Accepted (2026-10-28, Phase 7 Round 2A)
+- `npm audit` reported **critical** advisories for next 16.0.0–16.4.0 (GHSA-2464-fhr4-w9xw, GHSA-673q-mjm6-r5xr: unauthenticated RCE; GHSA-p3m5-59mp-jv5r: DoS) and a moderate one for `fast-uri`. Upgraded `next` and `eslint-config-next` to 16.4.3 (patch release, exact pin) and ran `npm audit fix` for `fast-uri`. `npm audit --omit=dev`: 0 vulnerabilities. All suites re-run (Round 2A report).
+
+## ADR-058 Round 2A fixes: brand assets from zorko.in, balanced footer, admin reset — Accepted (2026-10-28, Phase 7 Round 2A fixes)
+- **Permission.** The team states the franchise owner allows the project to use ZORKO's logo and photos. Recorded here as the team's assertion; this project cannot verify it.
+- **Logo.** `public/logo.webp` is now the official 1186×452 logo from zorko.in, re-encoded to 600 px wide (previous file was 246 px and looked soft on high-density screens). `public/logo-plain.webp` (no white outline, from the zorko.in footer) sits in the footer.
+- **Footer.** The fourth grid column used to render only when social links exist (none are confirmed yet), which left the right quarter empty. It is now always present: the ZORKO logo, right-aligned on desktop (bottom-right on tablet), with social links below it once confirmed.
+- **Gallery.** Added 3 photos of other ZORKO cafés (`PLACE 3/4/5`, answers Q-21) and 4 official ZORKO food photos (zorko.in hero images, transparency flattened onto `surface-warm-cream`). Captions say "A ZORKO café (brand photo)" / "ZORKO brand food photo", and the page intro says the gallery mixes the Sangli outlet and brand photos, so nothing is presented as taken at Sangli when it was not (rule 12).
+  - **Rejected from zorko.in:** its "outlet" images are promotional posters for other cities (with their addresses and phone numbers), and the small product shots are under 230 px.
+  - **Not used:** third-party photos on Google Maps or Zomato. They belong to the people who took them, so the owner's permission does not cover them.
+  - **Re-encoding.** All downloaded files were re-encoded through `sharp` (no original bytes or metadata kept).
+- **Broken gallery rows.** `npm run gallery:outlet-photos -- repair` re-points the 2 rows added by the unofficial copy (missing files) to `zorko-cafe-blue-booths.webp` / `zorko-cafe-floral-ceiling.webp`. It updates rows; nothing is deleted.
+- **Admins.** No Supabase password worked: one account had never signed in through Supabase Auth (its password was set in the database directly and only worked through the unofficial copy's raw-SQL login), and the other's password had changed. At the team's request both allowlist rows were **disabled** (`admin:disable`, audit history kept). New admins are created through the Supabase dashboard and `admin:add` (DEPLOYMENT.md §6). Accounts are never inserted directly into `auth.users`.
+
+## ADR-059 Brand redesign of header and footer in the zorko.in style — Accepted (2026-10-28, Phase 7 Round 2B)
+- **Context.** The team asked for the footer to look like zorko.in, for a better header, and for one consistent look across the site, using zorko.in's colours (owner's permission, ADR-058). This deliberately changes the approved Stitch header/footer (CLAUDE.md 6.6: reason stated, UI_SPEC updated, applied everywhere).
+- **Colours.** zorko.in's most-used colours become tokens: `brand-orange` #fb6514, `brand-yellow` #fbe414, `brand-blue` #04aded, `brand-ink` #000, plus `brand-ink-soft` and `brand-plank` (UI_SPEC §2.4). Orange on white is only 3.01:1, so on white it is used for marks and lines only. Text and buttons on white keep `primary` #a93200, so contrast results stay valid.
+- **Footer.** zorko.in's wave/skyline and food-strip artwork (re-encoded; the wave's white sky made transparent by a flood fill from the top edge, the strip's light edge columns trimmed). The outlet's own content goes on black. Not copied: ZORKO Limited's corporate addresses, emails, subscribe form and copyright line (not this outlet's; a subscribe form without a backend would be a fake control).
+- **Header.** One black block (team feedback: the logo looks better on black, as on zorko.in): info line and main row together, official logo, light text nav with the current page in orange plus an orange underline, dark pill search, an orange "Call" button (`tel:`, only with a phone number), orange focus outlines (6.97:1), and a 3 px orange rule.
+- **Site-wide.** The homepage "At a glance" band moved from `bg-primary` to the same black band with orange rules. `PureVegPill` gained `tone="dark"` (white pill, 6.75:1) for black surfaces, and no longer wraps.
+- **Build note.** Turbopack kept a stale CSS chunk after `globals.css` gained new tokens; `rm -rf .next` before building fixed it. Documented in the report's troubleshooting.
+
+## ADR-060 Site-wide UI refinement: ZORKO palette, Inter + DM Sans, real food imagery — Accepted (2026-10-28, Phase 7 Round 2B part 2)
+- **Context.** The team's design brief: the site looked generic (repeated icon cards, peach icon circles, weak hierarchy). It asked for the ZORKO palette, Inter headings, DM Sans body, real food photography for categories, a stronger Popular Picks section, and no regressions. It also said to keep the architecture and footer.
+- **Tokens, not components.** The existing Stitch token names are re-pointed (`primary` → ZORKO brown #a54e30, `surface` → #faf7f4, `on-surface` → #211c19, `on-surface-variant` → #76645a, containers → warm neutrals, `surface-warm-cream` → #fff3e7, `brand-orange` → #ff7916, `brand-ink` → #111111). New tokens: `cta`, `cta-hover`, `on-cta`, `border`, `brand-ink-raised`, `brand-peach`. Every component picks the palette up without being rewritten.
+- **Contrast decisions (deviations from the brief, for WCAG AA):**
+  - **Primary buttons:** orange #ff7916 with **near-black text #211c19** (6.43:1; 5.09:1 on hover #e8660a). The brief's white text on that orange is 2.63:1 and fails.
+  - **Muted text:** #8c817a (3.55:1) is not used for small text; metadata uses #76645a (5.26:1).
+  - **Surface containers:** chosen so that secondary and brown text stay ≥4.5:1 on them (#f1eae4, #eee7e1).
+  - **Green #16845b** is 4.39:1 on the page background, so it is used for veg marks only; veg text keeps `tertiary`.
+- **Typography.** Inter (600/700/800) for headings and DM Sans (400–700) for body, self-hosted by `next/font` as before (ADR-007).
+  - Hero `clamp(2.5rem…3.5rem)`, line height 1.08.
+  - Section headings `clamp(1.875rem…2.25rem)`.
+  - Body 16 px with line height 1.55, lead text 17 px with 1.65.
+  - Labels and buttons 15 px / 600; metadata 13 px.
+- **Category thumbnails.** Official ZORKO menu photography from zorko.in (`best-fast-food-1-N.webp`, owner's permission, ADR-058), cropped to the dish (the zorko.in cards also carry ZORKO-wide item counts, which are not Sangli's). All 16 real categories have a matching photo (Ice Tea, which has no zorko.in menu card, uses the ZORKO-branded glass from zorko.in's printed menu board `menu-6.jpg`, added 2026-10-28 at the team's request); admin-created categories keep a clean icon fallback (no stand-in photos). `src/features/menu/category-photos.ts`; images are decorative because the card text names the category.
+- **Homepage.**
+  - **Hero:** warm off-white with one faint peach glow; feature tiles are white with a border and a plain brown icon (no tinted squares).
+  - **Category cards:** photo 4:3 + name + count, 2/3/4/6 columns, orange border on hover. Categories with 0 visible items are skipped on the homepage only.
+  - **Popular Picks:** peach `#fff3e7` band with borders and more vertical space.
+  - **Gallery block:** retitled "A Look Around ZORKO", because the gallery now also holds other ZORKO cafés' photos.
+- **Cards and buttons site-wide.** Menu cards use a 1 px border instead of a shadow, with an orange border on hover; Popular Picks images are 4:3. Section eyebrows get the hero's short orange rule. Secondary buttons are white with a border and brown text.
+- **Footer and header.** Kept (ADR-059). Orange is now #ff7916 via the token, the header search uses `brand-ink-raised` #1d1d1d, and the footer hours have more line spacing.
+- **Not changed:** routes, data, filters, search, `tel:` actions, admin logic.
+
+## ADR-061 Admin quick edits and table QR cards — Accepted (2026-10-28, Phase 7 Round 2C)
+- **Context.** The team asked for the unofficial copy's admin conveniences (inline ₹ price, one-click labels) and table QR cards 1–20 with bulk printing and PNG/SVG downloads, built on the existing secure actions instead of porting the copy's code.
+- **Quick edits.** Two new Server Actions, `setPriceAction` and `setItemFlagAction`, follow the same pattern as `setAvailabilityAction`: `requireAdmin()` first, Zod validation of every argument (ID format; price via the item form's own rupees→paise rule, > ₹0 and ≤ ₹1,00,000; flag from the fixed enum `isBestSeller | isTrending | isFeatured`, so a client cannot set `isArchived`, `isDemo` or any other column), an audit entry, and expiry of the public cache tags. The database CHECK on price still applies. In the item list the price is a field that saves on Enter or when focus leaves it (Escape restores), and the labels are `aria-pressed` toggles; both are optimistic and revert on a refused save. "+ Add dish" already existed as **New item**.
+- **Table cards.** `/api/v1/qr` accepts `table=1…20` (strict: `05`, `1.5`, `21` → 400) and encodes `/menu?src=qr&table=N`. The table number is informational only: it is not stored or tracked, and there is no table ordering (CLAUDE.md §3.0). Files download as `zorko-sangli-table-N-qr.png|svg`. `/admin/qr` shows the 20 cards (logo, "Table N", code, "Scan to see our menu"); **Print all 20 cards** uses the browser's print dialog, with print styles that hide the admin navigation and everything except the cards (two per row, dashed cut lines). The count is the `TABLE_COUNT` constant in `src/features/qr/tables.ts`.
+- **Alternatives rejected.** A JSON "update any field" action (mass-assignment risk); generating a PDF on the server (new dependency; the browser's "Save as PDF" covers it); storing tables in the database (no feature needs it yet).
+
+## ADR-062 Feedback quick highlights stored as an enum array — Accepted (2026-10-28, Phase 7 Round 2D)
+- **Context.** The team asked for the unofficial copy's feedback "quick tags". The copy appended the tag text to the message, so tags were free text a guest could edit into anything, and they could not be shown or counted separately.
+- **Decision.** A fixed list of six highlights (`TASTY_FOOD`, `QUICK_SERVICE`, `FRIENDLY_STAFF`, `GREAT_AMBIENCE`, `GOOD_VALUE`, `STUDENT_FRIENDLY`; labels in `FEEDBACK_TAGS`, `src/lib/validation/feedback.ts`) stored in `Feedback.tags`, a Postgres enum array with an empty default. Additive migration `20261028120000_feedback_tags`; existing rows get `{}`. The form sends one `tags` value per ticked checkbox; Zod accepts known keys only (max 6), drops duplicates and keeps list order; the enum refuses anything else even from raw SQL. The labels are the guest's opinion, not claims by the café; dish-specific labels from the copy ("Loved the Mojitos") were not used.
+- **Display.** Ticked highlights show as small chips in admin moderation and on approved reviews (home/contact). Unapproved feedback stays private as before. The pills are real checkboxes (visually hidden input inside a `relative` label), so keyboard and screen-reader behaviour is native.
+- **Alternatives rejected.** Text appended to the message (the copy's approach: editable, not structured); a separate `FeedbackTag` table (a join for six fixed values adds nothing); a rating score (not requested; the synopsis has no ratings and CLAUDE.md §6.2 forbids invented ratings).
+
+## ADR-063 Homepage polish: less decoration, authentic hero photo — Accepted (2026-10-29, Phase 7 Round 2E)
+- **Context.** Team brief "Final Homepage Polish": keep the black/orange identity, remove decorative dashes and generic icon styling, present food better, show only trustworthy information.
+- **Changes.** Eyebrows lose the short orange dash (hero and `SectionHeading`, so every page). Hero: the fallback photo is ZORKO's own paneer burger (`/photos/brand-paneer-burger.webp`, ADR-058) instead of a Wikimedia stock burger that was shown without a label; peach glow removed; square framed image; the item-count label sits inside the frame without an icon tile; CTAs without decorative icons; feature tiles become a plain list. "At a glance" strip: plain orange icons instead of filled orange circles. Popular Picks: photos edge to edge (see bug below).
+- **Bug fixed.** `MenuCard`'s trending variant relied on `cn()` to replace `md:p-space-md` with `md:p-0`; tailwind-merge does not know the custom `space-*` scale, so the grid padding stayed and photos were inset. Padding is now chosen per variant.
+- **Kept because the data is real.** Category photos (ZORKO's own, ADR-060), "Best seller"/"Trending" (admin flags), "Available"/"Out of stock" (admin availability switch), "N items" (database count), hours with "(to be confirmed)", the footer.
+- **Not changed in code.** Guest Feedback shows only APPROVED feedback and hides itself when there is none; the one approved review in the dev database is the team's own test, so the team rejects or deletes it in Admin → Feedback (data, not code).
+
+## ADR-064 Hero refinement and test-review clean-up — Accepted (2026-10-29, Phase 7 Round 2F)
+- **Hero.** Desktop columns 6/6 (was 7/5). New asset `public/photos/brand-paneer-burger-hero.webp`: a 700×560 crop of the ZORKO brand photo around the burger (it filled about 70 % of the width, now about 90 %); frame `aspect-[5/4]`, max 560 px. It is a brand photo, not a verified menu item, so the alt text does not name a dish or price. The item count sits on the frame's bottom edge so it never covers the food. Spacing uses explicit margins (eyebrow → H1 `sm`, → lead `md`, → CTAs `lg`, → feature list `xl` + `lg` padding above the hairline).
+- **Hours chip removed from the hero.** It repeated the top info bar, the "At a glance" strip, Visit us and the footer, which all keep the hours and the "(to be confirmed)" note.
+- **"(to be confirmed)" stays** wherever hours are shown: `CafeInformation.hoursVerified` is false. It is removed only by ticking "Opening hours confirmed" in Admin → Café info once the café confirms the hours (CLAUDE.md rule 12). Address, contact and map are already verified.
+- **Test data.** At the team's request the team's own test review was deleted from the dev database (1 row, approved, "food was good indeed."). The dev database has no other demo rows (`isDemo` = 0 in every table). Guest Feedback hides itself until real feedback is approved.
+- **Categories.** More space above "Explore menu categories" (`md:pt-[4.5rem]`) so the heading does not sit tight under the black strip.
+
+## ADR-065 Team-supplied hero burger photo — Accepted (2026-10-29, Phase 7 Round 2G)
+- The team supplied a portrait burger photo (736×1308). Saved as `public/photos/hero-burger.webp` (re-encoded, EXIF stripped, not upscaled). It replaces the ZORKO brand-photo crop as the hero fallback; an admin banner image still wins.
+- Frame: `aspect-[4/5]`, `rounded-3xl`, dark `bg-brand-ink` behind the photo, no border or shadow; `object-cover object-[50%_40%]` keeps the whole stack (bun to board) in view. Width 400 / 440 / 480 / 520 px (mobile / md / lg / xl). The item count stays on the frame's bottom edge, over the board.
+- Alt text says "illustrative photo" and names no menu item. **Open risk for the team:** the photo shows what look like meat patties, while the site shows a "100% VEG" badge; its source and licence are unknown. Replace it with a veg burger photo the café owns if either is a problem (one constant, `HERO_FALLBACK`).
+

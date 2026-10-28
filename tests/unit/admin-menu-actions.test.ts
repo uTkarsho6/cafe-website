@@ -17,6 +17,8 @@ vi.mock('@/server/services/admin-menu', () => {
     'createItem',
     'updateItem',
     'setItemAvailability',
+    'setItemPrice',
+    'setItemFlag',
     'setItemArchived',
     'deleteItem',
     'replaceAddOns',
@@ -48,6 +50,8 @@ const prev = { ok: false, message: null, errors: {} }
 const calls: Array<[string, () => Promise<unknown>]> = [
   ['saveItemAction', () => actions.saveItemAction(prev, form())],
   ['setAvailabilityAction', () => actions.setAvailabilityAction(ID, false)],
+  ['setPriceAction', () => actions.setPriceAction(ID, '149')],
+  ['setItemFlagAction', () => actions.setItemFlagAction(ID, 'isTrending', true)],
   ['setItemArchivedAction', () => actions.setItemArchivedAction(ID, true)],
   ['deleteItemAction', () => actions.deleteItemAction(ID)],
   ['saveAddOnsAction', () => actions.saveAddOnsAction(ID, prev, form())],
@@ -85,6 +89,28 @@ describe('menu actions require an admin (authorization on every action)', () => 
     expect((await actions.setAvailabilityAction(ID, 'yes')).ok).toBe(false)
     expect(services.setItemAvailability).not.toHaveBeenCalled()
     expect(services.deleteItem).not.toHaveBeenCalled()
+  })
+
+  it('quick edits (Round 2C) reject bad prices, unknown flags and forged IDs before any write', async () => {
+    requireAdmin.mockResolvedValue({ id: 'admin', email: 'a@test.invalid', displayName: null })
+    for (const bad of ['0', '-5', 'abc', '149.555', '1e3', '99999999', ''])
+      expect((await actions.setPriceAction(ID, bad)).ok, bad).toBe(false)
+    expect((await actions.setPriceAction('../x', '149')).ok).toBe(false)
+    for (const flag of ['isArchived', 'isDemo', 'isAvailable', 'pricePaise', '__proto__'])
+      expect((await actions.setItemFlagAction(ID, flag, true)).ok, flag).toBe(false)
+    // @ts-expect-error a non-boolean from a tampered client
+    expect((await actions.setItemFlagAction(ID, 'isTrending', 'yes')).ok).toBe(false)
+    expect(services.setItemPrice).not.toHaveBeenCalled()
+    expect(services.setItemFlag).not.toHaveBeenCalled()
+  })
+
+  it('a valid price is converted to integer paise on the server', async () => {
+    requireAdmin.mockResolvedValue({ id: 'admin', email: 'a@test.invalid', displayName: null })
+    vi.mocked(services.setItemPrice).mockResolvedValue({ slug: 'wrap', name: 'Wrap' })
+    const r = await actions.setPriceAction(ID, ' 149.50 ')
+    expect(r.ok).toBe(true)
+    expect(services.setItemPrice).toHaveBeenCalledWith(ID, 14950)
+    expect(r.message).toBe('"Wrap" now costs ₹149.50.')
   })
 
   it('regression: delete still succeeds when Storage cleanup fails (no key configured)', async () => {

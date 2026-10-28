@@ -1,16 +1,25 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Archive, ArchiveRestore, Trash2 } from 'lucide-react'
+import { Archive, ArchiveRestore, Check, Plus, Trash2 } from 'lucide-react'
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/dialog'
 import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/components/ui/toast'
+import { cn } from '@/lib/utils'
+import {
+  ITEM_FLAG_LABELS,
+  ITEM_FLAGS,
+  paiseToRupeesInput,
+  type ItemFlag,
+} from '@/lib/validation/admin-menu'
 import {
   deleteItemAction,
   setAvailabilityAction,
   setItemArchivedAction,
+  setItemFlagAction,
+  setPriceAction,
   type FormState,
 } from '../menu-actions'
 
@@ -55,6 +64,130 @@ export function AvailabilityToggle({
         )
       }}
     />
+  )
+}
+
+/**
+ * Inline ₹ price in the item list (Round 2C). Saves on Enter or when focus leaves the field;
+ * Escape restores the last saved price. The server validates again and has the final say.
+ */
+export function PriceEditor({
+  itemId,
+  name,
+  pricePaise,
+}: {
+  itemId: string
+  name: string
+  pricePaise: number
+}) {
+  const [saved, setSaved] = useState(() => paiseToRupeesInput(pricePaise))
+  const [value, setValue] = useState(saved)
+  const [error, setError] = useState<string | null>(null)
+  const { pending, run } = useActionToast()
+  const errorId = `price-error-${itemId}`
+
+  const save = () => {
+    const next = value.trim()
+    if (next === saved) return setError(null)
+    run(
+      () => setPriceAction(itemId, next),
+      (r) => {
+        setError(r.ok ? null : r.message)
+        if (r.ok) setSaved(next)
+      },
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="relative w-28">
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-heading text-on-surface-variant"
+        >
+          ₹
+        </span>
+        <input
+          type="text"
+          inputMode="decimal"
+          maxLength={9}
+          aria-label={`Price of ${name} in rupees`}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          value={value}
+          disabled={pending}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={save}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              e.currentTarget.blur()
+            } else if (e.key === 'Escape') {
+              setValue(saved)
+              setError(null)
+            }
+          }}
+          className="h-12 w-full rounded-xl border border-border bg-surface-container-lowest pr-2 pl-7 font-heading text-body-md text-on-surface transition focus:border-cta focus:outline-none focus-visible:ring-[1.5px] focus-visible:ring-primary disabled:opacity-60 aria-invalid:border-error"
+        />
+      </div>
+      {error && (
+        <p id={errorId} className="max-w-40 text-body-sm text-error">
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** One-click Best seller / Trending / Featured labels (Round 2C); optimistic, reverts on error. */
+export function FlagToggles({
+  itemId,
+  name,
+  flags,
+}: {
+  itemId: string
+  name: string
+  flags: Record<ItemFlag, boolean>
+}) {
+  const [state, setState] = useState(flags)
+  const { pending, run } = useActionToast()
+  const set = (flag: ItemFlag, on: boolean) => setState((s) => ({ ...s, [flag]: on }))
+
+  return (
+    <div role="group" aria-label={`Labels for ${name}`} className="flex flex-wrap">
+      {ITEM_FLAGS.map((flag) => {
+        const on = state[flag]
+        const Icon = on ? Check : Plus
+        return (
+          <button
+            key={flag}
+            type="button"
+            aria-pressed={on}
+            disabled={pending}
+            onClick={() => {
+              set(flag, !on)
+              run(
+                () => setItemFlagAction(itemId, flag, !on),
+                (r) => !r.ok && set(flag, on),
+              )
+            }}
+            className="group inline-flex min-h-12 items-center px-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-label-sm whitespace-nowrap transition-colors',
+                on
+                  ? 'border-primary bg-primary text-on-primary'
+                  : 'border-border bg-surface-container-lowest text-on-surface-variant group-hover:border-primary/40 group-hover:text-on-surface',
+              )}
+            >
+              <Icon aria-hidden="true" className="size-3.5" />
+              {ITEM_FLAG_LABELS[flag]}
+            </span>
+          </button>
+        )
+      })}
+    </div>
   )
 }
 

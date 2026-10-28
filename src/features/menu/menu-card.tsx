@@ -47,9 +47,13 @@ export function MenuCard({
   return (
     <article
       className={cn(
-        'group relative flex w-full rounded-2xl bg-surface-container-lowest shadow-sm transition-shadow hover:shadow-md',
-        list ? 'flex-row gap-space-md p-space-sm sm:p-space-md' : 'flex-col p-2 md:p-space-md',
-        variant === 'trending' && 'overflow-hidden p-0 hover:shadow-xl md:p-0',
+        // ADR-060: a fine border instead of a drop shadow; orange border on hover.
+        'group relative flex w-full rounded-2xl border border-border bg-surface-container-lowest transition-colors hover:border-cta',
+        // Padding chosen per variant: cn() cannot merge the custom `space-*` padding away, so the
+        // trending card (photo edge to edge) must not get the grid padding at all (ADR-063).
+        list && 'flex-row gap-space-md p-space-sm sm:p-space-md',
+        variant === 'grid' && 'flex-col p-2 md:p-space-md',
+        variant === 'trending' && 'flex-col overflow-hidden',
       )}
       data-testid="menu-card"
     >
@@ -58,7 +62,7 @@ export function MenuCard({
           'relative shrink-0 overflow-hidden',
           list && 'size-24 rounded-xl sm:size-32',
           variant === 'grid' && 'aspect-square rounded-xl md:aspect-auto md:h-44',
-          variant === 'trending' && 'aspect-square md:aspect-auto md:h-52',
+          variant === 'trending' && 'aspect-[4/3]',
         )}
       >
         {item.image ? (

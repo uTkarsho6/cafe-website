@@ -37,12 +37,25 @@ async function main() {
       const name = arg('name')?.slice(0, 60) || null
       if (!userId || !UUID.test(userId)) fail('--user-id must be the Supabase "User UID" (a UUID).')
       if (!email || !EMAIL.test(email) || email.length > 254) fail('--email must be a valid email.')
-      const row = await db.adminUser.upsert({
-        where: { authUserId: userId },
-        create: { authUserId: userId, email, displayName: name, isActive: true },
-        update: { email, displayName: name, isActive: true },
-        select: { id: true },
+      // Same email on another Supabase account (the old one was deleted and recreated): re-link
+      // that row instead of failing on the unique email, so its audit history stays attached.
+      const sameEmail = await db.adminUser.findUnique({
+        where: { email },
+        select: { id: true, authUserId: true },
       })
+      const row =
+        sameEmail && sameEmail.authUserId !== userId
+          ? await db.adminUser.update({
+              where: { id: sameEmail.id },
+              data: { authUserId: userId, displayName: name, isActive: true },
+              select: { id: true },
+            })
+          : await db.adminUser.upsert({
+              where: { authUserId: userId },
+              create: { authUserId: userId, email, displayName: name, isActive: true },
+              update: { email, displayName: name, isActive: true },
+              select: { id: true },
+            })
       await db.auditLog.create({
         data: {
           adminUserId: row.id,

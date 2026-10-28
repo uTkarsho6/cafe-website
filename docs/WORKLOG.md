@@ -12,13 +12,13 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 6 — QR, feedback and supporting features |
-| **Phase status** | AWAITING TEAM VERIFICATION. All checks pass; phone QR scan PASSED by the team; Storage uploads still NOT RUN. Do **not** start Phase 7 until the team replies exactly `approved, go to Phase 7`. |
-| **Git** | Branch `phase-6` (from `main` after the 5C merge; tag `phase-5c-approved`). Local commits; push on the team's "push". |
-| **Last task completed** | Phase 6 built and verified (2026-10-16): /qr + /admin/qr, /feedback with honeypot + rate limit, moderation, 90-day retention (ADR-051). |
-| **Next action** | Wait for `approved, go to Phase 7`. On approval: merge `phase-6` → `main`, tag `phase-6-approved`, start Phase 7 (security hardening + full regression). |
-| **Waiting on the team** | Approval phrase; Storage bucket + `SUPABASE_SECRET_KEY`; "push". |
-| **Note** | This Mac runs under very high load (BTLEServer ~97 % CPU), so E2E with 4 workers can time out on static files. Run `npx playwright test --workers=2` locally. |
+| **Current phase** | Phase 7 — Round 2D (feedback quick highlights) |
+| **Phase status** | AWAITING TEAM VERIFICATION of Rounds 2B–2D. 2B/2C committed (`677fc8e`); 2D uncommitted (commit only when the team says so). Phase 7 itself still awaits `approved, go to Phase 8`. |
+| **Git** | Branch `phase-7-round2` (from `phase-7`). Local commits only. |
+| **Last task completed** | Round 2D (2026-10-28): ADR-062, feedback quick highlights; migration applied to the dev database; see the phase-7 report "Round 2D". |
+| **Next action** | Wait for the team's verdict on 2D (and 2B/2C), then their commit permission; then `approved, go to Phase 8`. |
+| **Waiting on the team** | Round 2A check; delete 2 broken gallery rows in Admin → Gallery; rotate the password in the unofficial copy's README-FOR-TEAM.md; Q-21. |
+| **Note** | This Mac runs under very high load (BTLEServer ~97 % CPU), so E2E with 4 workers can time out on static files. Run `npx playwright test --workers=2` locally. The current network uses NAT64 (`64:ff9b::`), so Next's image optimizer refuses Supabase Storage images locally (SSRF guard) and DNS/Supabase calls fail now and then; re-run affected tests. |
 
 ### On approval (the CLAUDE.md §0.2 step 8 routine)
 1. In `PROGRESS.md`: add a row to "Approved phases" (date + quoted message), set the current phase and status to `IN PROGRESS`, and update the branch.
@@ -36,7 +36,7 @@ cd ~/projects/zorko-sangli
 git status && git log --oneline -5 && git tag
 npm ci && npm run check                 # lint, typecheck, format, unit tests, build
 npm run test:integration                # Docker test DB, expect 103 passed
-npm run test:e2e -- --workers=2         # Docker test DB + Playwright, expect ~288 passed, 24 skipped
+npm run test:e2e -- --workers=2         # Docker test DB + Playwright, expect 312 passed, 25 skipped
 ```
 
 ---

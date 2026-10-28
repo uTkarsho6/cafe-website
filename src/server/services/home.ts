@@ -1,5 +1,6 @@
 import 'server-only'
 import { mediaUrl } from '@/lib/media'
+import type { FeedbackTagKey } from '@/lib/validation/feedback'
 import { getDb } from '../db'
 import { publicItemWhere } from './visibility'
 
@@ -11,7 +12,13 @@ export type BannerDto = {
   ctaLabel: string | null
   ctaHref: string | null
 }
-export type ReviewDto = { id: string; displayName: string; message: string; createdAt: string }
+export type ReviewDto = {
+  id: string
+  displayName: string
+  message: string
+  tags: FeedbackTagKey[]
+  createdAt: string
+}
 export type GalleryImageDto = { id: string; url: string; altText: string; caption: string | null }
 
 /** Published banners inside their optional date window. */
@@ -48,12 +55,13 @@ export async function listApprovedReviews(limit = 3): Promise<ReviewDto[]> {
     where: { status: 'APPROVED' },
     orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
     take: limit,
-    select: { id: true, displayName: true, message: true, createdAt: true },
+    select: { id: true, displayName: true, message: true, tags: true, createdAt: true },
   })
   return rows.map((r) => ({
     id: r.id,
     displayName: r.displayName?.trim() || 'Guest',
     message: r.message,
+    tags: r.tags,
     createdAt: r.createdAt.toISOString(),
   }))
 }

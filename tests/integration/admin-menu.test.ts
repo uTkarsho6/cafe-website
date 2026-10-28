@@ -124,6 +124,27 @@ describe('availability, archive, delete (TC-ADM-003/005)', () => {
   })
 })
 
+describe('quick edits from the item list (Round 2C, TC-ADM-011)', () => {
+  it('inline price and label toggles persist and show publicly', async () => {
+    const a = await admin.createItem(item({ name: 'Test Quick Edit' }))
+    created.push(a.id)
+    await admin.setItemPrice(a.id, 17950)
+    await admin.setItemFlag(a.id, 'isTrending', true)
+    await admin.setItemFlag(a.id, 'isBestSeller', true)
+    await admin.setItemFlag(a.id, 'isBestSeller', false)
+    const row = await db().menuItem.findUniqueOrThrow({ where: { id: a.id } })
+    expect(row).toMatchObject({ pricePaise: 17950, isTrending: true, isBestSeller: false })
+    expect((await getMenuItemBySlug(a.slug))?.priceLabel).toBe('₹179.50')
+  })
+
+  it('refuses a missing item; the database CHECK still rejects a zero price', async () => {
+    const missing = 'cmf0000000000000000000099'
+    await expect(admin.setItemPrice(missing, 100)).rejects.toThrow('no longer exists')
+    await expect(admin.setItemFlag(missing, 'isFeatured', true)).rejects.toThrow('no longer exists')
+    await expect(admin.setItemPrice(otherId, 0)).rejects.toThrow()
+  })
+})
+
 describe('add-ons and linked items (TC-ADM-004/007)', () => {
   it('replaces add-ons atomically and the public page shows them', async () => {
     const a = await admin.createItem(item({ name: 'Test Addon Host' }))

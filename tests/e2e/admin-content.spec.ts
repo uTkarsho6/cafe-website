@@ -209,21 +209,25 @@ test('uploads: banner and gallery photo go to Storage; disguised file refused', 
     'NOT RUN: SUPABASE_SECRET_KEY and the public-media bucket are needed (DEPLOYMENT.md §7)',
   )
   await page.goto('/admin/gallery')
-  await page.getByLabel('Photo').setInputFiles({
+  // Scope to the upload form: page-wide, 'Photo' also matches 'Move photo 1 earlier', 'Photos (2)'
+  // etc., and the input's full name is 'Photo *' (required marker), so { exact: true } can't be used.
+  const addPhoto = page.getByRole('region', { name: 'Add a photo' })
+  await addPhoto.getByLabel('Photo').setInputFiles({
     name: 'evil.jpg',
     mimeType: 'image/jpeg',
     buffer: Buffer.from('<html><script>alert(1)</script></html>'),
   })
   await field(page, 'Alt text').first().fill('E2E disguised file')
   await page.getByRole('button', { name: 'Upload photo' }).click()
-  await expect(page.getByText('Only JPEG, PNG or WebP images are allowed.')).toBeVisible()
+  // The form's own alert (the same message is also shown as a toast).
+  await expect(addPhoto.getByRole('alert')).toHaveText('Only JPEG, PNG or WebP images are allowed.')
 
   const png = await sharp({
     create: { width: 800, height: 600, channels: 3, background: '#006947' },
   })
     .png()
     .toBuffer()
-  await page
+  await addPhoto
     .getByLabel('Photo')
     .setInputFiles({ name: 'ok.png', mimeType: 'image/png', buffer: png })
   await field(page, 'Alt text').first().fill('E2E uploaded photo')
@@ -234,6 +238,14 @@ test('uploads: banner and gallery photo go to Storage; disguised file refused', 
       timeout: 2_000,
     })
   })
+  // Clean up (also removes the file from Storage), so runs don't pile up files in the bucket.
+  await page.reload()
+  const card = page
+    .getByTestId('gallery-admin-item')
+    .filter({ has: page.getByRole('img', { name: 'E2E uploaded photo' }) })
+  await card.getByRole('button', { name: 'Remove' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Remove photo' }).click()
+  await expect(card).toHaveCount(0)
 })
 
 test('5C pages are accessible (axe) and have no horizontal scroll', async ({ page }) => {

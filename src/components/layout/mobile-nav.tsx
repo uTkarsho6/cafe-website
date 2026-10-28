@@ -7,6 +7,7 @@ import { Suspense, useState } from 'react'
 import { Dialog } from '@/components/ui/dialog'
 import { isActivePath, type NavItem } from '@/lib/site/nav'
 import { cn } from '@/lib/utils'
+import { StaffLink } from './staff-link'
 
 /** Menu button + drawer for 768–1279 px (UI_SPEC §8.1, ADR-024). */
 export function MobileNav({ items }: { items: NavItem[] }) {
@@ -31,7 +32,7 @@ function MobileNavView({ items, pathname }: { items: NavItem[]; pathname: string
         aria-expanded={open}
         aria-controls="site-nav-drawer"
         onClick={() => setOpen(true)}
-        className="hidden size-12 items-center justify-center rounded-full bg-surface-container text-on-surface hover:bg-surface-container-high md:inline-flex xl:hidden"
+        className="hidden size-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 md:inline-flex xl:hidden"
       >
         <Menu aria-hidden="true" className="size-5" />
       </button>
@@ -59,6 +60,7 @@ function MobileNavView({ items, pathname }: { items: NavItem[]; pathname: string
               )
             })}
           </ul>
+          <StaffLink onNavigate={() => setOpen(false)} />
         </nav>
       </Dialog>
     </>

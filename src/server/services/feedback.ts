@@ -1,5 +1,5 @@
 import 'server-only'
-import type { FeedbackStatusKey } from '@/lib/validation/feedback'
+import type { FeedbackStatusKey, FeedbackTagKey } from '@/lib/validation/feedback'
 import { AdminRuleError } from '../admin-errors'
 import { getDb } from '../db'
 
@@ -8,9 +8,18 @@ import { getDb } from '../db'
  * public (home/contact, via listApprovedReviews). Text is stored as typed and rendered as escaped
  * text by React, never as HTML.
  */
-export async function createFeedback(input: { displayName: string | null; message: string }) {
+export async function createFeedback(input: {
+  displayName: string | null
+  message: string
+  tags?: FeedbackTagKey[]
+}) {
   return getDb().feedback.create({
-    data: { displayName: input.displayName, message: input.message, status: 'PENDING' },
+    data: {
+      displayName: input.displayName,
+      message: input.message,
+      tags: input.tags ?? [],
+      status: 'PENDING',
+    },
     select: { id: true },
   })
 }
@@ -31,6 +40,7 @@ export async function listAdminFeedback(status: FeedbackStatusKey, page: number)
         id: true,
         displayName: true,
         message: true,
+        tags: true,
         status: true,
         isDemo: true,
         createdAt: true,
@@ -50,6 +60,7 @@ export async function listAdminFeedback(status: FeedbackStatusKey, page: number)
       id: r.id,
       displayName: r.displayName,
       message: r.message,
+      tags: r.tags,
       status: r.status,
       isDemo: r.isDemo,
       createdAt: r.createdAt.toISOString(),

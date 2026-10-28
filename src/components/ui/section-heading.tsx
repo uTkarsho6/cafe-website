@@ -28,12 +28,9 @@ export function SectionHeading({
       )}
     >
       <div className="flex flex-col gap-space-xs">
-        {/* Same eyebrow as the hero: brown label after a short orange rule (ADR-060). */}
+        {/* Same eyebrow as the hero: brown spaced capitals, no decorative rule (ADR-063). */}
         {eyebrow && (
-          <p className="flex items-center gap-2 text-label-sm tracking-[0.14em] text-primary uppercase">
-            <span aria-hidden="true" className="h-[3px] w-6 rounded-full bg-cta" />
-            {eyebrow}
-          </p>
+          <p className="text-label-sm tracking-[0.14em] text-primary uppercase">{eyebrow}</p>
         )}
         <Heading className="text-headline-lg-mobile text-on-surface md:text-headline-lg">
           {title}

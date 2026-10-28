@@ -382,3 +382,111 @@ The current network uses NAT64: Supabase resolves to `64:ff9b::…` addresses. N
 3. Look at `/admin`, `/admin/menu`, `/admin/offers`, `/admin/feedback`: these match the updated screenshots.
 4. Optional: delete the two `zorko-e2e-…@example.com` users in Supabase → Authentication → Users when no more test runs are needed (then remove the `E2E_*` lines from `.env.local`).
 
+---
+
+# Round 2D — Feedback quick highlights (2026-10-28)
+
+**Status:** AWAITING TEAM VERIFICATION · Branch `phase-7-round2` · **not committed** (commit only with the team's permission)
+
+## What changed (ADR-062)
+| Area | Change | Files |
+|---|---|---|
+| Database | Enum `FeedbackTag` (6 values) and `Feedback.tags FeedbackTag[] DEFAULT {}`. Additive migration `20261028120000_feedback_tags`; existing feedback unchanged. Applied to the **dev** database with `prisma migrate deploy` (team-approved). | `prisma/schema.prisma`, `prisma/migrations/20261028120000_feedback_tags/` |
+| Validation | `FEEDBACK_TAGS` labels; Zod accepts known keys only, max 6, duplicates dropped, list order kept. The action reads every ticked checkbox (`getAll('tags')`). | `src/lib/validation/feedback.ts`, `src/features/feedback/actions.ts` |
+| Form | "Quick highlights (optional)": six toggle pills (real checkboxes, visually hidden inside a `relative` label; 48 px touch targets; focus ring). Labels: Tasty food, Quick service, Friendly staff, Great ambience, Good value, Student friendly. | `feedback-form.tsx` |
+| Display | Chips in admin moderation and on approved public reviews (home, contact). Unapproved feedback stays private. | `tag-list.tsx`, `feedback-moderation.tsx`, `cafe/review-list.tsx`, `services/{feedback,home}.ts` |
+| Not taken from the copy | Tags appended into the message text (editable, unstructured) and dish-specific labels ("Loved the Mojitos"). | — |
+
+## Tests
+| Check | Result |
+|---|---|
+| Lint, typecheck, format | PASS |
+| Unit + component | PASS: 333 (+2: TC-UNIT-124 validation and action; TC-UNIT-050 updated for `tags: []`) |
+| Integration | PASS: 106 (+1: TC-INT-043, incl. the enum refusing an unknown tag from raw SQL) |
+| Supabase dev project (REST still denied after the migration) | PASS: 46 (3 skipped, as before) |
+| Feedback E2E (Chromium + WebKit) | PASS: 17, incl. TC-E2E-085 (tick 2 pills → stored → chips in moderation → shown on home after approval) and axe on the form |
+| Full E2E regression | PASS across runs: the full run had 283 passed, 1 failed; the failure (and the 2nd one in its re-run) was the admin being sent to login mid-test when Supabase `getUser()` got no answer on this network (fails closed; see backlog). Re-run of the affected groups in full-run order: admin content 8+7, admin feedback 9+8, security 5: all PASS; admin content Chromium passed 3 times in a row. |
+| Visual | `feedback-form` desktop and mobile baselines updated (new pills), reviewed by eye; recorded in full-run order (after the admin content suite, so the demo-data bar state matches). |
+| Storage after the runs | Empty |
+
+**Bug found during the round:** the hidden checkbox was positioned outside its pill (absolute without a `relative` parent), so it sat elsewhere on the page and could make the page jump on focus. Fixed before handover.
+
+## HOW TO TEST
+```bash
+cd ~/projects/zorko-sangli && rm -rf .next && npm run dev
+```
+1. Open `http://localhost:3000/feedback`. Below the message there are 6 pills. Tap **Tasty food** and **Quick service**: they turn brown with a check mark. Tap again to untick.
+2. Write a message (10+ characters) and send. You see "Thanks! Your feedback will appear after the café reviews it."
+3. **Admin → Feedback → Pending:** the new feedback shows the two chips under the message. Approve it.
+4. Home page (and About & Contact): the review shows the message with the two chips.
+5. Keyboard: Tab to a pill, press Space to tick it; the focus ring is visible.
+
+**Not bugs:** feedback sent before this round has no chips. The feedback rate limit (3 per 10 minutes per network) still applies while testing.
+
+---
+
+# Round 2E — Final homepage polish (2026-10-29)
+
+**Status:** AWAITING TEAM VERIFICATION · Branch `phase-7-round2` · **not committed** (together with 2D; commit only with the team's permission)
+
+## What changed (ADR-063)
+| Area | Change | Files |
+|---|---|---|
+| Eyebrow labels | Orange dash removed before "ZORKO SANGLI", "EXPLORE MENU CATEGORIES", "GUEST FEEDBACK", "GALLERY", "FIND OUR CAFÉ" and every other `SectionHeading` eyebrow; labels stay brown, spaced capitals. Header/footer orange rules and the nav underline unchanged. | `components/ui/section-heading.tsx`, `app/(public)/page.tsx` |
+| Hero | ZORKO's own burger photo instead of an unlabelled Wikimedia stock burger; peach glow removed; square framed image (480 px), light border; "N items on the menu" inside the frame, no orange icon tile; headline `text-balance`; View Menu / View Offers without decorative icons; feature tiles as a plain list. | `app/(public)/page.tsx` |
+| "At a glance" strip | Plain orange icons instead of filled orange circles. | `app/(public)/page.tsx` |
+| Popular Picks | Photos now edge to edge (bug: tailwind-merge kept the grid padding). Labels unchanged: they come from real admin data. | `features/menu/menu-card.tsx` |
+
+## Checked, left as is (and why)
+- **Category photos:** all 16 are ZORKO's own photos (zorko.in, ADR-058/060); categories without one keep the icon fallback.
+- **Best seller / Trending / Available:** admin flags and the availability switch, so they are real data.
+- **Guest Feedback:** shows only approved feedback and hides when there is none. The one approved review in the dev database ("food was good indeed." by utkarsh) is the team's own test: **reject or delete it in Admin → Feedback** and the section disappears.
+- **Hours:** still shown with "(to be confirmed)".
+- **Footer:** not changed.
+- **"N" circle bottom-left:** the Next.js dev-tools button, only in `npm run dev`; absent from the production build (verified in the E2E screenshots).
+
+## Tests
+| Check | Result |
+|---|---|
+| Lint, typecheck, format | PASS |
+| Unit + component | PASS: 333 |
+| E2E public + signed-in (Chromium + WebKit) | PASS: 266, then 152/152 public after the baseline update; the only failures before it were the 2 home screenshots |
+| Feedback → home review E2E | PASS: 2 |
+| Visual | `home` desktop and mobile baselines updated and reviewed by eye; other pages' baselines passed unchanged |
+| Manual check at 1440 / 820 / 390 px (dev server, real dev data) | Hero wraps cleanly; no overflow; categories 6 / 4 / 2 columns; Popular Picks 4 / 2 columns |
+
+## HOW TO TEST
+Open `http://localhost:3000/` (your running dev server picks the changes up):
+1. No orange dash before any section label; the labels are brown capitals.
+2. The hero shows the ZORKO paneer burger in a light frame with "65 items on the menu" inside it; the buttons have no icons.
+3. Popular Picks photos fill the top of each card.
+4. Resize to phone width: hero, buttons and cards stack without sideways scrolling.
+5. Reject your test review in Admin → Feedback, then reload home: the Guest Feedback section disappears.
+
+---
+
+# Round 2F — Hero refinement (2026-10-29)
+
+**Status:** AWAITING TEAM VERIFICATION · **not committed** (with 2D and 2E)
+
+## What changed (ADR-064)
+| Area | Change | Files |
+|---|---|---|
+| Hero image | Tighter 5:4 crop of the ZORKO burger photo (new file); frame 5:4, up to 560 px; alt text says "ZORKO brand photo", no dish name or price | `public/photos/brand-paneer-burger-hero.webp`, `app/(public)/page.tsx` |
+| Hours | Hero hours chip removed (shown 4 other times on the page); "(to be confirmed)" kept everywhere else | `app/(public)/page.tsx` |
+| Count badge | On the frame's bottom edge; number `headline-md`, label `label-md`; white, fine border, small shadow; same database count | `app/(public)/page.tsx` |
+| Layout | Desktop 6/6; consistent spacing eyebrow → headline → text → buttons → feature list | `app/(public)/page.tsx` |
+| Categories | More space under the black strip | `app/(public)/page.tsx` |
+| Data | Team's test review deleted from the dev database (team request); Guest Feedback now hidden (no approved feedback) | dev database only |
+
+## Tests
+| Check | Result |
+|---|---|
+| Lint, typecheck, format | PASS |
+| Unit + component | PASS: 333 |
+| E2E public, regression, foundation (Chromium + WebKit) | PASS: 196 + 2 home screenshots updated after review; re-run 20/20 |
+| Production screenshot | No overlay or artifact; the "N" circle is only the Next.js dev tool in `npm run dev` |
+
+## Waiting on the team
+- **Opening hours:** if 11:00 AM – 11:00 PM every day is correct, tick **Opening hours confirmed** in Admin → Café info. Every "(to be confirmed)" note then disappears. Until then it stays (CLAUDE.md rule 12).
+- **Social links** are also unverified (not shown on the homepage).

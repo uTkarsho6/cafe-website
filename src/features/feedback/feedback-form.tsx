@@ -1,10 +1,10 @@
 'use client'
 
-import { CircleCheck } from 'lucide-react'
+import { Check, CircleCheck, Plus } from 'lucide-react'
 import { startTransition, useActionState, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { TextArea, TextField } from '@/components/ui/field'
-import { FEEDBACK_MAX } from '@/lib/validation/feedback'
+import { FEEDBACK_MAX, FEEDBACK_TAGS, FEEDBACK_TAG_KEYS } from '@/lib/validation/feedback'
 import { submitFeedbackAction, type FeedbackState } from './actions'
 
 const initial: FeedbackState = { status: 'idle', message: null, errors: {} }
@@ -66,6 +66,34 @@ export function FeedbackForm() {
           </span>
         }
       />
+      {/* Quick highlights (ADR-062): real checkboxes styled as pills, so keyboard and screen
+          readers get native checkbox behaviour; ticked ones are sent as `tags`. */}
+      <fieldset
+        className="flex flex-col gap-space-xs"
+        aria-describedby={state.errors.tags ? 'tags-error' : undefined}
+      >
+        <legend className="mb-space-xs text-label-lg text-on-surface">
+          Quick highlights <span className="font-normal text-on-surface-variant">(optional)</span>
+        </legend>
+        <div className="flex flex-wrap gap-space-xs">
+          {FEEDBACK_TAG_KEYS.map((key) => (
+            <label
+              key={key}
+              className="relative inline-flex min-h-12 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-surface-container-lowest px-space-md text-label-md text-on-surface-variant transition-colors select-none hover:border-primary/40 has-checked:border-primary has-checked:bg-primary has-checked:text-on-primary has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary lg:min-h-10"
+            >
+              <input type="checkbox" name="tags" value={key} className="peer sr-only" />
+              <Plus aria-hidden="true" className="size-3.5 peer-checked:hidden" />
+              <Check aria-hidden="true" className="hidden size-3.5 peer-checked:block" />
+              {FEEDBACK_TAGS[key]}
+            </label>
+          ))}
+        </div>
+        {state.errors.tags && (
+          <p id="tags-error" className="text-body-sm text-error">
+            {state.errors.tags}
+          </p>
+        )}
+      </fieldset>
       {/* Honeypot (ADR-026): hidden from people and screen readers; bots fill it in. */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
         <label htmlFor="website">Website</label>

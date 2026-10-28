@@ -8,7 +8,7 @@ import { qrPng, qrSvg, qrTarget, qrWarnings } from '@/server/qr'
 describe('feedback input (TC-UNIT-050)', () => {
   it('accepts a message with an optional name; empty name → null', () => {
     const r = feedbackInputSchema.parse({ message: 'Loved the paneer wrap!', displayName: '  ' })
-    expect(r).toEqual({ message: 'Loved the paneer wrap!', displayName: null })
+    expect(r).toEqual({ message: 'Loved the paneer wrap!', displayName: null, tags: [] })
   })
   it('enforces 10–1000 characters and a 40-character name', () => {
     expect(feedbackInputSchema.safeParse({ message: 'too short' }).success).toBe(false)
@@ -35,6 +35,23 @@ describe('feedback input (TC-UNIT-050)', () => {
     expect(r.message).toBe('<script>alert(1)</script> nice')
     expect(r).not.toHaveProperty('status')
     expect(r).not.toHaveProperty('isDemo')
+  })
+  it('quick highlights (TC-UNIT-124): known keys only, duplicates dropped, list order kept', () => {
+    const msg = 'A fine message.'
+    expect(
+      feedbackInputSchema.parse({ message: msg, tags: ['GOOD_VALUE', 'TASTY_FOOD', 'GOOD_VALUE'] })
+        .tags,
+    ).toEqual(['TASTY_FOOD', 'GOOD_VALUE'])
+    expect(feedbackInputSchema.parse({ message: msg, tags: [] }).tags).toEqual([])
+    for (const bad of [['APPROVED'], ['tasty_food'], ['<script>'], 'TASTY_FOOD', [1]]) {
+      const r = feedbackInputSchema.safeParse({ message: msg, tags: bad })
+      expect(r.success, JSON.stringify(bad)).toBe(false)
+      if (!r.success)
+        expect(r.error.issues[0]?.message).toBe('Please choose highlights from the list.')
+    }
+    expect(
+      feedbackInputSchema.safeParse({ message: msg, tags: Array(7).fill('TASTY_FOOD') }).success,
+    ).toBe(false)
   })
   it('admin list query falls back to pending, page 1', () => {
     expect(adminFeedbackQuerySchema.parse({ status: 'hacked', page: '-1' })).toEqual({
@@ -155,7 +172,27 @@ describe('public feedback submission (TC-SEC-070)', () => {
     expect(services.createFeedback).toHaveBeenCalledWith({
       displayName: null,
       message: 'Great cold coffee!',
+      tags: [],
       website: undefined,
+    })
+  })
+  it('sends every ticked highlight (one `tags` entry per checkbox) (TC-UNIT-124)', async () => {
+    hitRateLimit.mockResolvedValue({ allowed: true, retryAfterSec: 0 })
+    const fd = new FormData()
+    fd.set('message', 'Great cold coffee!')
+    fd.append('tags', 'QUICK_SERVICE')
+    fd.append('tags', 'TASTY_FOOD')
+    expect((await publicActions.submitFeedbackAction(idle, fd)).status).toBe('success')
+    expect(services.createFeedback).toHaveBeenLastCalledWith(
+      expect.objectContaining({ tags: ['TASTY_FOOD', 'QUICK_SERVICE'] }),
+    )
+    const bad = new FormData()
+    bad.set('message', 'Great cold coffee!')
+    bad.append('tags', 'APPROVED')
+    const r = await publicActions.submitFeedbackAction(idle, bad)
+    expect(r).toMatchObject({
+      status: 'error',
+      errors: { tags: 'Please choose highlights from the list.' },
     })
   })
   it('honeypot filled: reports success but stores nothing and spends no rate limit', async () => {

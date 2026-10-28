@@ -70,6 +70,7 @@ Added in Phase 3:
 | TC-UNIT-071 | `mediaUrl`: demo and `photos/` paths, storage path, traversal, sub-folders, absolute/external URL, SVG, Storage unconfigured | Local/bucket URL or null |
 | TC-UNIT-121 | Category thumbnails (ADR-060): every mapped file exists, all 16 real categories have one, unmapped slugs fall back to the icon | Pass |
 | TC-UNIT-122 | Table QR cards (ADR-061): tables 1–20, `table=N` added to the menu URL, strict table-number parsing (`0`, `21`, `05`, `1.5`, `1e1` refused) | Pass |
+| TC-UNIT-124 | Feedback quick highlights (ADR-062): known keys only, duplicates dropped, list order kept, max 6; unknown values (`APPROVED`, lowercase, `<script>`, non-array) refused with one message; the action reads every `tags` checkbox | Pass |
 | TC-UNIT-123 | Quick-edit actions (ADR-061): require an admin; bad prices, non-label flags (`isArchived`, `isDemo`, `__proto__`…), non-boolean values and forged IDs refused before any write; `149.50` → 14950 paise | Pass |
 | TC-UNIT-120 | Outlet photo list (ADR-056): every file exists in `public/`, resolves locally, alt text and caption fit the schema, no duplicates | Pass |
 | TC-UNIT-080 | Error mapping: Prisma P2002/P2025/P2003/P1001/unknown, Zod, ApiError | 409/404/409/503/500/400; no internal text |
@@ -95,6 +96,7 @@ Added in Phase 6:
 | ID | Case | Expected |
 |---|---|---|
 | TC-UNIT-094 | Feedback schema (lengths, control/zero-width/bidi characters removed, HTML kept as text, unknown fields dropped); QR target = configured URL, decoded payload equals it, SVG/PNG valid, localhost/LAN/http warnings; moderation actions require an admin; public action: pending only, honeypot, rate limit, generic DB error | Pass (`tests/unit/feedback-qr.test.ts`) |
+| TC-INT-043 | Quick highlights on Postgres (ADR-062): stored, returned in moderation and on approved reviews; no highlights → `{}`; raw SQL with an unknown tag is refused by the enum | Pass |
 | TC-INT-040/041 | Feedback on Postgres: pending → not public; approve → public text (XSS stored as text); reject → hidden; delete; "Guest" fallback; 3/10 min limit per IP; 90-day purge of rejected feedback | Pass (`tests/integration/feedback.test.ts`) |
 | TC-E2E-042/043/044/073 | `/qr` image + downloads + destination opens the menu; feedback submit, validation, honeypot, 4th submission refused; approve → home shows payload as text (not executed) → reject hides → delete; admin QR warnings; axe + overflow; baselines | Pass (`tests/e2e/admin-feedback.spec.ts`) |
 
@@ -217,6 +219,7 @@ Phase 5B note: uploads go through a Server Action, so TC-SEC-060…063 are refus
 | TC-E2E-040 | Gallery lightbox keyboard (arrows, Esc, focus restore) | Pass |
 | TC-E2E-041 | Contact: tel/mailto/wa.me/social links have valid hrefs; map iframe has a title; directions link | Pass |
 | TC-E2E-042 | Feedback submit → success; appears publicly only after admin approval | Pass |
+| TC-E2E-085 | Feedback quick highlights (ADR-062): guest ticks two pills → stored; admin sees them as chips; after approval the home review shows them | Pass |
 | TC-E2E-043 | QR page: decode the rendered QR (jsQR in test) equals `${SITE_URL}/menu?src=qr`; PNG/SVG download; table code `table=12` downloads as `zorko-sangli-table-12-qr.png`, invalid tables → 400; admin page shows 20 table cards with downloads and Print all (signed-in part needs test accounts) | Pass |
 | TC-E2E-044 | Visiting the QR target URL on a mobile viewport opens the menu with no login | Pass |
 | TC-E2E-045 | SEO: title/description/canonical/OG/Twitter tags; noindex on missing pages; sitemap and robots.txt | Tags present; sitemap has only visible content and every URL resolves |

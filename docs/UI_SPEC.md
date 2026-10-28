@@ -339,11 +339,13 @@ Default size is 18–20 px (16 px inside small buttons), `stroke-width` 2, inher
 
 ### 12.1 Home (`/`) — Stitch `desktop_home`
 1. **Hero** (`bg-surface-container-low`, 12-col: 7/5).
-   - Chips row: "Open today <hours>" from the database. No ratings or certification chips.
+   - No hours chip in the hero (ADR-064): today's hours are already in the top info bar, the "At a glance" strip, Visit us and the footer. No ratings or certification chips.
    - Eyebrow "ZORKO Sangli"; H1 "Hungry? Bite Into Joy at **ZORKO Sangli!**" with the second line `text-primary`; lead text is neutral, editable brand copy.
    - CTAs: **View Menu** (primary → `/menu`) and **View Offers** (tonal → `/offers`).
-   - Three feature tiles describing real site features: "QR Digital Menu / Scan to browse", "Student Zone / Offers for students", "Live Availability / See what's in stock".
-   - Image card: active banner image or hero placeholder. Floating stat card: "**N** items on the menu" (a real count from the database). The second floating card ("10 Mins") is removed.
+   - Three features describing real site features: "QR Digital Menu / Scan to browse", "Student Zone / Offers for students", "Live Availability / See what's in stock". Plain list (ADR-063): 16 px brown icon, title, text; a hairline above; no boxes.
+   - Desktop 6/6 columns. Image card: active banner image, otherwise ZORKO's own paneer-burger brand photo, tight 5:4 crop (`brand-paneer-burger-hero.webp`, never a stock photo, ADR-063/064); `aspect-[5/4]`, max 560 px, `rounded-3xl`, fine border, no heavy shadow. Stat label on the frame's bottom edge, left: "**N**" (`headline-md`) + "items on the menu" (`label-md`), a real count from the database, no icon tile. The second floating card ("10 Mins") is removed.
+   - CTAs carry no decorative icons. No background glow.
+   - **Eyebrows site-wide** (hero and `SectionHeading`): brown `text-primary` spaced capitals, no orange dash (ADR-063). The orange header/footer rules and the active-nav underline stay.
 2. **Promotional banners strip:** published, in-date `PromotionalBanner`s; one is a full-width card and several form a snap carousel with buttons. Hidden when there are none. This replaces the Stitch orange claims strip with a strip of facts computed from the database:
    - location (short address), shown only when configured;
    - "QR Digital Menu";
@@ -418,6 +420,7 @@ Heading block, then a grid `grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-space-
 ### 12.9 Feedback (`/feedback`) — derived
 Card `max-w-xl rounded-3xl p-space-xl`:
 - Fields: name or nickname (optional), message (required, counter 0/1000), a hidden honeypot field.
+- **Quick highlights (optional, ADR-062):** a `fieldset` of six toggle pills below the message: outline `border-border` with a `+` icon; ticked = `bg-primary text-on-primary` with a check icon; `min-h-12` (`lg:min-h-10`); visible focus ring. Ticked highlights appear as `bg-surface-warm-cream text-primary` chips in admin moderation and on approved reviews.
 - Privacy note: "Your feedback is reviewed before it appears publicly. We don't collect your email or phone."
 - Submit button, success state ("Thanks! Your feedback will appear after review"), and error states (validation, rate limit "Too many submissions, try again in a few minutes", generic failure).
 

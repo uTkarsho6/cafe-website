@@ -16,11 +16,17 @@ test.afterAll(async () => {
   await testDb((db) => db.query(`DELETE FROM "Feedback" WHERE message LIKE 'E2E %'`))
 })
 
-async function submitFeedback(page: Page, message: string, name?: string) {
+async function submitFeedback(page: Page, message: string, name?: string, tags: string[] = []) {
   await page.goto('/feedback')
   await expect(page.getByRole('heading', { level: 1, name: 'Feedback' })).toBeVisible()
   if (name) await page.getByLabel('Your name or nickname (optional)').fill(name)
   await page.getByLabel('Your feedback').fill(message)
+  const highlights = page.getByRole('group', { name: /Quick highlights/ })
+  // Click the visible pill like a guest (the real checkbox inside it is visually hidden).
+  for (const t of tags) {
+    await highlights.locator('label').filter({ hasText: t }).click()
+    await expect(highlights.getByRole('checkbox', { name: t })).toBeChecked()
+  }
   await page.getByRole('button', { name: 'Send feedback' }).click()
 }
 
@@ -73,9 +79,18 @@ test.describe('public: QR menu', () => {
 test.describe('public: feedback form', () => {
   test('valid feedback is stored as pending and is not public', async ({ page }) => {
     await asClient(page)
-    await submitFeedback(page, XSS, 'E2E Guest')
+    await submitFeedback(page, XSS, 'E2E Guest', ['Tasty food', 'Quick service'])
     await expect(page.getByRole('status')).toContainText('Thanks! Your feedback will appear')
     expect(await rows(XSS)).toEqual([{ status: 'PENDING' }])
+    const tags = await testDb(
+      async (db) =>
+        (
+          await db.query<{ tags: string }>(`SELECT tags::text FROM "Feedback" WHERE message = $1`, [
+            XSS,
+          ])
+        ).rows[0]?.tags,
+    )
+    expect(tags).toBe('{TASTY_FOOD,QUICK_SERVICE}') // TC-E2E-085
     await page.goto('/')
     await expect(page.getByText('great masala fries')).toHaveCount(0)
   })
@@ -132,6 +147,10 @@ test.describe('admin: moderation and QR', () => {
     const row = page.getByTestId('feedback-row').filter({ hasText: 'great masala fries' })
     await expect(row).toBeVisible()
     await expect(row.getByText(XSS)).toBeVisible() // shown literally to the admin, not as HTML
+    await expect(row.getByRole('list', { name: 'Highlights' }).getByRole('listitem')).toHaveText([
+      'Tasty food',
+      'Quick service',
+    ])
     await row.getByRole('button', { name: /^Approve/ }).click()
     await expect(page.getByText('Approved: now shown publicly.')).toBeVisible()
 
@@ -140,6 +159,8 @@ test.describe('admin: moderation and QR', () => {
       await home.goto('/')
       await expect(home.getByText(XSS, { exact: false }).first()).toBeVisible({ timeout: 2_000 })
     }).toPass({ timeout: 15_000 })
+    const review = home.getByRole('listitem').filter({ hasText: 'great masala fries' })
+    await expect(review.getByRole('list', { name: 'Highlights' })).toContainText('Quick service')
     expect(
       await home.evaluate(() => (window as unknown as { __xss?: number }).__xss),
     ).toBeUndefined()

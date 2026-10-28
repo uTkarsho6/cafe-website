@@ -53,6 +53,16 @@ enum FeedbackStatus {
   REJECTED
 }
 
+/// Quick highlights a guest can tick on the feedback form (Round 2D, ADR-062).
+enum FeedbackTag {
+  TASTY_FOOD
+  QUICK_SERVICE
+  FRIENDLY_STAFF
+  GREAT_AMBIENCE
+  GOOD_VALUE
+  STUDENT_FRIENDLY
+}
+
 model MenuCategory {
   id          String       @id @default(cuid())
   name        String       @db.VarChar(60)
@@ -283,6 +293,7 @@ model Feedback {
   id            String         @id @default(cuid())
   displayName   String?        @db.VarChar(40)
   message       String         @db.VarChar(1000)
+  tags          FeedbackTag[]  @default([])
   status        FeedbackStatus @default(PENDING)
   moderatedAt   DateTime?
   moderatedById String?

@@ -49,8 +49,11 @@ export function MenuCard({
       className={cn(
         // ADR-060: a fine border instead of a drop shadow; orange border on hover.
         'group relative flex w-full rounded-2xl border border-border bg-surface-container-lowest transition-colors hover:border-cta',
-        list ? 'flex-row gap-space-md p-space-sm sm:p-space-md' : 'flex-col p-2 md:p-space-md',
-        variant === 'trending' && 'overflow-hidden p-0 md:p-0',
+        // Padding chosen per variant: cn() cannot merge the custom `space-*` padding away, so the
+        // trending card (photo edge to edge) must not get the grid padding at all (ADR-063).
+        list && 'flex-row gap-space-md p-space-sm sm:p-space-md',
+        variant === 'grid' && 'flex-col p-2 md:p-space-md',
+        variant === 'trending' && 'flex-col overflow-hidden',
       )}
       data-testid="menu-card"
     >

@@ -12,11 +12,11 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 7 — Round 2C (admin quick edits, table QR cards 1–20) |
-| **Phase status** | AWAITING TEAM VERIFICATION of Rounds 2B and 2C (committed 2026-10-28 with permission; future commits still only when the team says so). Next: Round 2D (feedback quick tags + full regression). Phase 7 itself still awaits `approved, go to Phase 8`. |
+| **Current phase** | Phase 7 — Round 2D (feedback quick highlights) |
+| **Phase status** | AWAITING TEAM VERIFICATION of Rounds 2B–2D. 2B/2C committed (`677fc8e`); 2D uncommitted (commit only when the team says so). Phase 7 itself still awaits `approved, go to Phase 8`. |
 | **Git** | Branch `phase-7-round2` (from `phase-7`). Local commits only. |
-| **Last task completed** | Round 2C (2026-10-28): ADR-061, Ice Tea photo; see the phase-7 report "Round 2C" for results. Signed-in admin E2E incl. real Storage uploads PASS after the team added `SUPABASE_SECRET_KEY` (report: "Round 2C — signed-in admin verification"). |
-| **Next action** | Wait for the team's verdict on 2B/2C; then 2D (feedback quick tags; needs a migration, ask first). |
+| **Last task completed** | Round 2D (2026-10-28): ADR-062, feedback quick highlights; migration applied to the dev database; see the phase-7 report "Round 2D". |
+| **Next action** | Wait for the team's verdict on 2D (and 2B/2C), then their commit permission; then `approved, go to Phase 8`. |
 | **Waiting on the team** | Round 2A check; delete 2 broken gallery rows in Admin → Gallery; rotate the password in the unofficial copy's README-FOR-TEAM.md; Q-21. |
 | **Note** | This Mac runs under very high load (BTLEServer ~97 % CPU), so E2E with 4 workers can time out on static files. Run `npx playwright test --workers=2` locally. The current network uses NAT64 (`64:ff9b::`), so Next's image optimizer refuses Supabase Storage images locally (SSRF guard) and DNS/Supabase calls fail now and then; re-run affected tests. |
 

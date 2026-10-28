@@ -9,9 +9,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Field | Value |
 |---|---|
 | Current phase | **Phase 7 — Round 2A (team-requested changes: UI port from the unofficial copy)** |
-| Status | **AWAITING TEAM VERIFICATION** (Rounds 2B and 2C; committed; signed-in admin E2E PASS) |
+| Status | **AWAITING TEAM VERIFICATION** (2B and 2C committed `677fc8e`; 2D–2F done, uncommitted) |
 | Branch | `phase-7-round2` (from `phase-7`) |
-| Latest report | `docs/PHASE_REPORTS/phase-7.md` → "Round 2C" |
+| Latest report | `docs/PHASE_REPORTS/phase-7.md` → "Round 2F" |
 | Last updated | 2026-10-28 |
 
 ## Approved phases
@@ -36,7 +36,10 @@ The team asked to keep this project and bring over the UI changes from an unoffi
 - **2A fixes:** admin login (invalid Supabase key from the copy, admin reset), gallery repair + brand photos, footer logo (ADR-058).
 - **2B:** brand redesign of header and footer in the zorko.in style, site-wide (ADR-059). Inserted at the team's request on 2026-10-28.
 - **2C:** admin menu quick editing (inline ₹ price, quick flags), table QR cards 1–20 with bulk print and PNG/SVG (ADR-061). Done 2026-10-28; Ice Tea category photo added the same day.
-- **2D:** feedback quick tags (migration), full regression.
+- **2D:** feedback quick highlights stored as an enum array (ADR-062, migration `20261028120000_feedback_tags`, applied to the dev database), full regression. Done 2026-10-28, uncommitted.
+- **2E:** final homepage polish (ADR-063): no eyebrow dashes, authentic ZORKO hero photo, lighter icons, Popular Picks photos edge to edge. Done 2026-10-29, uncommitted.
+- **2F:** hero refinement (ADR-064): tighter burger crop, 6/6 columns, no hero hours chip, count badge on the frame edge; team's test review deleted from the dev database. Done 2026-10-29, uncommitted.
+- **2G:** team-supplied hero burger photo (ADR-065), portrait 4:5 frame. Done 2026-10-29, uncommitted. Open: photo looks non-veg against the "100% VEG" badge; licence unknown.
 - **Commits:** only with the team's explicit permission (team instruction, 2026-10-28). 2A is commit `ad65c16`; 2A fixes, 2B and 2C (incl. signed-in admin verification) committed on 2026-10-28 with permission ("yes procedd and commit this").
 
 ## Open bugs
@@ -59,7 +62,8 @@ None open. Fixed in Phase 6 Round 2: admin stayed signed in across visits (ADR-0
 - Structured data (JSON-LD, FR-023) once hours and the remaining café facts are confirmed (ADR-047).
 - Gallery lightbox E2E with real uploaded photos once Storage is set up.
 - New admin actions: use `expirePublic()` from `action-utils.ts` and return `redirectTo` instead of calling `redirect()` (ADR-050).
-- Real Storage uploads (items, banners, gallery, offers) are NOT RUN in E2E until `SUPABASE_SECRET_KEY` and the `public-media` bucket exist (DEPLOYMENT §7).
+- ~~Real Storage uploads NOT RUN in E2E~~ Done 2026-10-28: `SUPABASE_SECRET_KEY` and `public-media` exist; item, banner and gallery uploads PASS.
+- `getAdminCheck()` (`src/server/auth/admin.ts`) treats a failed `getUser()` call (Supabase unreachable) as signed out without logging it. Failing closed is correct, but log non-session errors like the login action does (`admin.login_auth_service_error`, status only) so an outage is not mistaken for a logout. Seen in Round 2D E2E on a flaky network.
 
 ## Assumptions waiting for team confirmation
 

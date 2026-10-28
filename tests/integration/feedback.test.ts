@@ -57,6 +57,36 @@ describe('feedback lifecycle', () => {
     await expect(moderateFeedback(f.id, 'APPROVED', adminId)).rejects.toThrow(/no longer exists/)
   })
 
+  it('quick highlights (TC-INT-043): stored, shown on approved reviews and in moderation; DB refuses unknown tags', async () => {
+    const f = await createFeedback(
+      feedbackInputSchema.parse({
+        message: 'Test highlights were spot on',
+        tags: ['QUICK_SERVICE', 'TASTY_FOOD'],
+      }),
+    )
+    expect((await db().feedback.findUniqueOrThrow({ where: { id: f.id } })).tags).toEqual([
+      'TASTY_FOOD',
+      'QUICK_SERVICE',
+    ])
+    const row = (await listAdminFeedback('PENDING', 1)).items.find((i) => i.id === f.id)
+    expect(row?.tags).toEqual(['TASTY_FOOD', 'QUICK_SERVICE'])
+    await moderateFeedback(f.id, 'APPROVED', adminId)
+    const pub = (await listApprovedReviews(50)).find((r) => r.id === f.id)
+    expect(pub?.tags).toEqual(['TASTY_FOOD', 'QUICK_SERVICE'])
+
+    // Without tags (existing rows, old clients): an empty list, never null.
+    const plain = await submit('Test no highlights at all')
+    expect((await db().feedback.findUniqueOrThrow({ where: { id: plain.id } })).tags).toEqual([])
+
+    // The enum is the last line of defence: even raw SQL cannot store an unknown tag.
+    await expect(
+      db().$executeRawUnsafe(
+        `UPDATE "Feedback" SET tags = ARRAY['APPROVED']::"FeedbackTag"[] WHERE id = $1`,
+        f.id,
+      ),
+    ).rejects.toThrow()
+  })
+
   it('anonymous feedback shows as "Guest"; counts per status are returned', async () => {
     const f = await submit('Test anonymous feedback')
     await moderateFeedback(f.id, 'APPROVED', adminId)

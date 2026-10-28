@@ -9,9 +9,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Field | Value |
 |---|---|
 | Current phase | **Phase 8 — Deployment readiness** |
-| Status | **IN PROGRESS** |
+| Status | **AWAITING TEAM VERIFICATION** (deployment itself waits for accounts + written approval) |
 | Branch | `phase-8` (from `main`) |
-| Latest report | `docs/PHASE_REPORTS/phase-7.md` (Phase 8 report pending) |
+| Latest report | `docs/PHASE_REPORTS/phase-8.md` |
 | Last updated | 2026-10-29 |
 
 ## Approved phases

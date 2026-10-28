@@ -70,6 +70,7 @@ Added in Phase 3:
 | TC-UNIT-071 | `mediaUrl`: demo and `photos/` paths, storage path, traversal, sub-folders, absolute/external URL, SVG, Storage unconfigured | Local/bucket URL or null |
 | TC-UNIT-121 | Category thumbnails (ADR-060): every mapped file exists, all 16 real categories have one, unmapped slugs fall back to the icon | Pass |
 | TC-UNIT-122 | Table QR cards (ADR-061): tables 1–20, `table=N` added to the menu URL, strict table-number parsing (`0`, `21`, `05`, `1.5`, `1e1` refused) | Pass |
+| TC-UNIT-125 | Production preflight (ADR-066): complete separate env passes; missing variables, http/localhost/IP site URL, wrong pooler ports, short or reused salt, secret key in `NEXT_PUBLIC_*`, dev project, mixed projects and test-only variables fail; messages never contain values | Pass |
 | TC-UNIT-124 | Feedback quick highlights (ADR-062): known keys only, duplicates dropped, list order kept, max 6; unknown values (`APPROVED`, lowercase, `<script>`, non-array) refused with one message; the action reads every `tags` checkbox | Pass |
 | TC-UNIT-123 | Quick-edit actions (ADR-061): require an admin; bad prices, non-label flags (`isArchived`, `isDemo`, `__proto__`…), non-boolean values and forged IDs refused before any write; `149.50` → 14950 paise | Pass |
 | TC-UNIT-120 | Outlet photo list (ADR-056): every file exists in `public/`, resolves locally, alt text and caption fit the schema, no duplicates | Pass |

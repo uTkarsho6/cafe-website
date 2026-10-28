@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=22.13.0"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev",
@@ -20,6 +20,8 @@
     "test:e2e": "npm run test:db:reset && playwright test",
     "check": "npm run lint && npm run typecheck && npm run format:check && npm test && npm run build",
     "postinstall": "prisma generate",
+    "preflight": "node scripts/preflight.mjs",
+    "scan:build": "node scripts/scan-build.mjs",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:status": "prisma migrate status",

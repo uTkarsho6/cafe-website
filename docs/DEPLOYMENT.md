@@ -1,6 +1,6 @@
 # DEPLOYMENT
 
-**Version:** 1.0 (Phase 1 skeleton). Commands marked *(Phase N)* become available in that phase; this document is completed and verified step by step through Phase 8.
+**Version:** 2.0 (Phase 8). Sections 1–13 were verified phase by phase; §14 is the production go-live runbook (verified locally; the production steps run only with the team's accounts and written approval).
 
 ## 1. Environments
 
@@ -120,10 +120,7 @@ ALLOW_DEMO_SEED=true npm run db:seed    # demo data; refuses without the flag an
 npm run lint && npm run typecheck && npm test && npm run build
 npm run test:e2e
 ```
-- **Vercel (Phase 8, with approval):**
-  - Import the repo and set the env vars for Production and Preview separately.
-  - Set the region to `bom1`.
-  - The production branch is `main`.
+- **Vercel:** follow §14 (region `bom1` comes from `vercel.json`; Node `22.x` from `package.json` `engines`).
 - After deploy:
   - `GET /api/health` returns `{"status":"ok","db":"ok"}`.
   - Open `/qr` and confirm the encoded URL is the https production domain.
@@ -167,3 +164,71 @@ If any secret appears in a log, chat, commit or screenshot, treat it as compromi
 | Images not loading | `remotePatterns` host mismatch or bucket not public |
 | QR points to localhost | `NEXT_PUBLIC_SITE_URL` not set for that environment |
 | Admin login loops | Cookie not set (site URL/domain mismatch), or the user is not in `AdminUser` |
+| Production shows "(to be confirmed)" | `hoursVerified` is false: tick **Opening hours confirmed** in Admin → Café info once the café confirms |
+| Email links open `localhost` | Supabase → Authentication → URL Configuration: Site URL still `http://localhost:3000` (§14 step A3) |
+
+## 14. Production go-live runbook *(Phase 8)*
+
+**Needs:** a Vercel account (connected to the GitHub repo), a **new** Supabase project for production, the production domain (or the `*.vercel.app` address), and the team's written go-ahead (CLAUDE.md rule 14). Never reuse the dev project.
+
+### Safety rules
+- **Never create `.env.production` or `.env.production.local` on a laptop.** Next.js and the Prisma CLI (`prisma.config.ts`) load them automatically, so every local command would silently use the production database.
+- Keep production values in a separate, git-ignored file, for example `.env.prod-admin` (matches `.env.*` in `.gitignore`), in a password manager when not in use. Load it only inside a subshell together with `VERCEL_ENV=production`, so the scripts' production guards are active:
+  ```bash
+  prod() { ( set -a && . ./.env.prod-admin && set +a && export VERCEL_ENV=production && "$@" ); }
+  ```
+  Shell variables win over `.env.local`, so `prod npm run …` targets production and plain `npm run …` still targets dev.
+
+### A. Production Supabase project
+1. Create the project (region **Mumbai / ap-south-1**, strong database password from a password manager).
+2. **Authentication → Sign In / Providers:** Email enabled, **"Allow new users to sign up" off**. Optional: MFA (TOTP) for admins (Q-14).
+3. **Authentication → URL Configuration:** Site URL = the production https address; Redirect URLs = `https://<domain>/**`. (Otherwise password-recovery emails link to localhost, as seen on dev in Phase 5A.)
+4. **Storage:** bucket `public-media` exactly as in §7 (public read, 5 MB, WebP/JPEG/PNG, no write policies).
+5. Copy into `.env.prod-admin`: `DATABASE_URL` (Transaction pooler, 6543), `DIRECT_URL` (5432), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, a **new** `RATE_LIMIT_SALT` (`openssl rand -hex 32`), and `NEXT_PUBLIC_SITE_URL=https://<domain>`. No `E2E_*`, `ALLOW_DEMO_SEED` or `ENABLE_STYLEGUIDE`.
+6. **Preflight** (names only, never values; also refuses the dev project and a reused salt):
+   ```bash
+   npm run preflight -- .env.prod-admin     # must end with "PASS  production env looks complete"
+   ```
+
+### B. Database (with written approval)
+```bash
+prod npm run db:migrate:deploy             # all migrations incl. RLS deny-all; a new project needs no backup first
+prod npm run db:migrate:status             # "Database schema is up to date!"
+prod npm run test:supabase                 # REST API denied on every table (RLS check)
+prod npm run db:import-menu -- --production # real Sangli menu + outlet details (create-only); never db:seed
+prod npm run gallery:outlet-photos -- --production   # optional: outlet photos into the gallery
+```
+Later migrations: `pg_dump` backup first (§9), then `prod npm run db:migrate:deploy`.
+
+### C. First production admin
+1. Production Supabase → Authentication → Users → Add user (Auto Confirm), strong password; copy the User UID.
+2. `prod npm run admin:add -- --user-id <UID> --email <email> --name "Name" --production`, then `prod npm run admin:list`.
+
+### D. Vercel
+1. **Add New → Project →** import `uTkarsho6/cafe-website`. Framework: Next.js (auto). Production branch: `main`. Build and install commands: defaults (`npm run build` runs `prisma generate`).
+2. **Environment variables:**
+   | Variable | Production | Preview |
+   |---|---|---|
+   | `NEXT_PUBLIC_SITE_URL` | `https://<domain>` | leave unset (QR page warns) or the preview domain |
+   | `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` | production project | **dev** project |
+   | `RATE_LIMIT_SALT` | production salt | dev salt |
+   | `E2E_*`, `ALLOW_DEMO_SEED`, `ENABLE_STYLEGUIDE` | never | never |
+3. Deploy. `NEXT_PUBLIC_*` values are built into the pages, so **redeploy after changing any of them** (for example after adding the custom domain).
+4. **Domain:** Project → Settings → Domains; Vercel issues the HTTPS certificate. Set `NEXT_PUBLIC_SITE_URL` and the Supabase Site URL (A3) to it, then redeploy.
+
+### E. Verify after every production deploy
+```bash
+curl -s https://<domain>/api/health                     # {"status":"ok","db":"ok",…}
+curl -sI https://<domain>/ | grep -iE "strict-transport|content-security|x-frame|referrer"
+```
+- [ ] `/qr` shows the https production address (no localhost warning); scan it with a phone.
+- [ ] `/admin` redirects to the login; sign in; a Supabase user who is not on the allowlist is refused.
+- [ ] Toggle an item's availability: the public menu follows within 30 seconds.
+- [ ] Upload a test image in Admin → Menu items, check it on the item page, remove it.
+- [ ] Submit feedback: hidden until approved.
+- [ ] Public artifacts: locally, `prod npm run build && node scripts/scan-build.mjs .env.prod-admin` → "PASS  no secret values in build output".
+- [ ] Opening hours: confirm with the café, then tick **Opening hours confirmed** in Admin → Café info.
+
+### F. Rollback
+App: Vercel → Deployments → previous → **Promote to Production** (§10). Database: forward-fix migration; restore from backup only with written approval.
+

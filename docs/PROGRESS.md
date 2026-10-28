@@ -8,11 +8,11 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 | Field | Value |
 |---|---|
-| Current phase | **Phase 7 — Round 2A (team-requested changes: UI port from the unofficial copy)** |
-| Status | **AWAITING TEAM VERIFICATION** (2B and 2C committed `677fc8e`; 2D–2F done, uncommitted) |
-| Branch | `phase-7-round2` (from `phase-7`) |
-| Latest report | `docs/PHASE_REPORTS/phase-7.md` → "Round 2F" |
-| Last updated | 2026-10-28 |
+| Current phase | **Phase 8 — Deployment readiness** |
+| Status | **IN PROGRESS** |
+| Branch | `phase-8` (from `main`) |
+| Latest report | `docs/PHASE_REPORTS/phase-7.md` (Phase 8 report pending) |
+| Last updated | 2026-10-29 |
 
 ## Approved phases
 
@@ -28,6 +28,7 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Phase 5B | 2026-10-16 | "approved, go to Phase 5C" |
 | Phase 5C | 2026-10-16 | "approved, go to Phase 6" |
 | Phase 6 | 2026-10-16 | "approved, go to Phase 7" |
+| Phase 7 | 2026-10-29 | "approved, go to Phase 8" (incl. Rounds 2A–2G) |
 
 ## Team-requested changes (Phase 7 Round 2, 2026-10-28)
 

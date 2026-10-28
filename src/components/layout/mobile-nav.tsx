@@ -7,6 +7,7 @@ import { Suspense, useState } from 'react'
 import { Dialog } from '@/components/ui/dialog'
 import { isActivePath, type NavItem } from '@/lib/site/nav'
 import { cn } from '@/lib/utils'
+import { StaffLink } from './staff-link'
 
 /** Menu button + drawer for 768–1279 px (UI_SPEC §8.1, ADR-024). */
 export function MobileNav({ items }: { items: NavItem[] }) {
@@ -59,6 +60,7 @@ function MobileNavView({ items, pathname }: { items: NavItem[]; pathname: string
               )
             })}
           </ul>
+          <StaffLink onNavigate={() => setOpen(false)} />
         </nav>
       </Dialog>
     </>

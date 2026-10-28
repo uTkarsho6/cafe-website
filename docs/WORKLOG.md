@@ -12,12 +12,12 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 7 — Security hardening and full regression |
-| **Phase status** | AWAITING TEAM VERIFICATION. All suites pass (check 302, integration 103, Supabase 46, E2E 312). Do **not** start Phase 8 until the team replies exactly `approved, go to Phase 8`. |
-| **Git** | Branch `phase-7` (from `main` after the Phase 6 merge; tag `phase-6-approved`). Local commits; push on the team's "push". |
-| **Last task completed** | Phase 7 (2026-10-16): scans, attack replays, authz guard, CSP evaluation (ADR-053), Zod jitless, favicon, TC-E2E-090/091, Lighthouse. |
-| **Next action** | Wait for `approved, go to Phase 8`. Phase 8 needs from the team: Vercel account, production Supabase project, domain (if any). |
-| **Waiting on the team** | Approval phrase; confirm accepted risks R-07/R-12; Storage setup; Phase 8 accounts; "push". |
+| **Current phase** | Phase 7 — Round 2A (team-requested UI port: security upgrade, logo, 1480 px width, staff link, outlet photos) |
+| **Phase status** | AWAITING TEAM VERIFICATION of Round 2A. Do **not** start Round 2B (admin quick edit + table QR cards) until the team approves 2A. Phase 7 itself still awaits `approved, go to Phase 8`. |
+| **Git** | Branch `phase-7-round2` (from `phase-7`). Local commits only. |
+| **Last task completed** | Round 2A (2026-10-28): ADR-054…057, 310 unit, 103 integration, E2E 256 + 13 pass (1 WebKit timing flake re-run 6/6 PASS), 42 signed-in NOT RUN (no test accounts in the current Supabase project). |
+| **Next action** | Wait for the team's Round 2A verdict. Then 2B, then 2C (PROGRESS.md). |
+| **Waiting on the team** | Round 2A check; delete 2 broken gallery rows in Admin → Gallery; rotate the password in the unofficial copy's README-FOR-TEAM.md; Q-21; test accounts in the current Supabase project. |
 | **Note** | This Mac runs under very high load (BTLEServer ~97 % CPU), so E2E with 4 workers can time out on static files. Run `npx playwright test --workers=2` locally. |
 
 ### On approval (the CLAUDE.md §0.2 step 8 routine)

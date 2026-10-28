@@ -67,7 +67,8 @@ Added in Phase 3:
 | ID | Case | Expected |
 |---|---|---|
 | TC-UNIT-070 | Seed guard: no `ALLOW_DEMO_SEED`, `=1`, production `NODE_ENV`/`VERCEL_ENV`, missing URL | Refused with reason |
-| TC-UNIT-071 | `mediaUrl`: demo path, storage path, traversal, absolute/external URL, SVG, Storage unconfigured | Local/bucket URL or null |
+| TC-UNIT-071 | `mediaUrl`: demo and `photos/` paths, storage path, traversal, sub-folders, absolute/external URL, SVG, Storage unconfigured | Local/bucket URL or null |
+| TC-UNIT-120 | Outlet photo list (ADR-056): every file exists in `public/`, resolves locally, alt text and caption fit the schema, no duplicates | Pass |
 | TC-UNIT-080 | Error mapping: Prisma P2002/P2025/P2003/P1001/unknown, Zod, ApiError | 409/404/409/503/500/400; no internal text |
 
 Added in Phase 5B:
@@ -104,6 +105,7 @@ Added in Phase 7:
 | TC-SEC-120 | Junk API inputs (negative page, quote injection, path traversal, 5000-char slug, bad QR format) | <500 status, no stack traces or internals |
 | TC-E2E-090 | No ordering/cart/coupon UI and none of the CLAUDE.md §6.2/§6.3 mockup claims on 13 public pages | Pass (`tests/e2e/regression.spec.ts`, both engines) |
 | TC-E2E-091 | No console errors, page errors or failed same-origin requests on the same 13 pages | Pass |
+| TC-E2E-092 | Header shows the official logo (image loads); footer and phone "More" sheet "Staff portal" open only the sign-in page (ADR-055) | Pass |
 
 Added in Phase 4A: menu URL state (invalid values dropped, hrefs keep filters, chips), navigation gating (`liveNav`, `isActivePath`), 12-hour time formatting, price-band `where` clauses (TC-UNIT-012), in `tests/unit/menu-page.test.ts`. Menu card states (TC-COMP-002) in `tests/component/menu-card.test.tsx`.
 

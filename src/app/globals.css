@@ -149,6 +149,9 @@
   --spacing-margin-tablet: 1.5rem;
   --spacing-margin-desktop: 2.5rem;
 
+  /* Page width (UI_SPEC §4, ADR-054): one token for every page row — header, sections, footer. */
+  --container-page: 1480px;
+
   /* Warm elevation from DESIGN.md (Level 1-warm / Level 2) */
   --shadow-warm: 0 4px 16px -2px rgba(241, 90, 36, 0.2);
   --shadow-header: 0 1px 8px rgba(0, 0, 0, 0.04);

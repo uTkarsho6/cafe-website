@@ -8,11 +8,11 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 | Field | Value |
 |---|---|
-| Current phase | **Phase 7 — Security hardening and full regression** |
-| Status | **AWAITING TEAM VERIFICATION** |
-| Branch | `phase-7` |
-| Latest report | `docs/PHASE_REPORTS/phase-7.md` |
-| Last updated | 2026-10-16 |
+| Current phase | **Phase 7 — Round 2A (team-requested changes: UI port from the unofficial copy)** |
+| Status | **AWAITING TEAM VERIFICATION** (Round 2A) |
+| Branch | `phase-7-round2` (from `phase-7`) |
+| Latest report | `docs/PHASE_REPORTS/phase-7.md` → "Round 2A" |
+| Last updated | 2026-10-28 |
 
 ## Approved phases
 
@@ -28,6 +28,13 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Phase 5B | 2026-10-16 | "approved, go to Phase 5C" |
 | Phase 5C | 2026-10-16 | "approved, go to Phase 6" |
 | Phase 6 | 2026-10-16 | "approved, go to Phase 7" |
+
+## Team-requested changes (Phase 7 Round 2, 2026-10-28)
+
+The team asked to keep this project and bring over the UI changes from an unofficial copy (Downloads folder), securely, in rounds verified one at a time:
+- **2A:** Next.js 16.4.3 security upgrade, official logo, 1480 px page width, "Staff portal" link, outlet gallery photos (ADR-054…057).
+- **2B:** admin menu quick editing (inline ₹ price, quick flags), table QR cards 1–20 with bulk print and PNG/SVG.
+- **2C:** feedback quick tags (migration), full regression.
 
 ## Open bugs
 

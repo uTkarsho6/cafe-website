@@ -1,6 +1,11 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
-/** Text wordmark (UI_SPEC §8.1). The official logo is used only once permission is confirmed (Q-09). */
+/**
+ * Official ZORKO logo with the "Sangli" outlet tag (UI_SPEC §8.1, ADR-055). The logo file is the
+ * brand asset supplied by the team (source kept in design/brand/). The link's aria-label names the
+ * destination, so the image itself is decorative.
+ */
 export function Logo() {
   return (
     <Link
@@ -8,15 +13,16 @@ export function Logo() {
       className="flex shrink-0 items-center gap-space-sm rounded-xl"
       aria-label="ZORKO Sangli — home"
     >
-      <span
-        aria-hidden="true"
-        className="flex size-11 items-center justify-center rounded-xl bg-primary font-heading text-headline-sm font-extrabold text-on-primary"
-      >
-        Z
-      </span>
-      <span aria-hidden="true" className="flex flex-col leading-none">
-        <span className="font-heading text-headline-sm font-extrabold">ZORKO</span>
-        <span className="text-label-sm tracking-widest text-primary uppercase">Sangli</span>
+      <Image
+        src="/logo.webp"
+        alt=""
+        width={246}
+        height={105}
+        priority
+        className="h-10 w-auto md:h-12"
+      />
+      <span aria-hidden="true" className="text-label-sm tracking-widest text-primary uppercase">
+        Sangli
       </span>
     </Link>
   )

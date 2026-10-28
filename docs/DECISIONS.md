@@ -14,7 +14,7 @@ Format: ID · decision · alternatives · rationale · consequences. Status: **A
 
 | Package | Pinned | Note |
 |---|---|---|
-| next / eslint-config-next | 16.4.0 | Template default `cacheComponents: true`, `partialPrefetching: true`, Turbopack + `@tailwindcss/turbopack` (no PostCSS) |
+| next / eslint-config-next | 16.4.3 (was 16.4.0; security upgrade, ADR-057) | Template default `cacheComponents: true`, `partialPrefetching: true`, Turbopack + `@tailwindcss/turbopack` (no PostCSS) |
 | react / react-dom | 19.3.0 | |
 | typescript | **5.9.3** | Official Next 16.4 template uses `^5`; TypeScript 7 **not** used |
 | eslint | **9.39.5** | Template uses `^9`; ESLint 10 not used |
@@ -451,3 +451,21 @@ Prisma parameterises `contains`, but it does **not** escape `%`, `_` and `\`. A 
 - **Favicon:** `src/app/icon.svg` (the header "Z" mark). It removes a 404 on every page.
 - **Static authorization guard:** `tests/unit/authz-guard.test.ts` fails if an admin page or exported Server Action does not await `requireAdmin()` before anything else.
 - **Lighthouse** runs from a temporary folder outside the repository (like ADR-027): `lighthouse` 13.5.0 using Playwright's Chromium. It is not a project dependency.
+
+## ADR-054 Page width 1480 px through one token — Accepted (2026-10-28, Phase 7 Round 2A)
+- **Context.** The team asked for less empty space at the sides on wide monitors and when zooming out (a change first tried in an unofficial copy of the project).
+- **Decision.** One theme token `--container-page: 1480px` (Tailwind class `max-w-page`) replaces every hard-coded `max-w-[1280px]`: `Container`, header rows, demo ribbon and footer. Side margins (16/24/40 px) and breakpoints are unchanged.
+- **Consequences.** Every page row widens together, so header, sections and footer stay aligned. Visual baselines were re-recorded as a deliberate design change. UI_SPEC §4 updated.
+
+## ADR-055 Official logo and "Staff portal" link — Accepted (2026-10-28, Phase 7 Round 2A)
+- **Logo.** The team supplied the ZORKO logo and asked for it on the site (answers Q-09 for this student project). `public/logo.webp` (246×105) replaces the "Z" text mark in `Logo` (header and admin sign-in); the original file is kept in `design/brand/`. The image is decorative (`alt=""`) because the link's `aria-label` names it. The favicon stays the "Z" mark.
+- **Staff portal.** A link to `/admin/login` in the footer, the phone "More" sheet and the tablet drawer (shared `StaffLink`). It is only a shortcut: admin access is still decided by `requireAdmin()` on the server (ADR-010). Showing where the sign-in page is does not weaken it; the page already existed at a guessable URL and is rate-limited.
+- **Not adopted from the unofficial copy:** its separate admin cookie holding the raw admin ID (forgeable, bypassed Supabase Auth), its raw-SQL password check against `auth.users`, the fake newsletter form, and its footer colours outside the design tokens.
+
+## ADR-056 Outlet photos from the team as local files — Accepted (2026-10-28, Phase 7 Round 2A)
+- **Context.** Storage uploads are still off (no `SUPABASE_SECRET_KEY`), but the team supplied photos of the outlet.
+- **Decision.** Five photos in `public/photos/` (WebP, ≤1600 px, metadata such as GPS stripped). `mediaUrl()` accepts `photos/<name>.webp` like the other local prefixes (same strict pattern, no `..` or sub-folders). `npm run gallery:outlet-photos -- add` registers them as real (`isDemo=false`), published gallery rows; it only adds missing rows and never deletes. Admins then manage them in Admin → Gallery (order, alt text, publish, remove; removing a local photo deletes only the row).
+- **Excluded on purpose.** Three images in the unofficial copy (`central-aisle`, `order-counter`, `dining-table`) are AI-generated re-imaginings of the room (wine glasses, staged diners, unreadable menu boards). Showing them as the café would be fabricated outlet content (CLAUDE.md rule 12). Three other photos (`PLACE 3/4/5`) show interiors that differ from the rest; they wait for the team to confirm they are the Sangli outlet (Q-21).
+
+## ADR-057 Next.js 16.4.3 security upgrade — Accepted (2026-10-28, Phase 7 Round 2A)
+- `npm audit` reported **critical** advisories for next 16.0.0–16.4.0 (GHSA-2464-fhr4-w9xw, GHSA-673q-mjm6-r5xr: unauthenticated RCE; GHSA-p3m5-59mp-jv5r: DoS) and a moderate one for `fast-uri`. Upgraded `next` and `eslint-config-next` to 16.4.3 (patch release, exact pin) and ran `npm audit fix` for `fast-uri`. `npm audit --omit=dev`: 0 vulnerabilities. All suites re-run (Round 2A report).

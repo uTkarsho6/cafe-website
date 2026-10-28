@@ -12,8 +12,8 @@ Information or decisions the team, the café or the guide must supply. Until ans
 | Q-06 | Is the outlet 100% vegetarian? (controls every "100% VEG" claim) | Café | `isPureVegConfirmed=false`; per-item marks only | 4A | *(2026-10-14: the brand site zorko.in describes ZORKO as "100% Veg"; still needs confirmation for the Sangli outlet before the badge is shown — ADR-043.)* **Answered 2026-10-14 (ADR-044):** yes — the printed outlet menu carries the green veg mark; flag set.
 | Q-07 | Real menu: categories, items, prices, descriptions, add-ons, veg/non-veg | Café | Demo seed labelled demo | before final demo | **Answered 2026-10-14 (ADR-044):** menu and prices transcribed from the printed menu (65 items). Still needed: dessert prices (cut off in the photo) and item photos.
 | Q-08 | Real offers, combos and Student Zone terms | Café | Demo offers labelled demo | before final demo |
-| Q-09 | Permission to use the ZORKO logo, name and imagery | Café / franchise | Text wordmark only; neutral footer | 4A |
-| Q-10 | Real photos for gallery and menu | Café | Generated placeholders | before final demo |
+| Q-09 | Permission to use the ZORKO logo, name and imagery | Café / franchise | **Answered 2026-10-28:** team supplied the logo and asked for it (ADR-055); neutral footer kept | 4A |
+| Q-10 | Real photos for gallery and menu | Café | **Gallery: 5 outlet photos added 2026-10-28 (ADR-056).** Menu photos still illustrative | before final demo |
 | Q-11 | Should feedback include a star rating? | Team / guide | No ratings (ADR-026) | 6 |
 | Q-12 | Loyalty and Reward Program: confirm it is future work (synopsis abstract vs methodology) | Guide | Out of scope | — |
 | Q-13 | Production domain (if any) | Team | Vercel `*.vercel.app` URL | 8 |
@@ -24,3 +24,4 @@ Information or decisions the team, the café or the guide must supply. Until ans
 | Q-18 | Vercel account | Team | — | 8 |
 | Q-19 | Confirm UI decisions: hover colour (ADR-004), header fixes (ADR-024), 4 trending items (ADR-023), feedback without ratings (ADR-026) | Team | As proposed | 2 |
 | Q-20 | Hero/about marketing copy: keep the Stitch-style tagline "Hungry? Bite Into Joy at ZORKO Sangli!"? | Team / café | Keep (not a factual claim) | 4A |
+| Q-21 | Are `PLACE 3` (pop-art walls), `PLACE 4` (blue booths) and `PLACE 5` (floral ceiling) photos of the **Sangli** outlet? They look like different interiors. | Team | Not added to the gallery (ADR-056) | Round 2A |

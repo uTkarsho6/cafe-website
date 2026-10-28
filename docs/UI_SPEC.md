@@ -118,7 +118,7 @@ Fonts are self-hosted via `next/font`: **Sora** (600/700/800) and **Plus Jakarta
 ## 4. Spacing, containers, grid
 
 - **Spacing tokens (Tailwind `--spacing-*`):** `space-xs` 4 · `space-sm` 8 · `space-md` 16 · `space-lg` 24 · `space-xl` 36 · `space-2xl` 56 · `gutter` 16 · `gutter-desktop` 24 · `margin` 16 · `margin-tablet` 24 · `margin-desktop` 40 (px). Standard Tailwind steps (`gap-2`, `p-2.5`, `py-3.5`, …) are also allowed because Stitch uses them.
-- **Container:** `max-w-[1280px] mx-auto`. Horizontal padding is `px-margin` (16) under 768, `px-margin-tablet` (24) from 768 to 1023, and `px-margin-desktop` (40) at 1024 and above. Stitch always uses 40, which is desktop-only.
+- **Container:** `max-w-page mx-auto` (1480 px, theme token `--container-page`; was 1280 px until Phase 7 Round 2A, ADR-054). Horizontal padding is `px-margin` (16) under 768, `px-margin-tablet` (24) from 768 to 1023, and `px-margin-desktop` (40) at 1024 and above. Stitch always uses 40, which is desktop-only.
 - **Breakpoints:** mobile <768 · tablet 768–1023 (`md`) · desktop ≥1024 (`lg`) · wide nav ≥1280 (`xl`). Tailwind defaults are kept.
 - **Section rhythm:** `py-space-2xl` for major sections, `py-space-xl` for compact bands; heading blocks use `mb-space-xl`.
 

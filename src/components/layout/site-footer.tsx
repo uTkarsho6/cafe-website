@@ -1,4 +1,4 @@
-import { Clock, MapPin, MessageCircle, Phone } from 'lucide-react'
+import { Clock, Lock, MapPin, MessageCircle, Phone } from 'lucide-react'
 import Link from 'next/link'
 import { formatPhone } from '@/lib/format'
 import { PureVegPill } from '@/components/ui/veg-mark'
@@ -23,7 +23,7 @@ export function SiteFooter({ cafe }: { cafe: CafeDto | null }) {
 
   return (
     <footer className="bg-surface-warm-cream pt-space-2xl pb-space-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-      <div className="mx-auto grid max-w-[1280px] gap-space-xl px-margin md:grid-cols-2 md:px-margin-tablet lg:grid-cols-4 lg:px-margin-desktop">
+      <div className="mx-auto grid max-w-page gap-space-xl px-margin md:grid-cols-2 md:px-margin-tablet lg:grid-cols-4 lg:px-margin-desktop">
         <div className="flex flex-col gap-space-sm">
           <p className="font-heading text-headline-sm font-extrabold">ZORKO Sangli</p>
           <p className="text-body-sm text-on-surface-variant">
@@ -106,7 +106,7 @@ export function SiteFooter({ cafe }: { cafe: CafeDto | null }) {
           </div>
         )}
       </div>
-      <p className="mx-auto mt-space-xl max-w-[1280px] px-margin text-body-sm text-on-surface-variant md:px-margin-tablet lg:px-margin-desktop">
+      <p className="mx-auto mt-space-xl max-w-page px-margin text-body-sm text-on-surface-variant md:px-margin-tablet lg:px-margin-desktop">
         ZORKO Sangli — student project, not an official ZORKO website. Menu photos are illustrative
         ·{' '}
         <Link
@@ -114,6 +114,15 @@ export function SiteFooter({ cafe }: { cafe: CafeDto | null }) {
           className="inline-flex min-h-12 items-center underline hover:text-primary lg:min-h-0"
         >
           Image credits
+        </Link>{' '}
+        ·{' '}
+        {/* Staff entry point (ADR-055). Only the sign-in page; access is still decided on the server. */}
+        <Link
+          href="/admin/login"
+          className="inline-flex min-h-12 items-center gap-1 underline hover:text-primary lg:min-h-0"
+        >
+          <Lock aria-hidden="true" className="size-3.5" />
+          Staff portal
         </Link>
       </p>
     </footer>

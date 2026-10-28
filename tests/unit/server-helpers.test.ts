@@ -84,6 +84,7 @@ describe('mediaUrl (TC-UNIT-071)', () => {
   const uuid = '123e4567-e89b-12d3-a456-426614174000'
   it('serves demo images locally and storage images from the public bucket', () => {
     expect(mediaUrl('demo/burgers.webp', sb)).toBe('/demo/burgers.webp')
+    expect(mediaUrl('photos/outlet-storefront.webp', sb)).toBe('/photos/outlet-storefront.webp')
     expect(mediaUrl(`gallery/${uuid}.webp`, sb)).toBe(
       `${sb}/storage/v1/object/public/public-media/gallery/${uuid}.webp`,
     )
@@ -93,6 +94,8 @@ describe('mediaUrl (TC-UNIT-071)', () => {
     '',
     '../secret.webp',
     'demo/../../etc/passwd',
+    'photos/../.env.local',
+    'photos/sub/x.webp',
     '/abs/path.webp',
     'https://evil.com/x.webp',
     `gallery/${uuid}.svg`,

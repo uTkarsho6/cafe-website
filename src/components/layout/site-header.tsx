@@ -20,7 +20,7 @@ function InfoBar({ cafe }: { cafe: CafeDto }) {
   const today = todayHours(cafe)
   return (
     <div className="hidden bg-surface-container-low md:block">
-      <div className="mx-auto flex h-9 max-w-[1280px] items-center justify-between gap-space-md px-margin-tablet text-label-md text-on-surface-variant lg:px-margin-desktop">
+      <div className="mx-auto flex h-9 max-w-page items-center justify-between gap-space-md px-margin-tablet text-label-md text-on-surface-variant lg:px-margin-desktop">
         <div className="flex min-w-0 items-center gap-space-md">
           <PureVegPill confirmed={cafe.isPureVegConfirmed} />
           <span className="flex min-w-0 items-center gap-1.5">
@@ -54,7 +54,7 @@ export function SiteHeader({ cafe }: { cafe: CafeDto | null }) {
   return (
     <header className="sticky top-0 z-50 bg-surface/90 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
       {cafe && <InfoBar cafe={cafe} />}
-      <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between gap-space-md px-margin md:h-20 md:px-margin-tablet lg:px-margin-desktop">
+      <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-space-md px-margin md:h-20 md:px-margin-tablet lg:px-margin-desktop">
         <Logo />
         <NavLinks items={nav} />
         <div className="flex items-center gap-space-sm">

@@ -32,9 +32,12 @@ async function AdminGate({ children }: { children: React.ReactNode }) {
   await connection()
   const admin = await requireAdmin()
   return (
-    <div className="flex min-h-dvh flex-col bg-surface lg:flex-row">
-      <AdminNav items={liveAdminNav()} footer={<AccountBox admin={admin} />} />
-      <main id="main" className="min-w-0 flex-1 p-space-md md:p-space-xl">
+    <div className="flex min-h-dvh flex-col bg-surface lg:flex-row print:bg-white">
+      {/* Printing (table QR cards, ADR-061) keeps only the page content. */}
+      <div className="contents print:hidden">
+        <AdminNav items={liveAdminNav()} footer={<AccountBox admin={admin} />} />
+      </div>
+      <main id="main" className="min-w-0 flex-1 p-space-md md:p-space-xl print:p-0">
         {children}
       </main>
     </div>

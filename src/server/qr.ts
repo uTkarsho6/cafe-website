@@ -5,11 +5,14 @@ import { publicEnv } from '@/lib/config/env'
 /**
  * QR code for the digital menu (FR-018, ADR-018). It always encodes the configured public site
  * URL (`NEXT_PUBLIC_SITE_URL`, validated at startup: https and not localhost on Vercel
- * production), never the address of the current request. `src=qr` is informational only; it is
- * not stored or tracked.
+ * production), never the address of the current request. `src=qr` and the table cards'
+ * `table=N` are informational only; they are not stored or tracked.
  */
-export function qrTarget(siteUrl: string = publicEnv.siteUrl): string {
-  return new URL('/menu?src=qr', siteUrl).toString()
+export function qrTarget(siteUrl: string = publicEnv.siteUrl, table?: number): string {
+  const url = new URL('/menu?src=qr', siteUrl)
+  // Table cards (ADR-061): informational only, like `src`.
+  if (table !== undefined) url.searchParams.set('table', String(table))
+  return url.toString()
 }
 
 /** Problems that would make a printed QR code useless (shown on /admin/qr). */

@@ -41,13 +41,15 @@ test.describe('Style guide and UI foundation', () => {
   test('design tokens are applied (primary colour, radii)', async ({ page }) => {
     await page.goto('/dev/styleguide')
     const primary = page.getByRole('button', { name: 'Primary' })
+    // ADR-060: primary action = ZORKO orange #ff7916 with near-black text #211c19 (AA 6.43:1).
     expect(await primary.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
-      'rgb(169, 50, 0)',
+      'rgb(255, 121, 22)',
     )
+    expect(await primary.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(33, 28, 25)')
     await primary.hover()
     await expect
       .poll(() => primary.evaluate((el) => getComputedStyle(el).backgroundColor))
-      .toBe('rgb(209, 67, 10)') // ADR-004 hover = primary-container
+      .toBe('rgb(232, 102, 10)') // hover = cta-hover #e8660a
     // rounded-full is calc(infinity * 1px) in Tailwind 4; browsers clamp it to a huge px value.
     const radius = parseFloat(await primary.evaluate((el) => getComputedStyle(el).borderRadius))
     expect(radius).toBeGreaterThanOrEqual(9999)

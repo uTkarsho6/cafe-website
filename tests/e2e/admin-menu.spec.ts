@@ -261,7 +261,11 @@ test('image upload: real file reaches Storage and the public page; disguised fil
   await images.getByLabel('Alt text').last().fill('E2E test photo')
   await images.getByRole('button', { name: 'Upload image' }).click()
   await expect(page.getByText('Image uploaded.')).toBeVisible()
+  // The seeded demo photo stays first, so the upload is the last thumbnail (thumbnails have alt="";
+  // their button carries the label). Select it like a customer would, then check the main image.
   await expectPublic(page, `/menu/${target.slug}`, async (p) => {
+    const thumbs = p.getByRole('list', { name: 'More images' }).getByRole('button')
+    await thumbs.last().click()
     await expect(p.getByRole('img', { name: 'E2E test photo' }).first()).toBeVisible({
       timeout: 2_000,
     })

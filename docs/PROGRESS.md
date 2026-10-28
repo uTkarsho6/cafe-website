@@ -9,9 +9,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Field | Value |
 |---|---|
 | Current phase | **Phase 7 — Round 2A (team-requested changes: UI port from the unofficial copy)** |
-| Status | **AWAITING TEAM VERIFICATION** (Round 2A) |
+| Status | **AWAITING TEAM VERIFICATION** (Rounds 2B and 2C; committed; signed-in admin E2E PASS) |
 | Branch | `phase-7-round2` (from `phase-7`) |
-| Latest report | `docs/PHASE_REPORTS/phase-7.md` → "Round 2A" |
+| Latest report | `docs/PHASE_REPORTS/phase-7.md` → "Round 2C" |
 | Last updated | 2026-10-28 |
 
 ## Approved phases
@@ -33,8 +33,11 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 The team asked to keep this project and bring over the UI changes from an unofficial copy (Downloads folder), securely, in rounds verified one at a time:
 - **2A:** Next.js 16.4.3 security upgrade, official logo, 1480 px page width, "Staff portal" link, outlet gallery photos (ADR-054…057).
-- **2B:** admin menu quick editing (inline ₹ price, quick flags), table QR cards 1–20 with bulk print and PNG/SVG.
-- **2C:** feedback quick tags (migration), full regression.
+- **2A fixes:** admin login (invalid Supabase key from the copy, admin reset), gallery repair + brand photos, footer logo (ADR-058).
+- **2B:** brand redesign of header and footer in the zorko.in style, site-wide (ADR-059). Inserted at the team's request on 2026-10-28.
+- **2C:** admin menu quick editing (inline ₹ price, quick flags), table QR cards 1–20 with bulk print and PNG/SVG (ADR-061). Done 2026-10-28; Ice Tea category photo added the same day.
+- **2D:** feedback quick tags (migration), full regression.
+- **Commits:** only with the team's explicit permission (team instruction, 2026-10-28). 2A is commit `ad65c16`; 2A fixes, 2B and 2C (incl. signed-in admin verification) committed on 2026-10-28 with permission ("yes procedd and commit this").
 
 ## Open bugs
 

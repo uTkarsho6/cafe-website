@@ -89,6 +89,19 @@ const sortOrder = z.coerce
   .max(9999, 'Sort order can be at most 9999.')
   .default(0)
 
+/** Inline price edit in the item list (Round 2C): same rules as the item form. */
+export const quickPriceSchema = price('Price', 1)
+
+/** Labels an admin can toggle in one click from the item list (Round 2C). */
+export const ITEM_FLAGS = ['isBestSeller', 'isTrending', 'isFeatured'] as const
+export type ItemFlag = (typeof ITEM_FLAGS)[number]
+export const itemFlagSchema = z.enum(ITEM_FLAGS)
+export const ITEM_FLAG_LABELS: Record<ItemFlag, string> = {
+  isBestSeller: 'Best seller',
+  isTrending: 'Trending',
+  isFeatured: 'Featured',
+}
+
 export const idSchema = z.string().regex(/^[a-z0-9]{20,40}$/, 'Invalid ID.')
 
 export const CATEGORY_ICONS = [

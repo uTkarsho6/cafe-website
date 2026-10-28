@@ -58,7 +58,14 @@ export async function loginAction(_prev: LoginState, form: FormData): Promise<Lo
     email: normalized,
     password: parsed.data.password,
   })
-  if (error || !data.user) return { error: GENERIC, email }
+  if (error || !data.user) {
+    // A wrong password is normal. Anything else (bad API key, Supabase down) is a configuration
+    // problem that would otherwise look exactly like a wrong password, so log it for the operator.
+    // Only the status code goes to the log, never the email or password.
+    if (error && error.code !== 'invalid_credentials')
+      log('error', 'admin.login_auth_service_error', { status: error.status ?? 0 })
+    return { error: GENERIC, email }
+  }
 
   const check = await checkAllowlist(data.user.id)
   if (check.status !== 'admin') {

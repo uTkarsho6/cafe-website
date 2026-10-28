@@ -17,7 +17,9 @@ describe('Button (TC-COMP-001)', () => {
     const button = screen.getByRole('button', { name: 'Save' })
     expect(button).toBeEnabled()
     expect(button).toHaveAttribute('type', 'button')
-    expect(button.className).toContain('bg-primary')
+    // ADR-060: primary = ZORKO orange fill with dark text (white on this orange fails AA).
+    expect(button.className).toContain('bg-cta')
+    expect(button.className).toContain('text-on-cta')
   })
   it('is disabled and busy while loading', () => {
     render(<Button loading>Saving</Button>)

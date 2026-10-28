@@ -59,6 +59,17 @@ Mobile-first. The tone is playful but honest: nothing on screen may state an unv
 | `smart-cyan` | `#04ADED` | Decorative "smart" icon tints only |
 | `#F15A24` (`brand-glow`) | — | Shadow/glow colour only: `rgba(241,90,36,0.08–0.25)` |
 
+### 2.4 ZORKO brand colours (zorko.in, ADR-059)
+| Token | Value | Allowed use |
+|---|---|---|
+| `brand-orange` | #fb6514 | On black: text, icons, hover (6.97:1). On white: only non-text marks (nav underline, rules, borders) and large decorative shapes, because it is 3.01:1 there. |
+| `brand-yellow` | #fbe414 | On black only (16.21:1): small accents, "to be confirmed" notes. |
+| `brand-blue` | #04aded | On black only (8.21:1). Reserved; the logo already carries the blue. |
+| `brand-ink` | #000000 | Header info bar, homepage "At a glance" band, footer, Call button. |
+| `brand-ink-soft` | #d4d4d4 | Body text and links on black (14.17:1). |
+| `brand-plank` | #5c4128 | Footer bottom band; white text 9.37:1. |
+Text on white keeps `primary` #a93200 (6.68:1).
+
 ### 2.3 Contrast verification (WCAG 2.2 AA, measured 2026-10-13)
 
 | Pair | Ratio | Result / rule |
@@ -85,6 +96,8 @@ Mobile-first. The tone is playful but honest: nothing on screen may state an unv
 | `smart-cyan` on white | 2.56 | **Fails** → decorative icons only, always next to a text label |
 
 Text over photos always sits on the Stitch gradient overlay (`bg-gradient-to-t from-black/80 via-black/20`) or a solid pill. This is checked with axe and manually in Phase 4A.
+
+> **Phase 7 Round 2B part 2 (ADR-060):** the palette in §2.1 is re-pointed to the ZORKO palette (primary = brown #a54e30, page #faf7f4, text #211c19 / #76645a, CTA orange #ff7916 with #211c19 text, border #e9ded5), and §3 typography is now **Inter** (headings) + **DM Sans** (body) with a refined scale (hero 40–56 px / 1.08, sections 30–36 px, body 16 px / 1.55, labels 15 px / 600, metadata 13 px). ADR-060 wins where the older tables below differ.
 
 ## 3. Typography
 
@@ -234,15 +247,15 @@ Stitch badges such as "CHEF SPECIAL", "SPICY ZING", "STEAM FRESH" and "6 PCS" ar
 
 ## 8. Navigation
 
-### 8.1 Header (public)
-- **Sticky top** (ADR-024): `sticky top-0 z-50 bg-surface/90 backdrop-blur-xl` + header shadow.
-- **Desktop info bar (≥768):** `bg-surface-container-low font-label-sm`. Left: "PURE VEG" mark (only when the flag is set) and the short address. Right: "Open today: <hours>", or "Closed today", computed from opening hours in IST. No Wi-Fi or kiosk claims.
-- **Main row `h-20`:**
-  - Logo: `h-11 w-11 rounded-xl bg-primary` "Z" tile, "ZORKO" (Sora 800), and "SANGLI" caption `label-sm text-primary`. Text wordmark only; the official logo is used only once permission is confirmed (Q-09).
-  - Nav (≥1280): Home · Digital Menu · Offers & Combos · Student Zone · Gallery · About & Contact, all `whitespace-nowrap`.
-  - Right: header search (≥640), which submits to `/menu?q=`. The "Table QR Order" button becomes **"QR Menu"** (link to `/qr`, `qr-code` icon). The profile icon is removed.
-- **768–1279:** a menu button (`aria-expanded`, `aria-controls`) opens a drawer with the same links.
-- **<768:** compact header `h-16` (logo, search icon → `/menu` with the search field focused) plus the bottom nav.
+### 8.1 Header (public) — one black block, Phase 7 Round 2B (ADR-059)
+- **Sticky top** (ADR-024): `sticky top-0 z-50 bg-brand-ink text-white shadow-header`, closed by a 3 px `bg-brand-orange` rule (echoes the footer wave line). Focus outlines inside the header use `brand-orange` (6.97:1; `primary` is only 3.14:1 on black).
+- **Info line (≥768):** part of the same black block, separated by `border-white/10`. Left: "100% VEG" pill (`tone="dark"`, only when the flag is set) and the short address with an orange pin. Right: today's hours with a yellow clock, "(to be confirmed)" in `brand-yellow` when unverified.
+- **Main row `h-20` (`h-16` <768):**
+  - Logo: official ZORKO logo on black (`Logo tone="dark"`), "SANGLI" caption in `brand-orange`.
+  - Nav (≥1280): Sora `label-lg` text links in `brand-ink-soft` (14.2:1). Current page: `brand-orange` bold + 3 px orange underline. Hover: white text, and the bar grows in (no transition under reduced motion).
+  - Right: dark pill search (`bg-white/10 border-white/20`, white text, orange focus ring), and an orange **Call** button (`bg-brand-orange text-brand-ink`, 6.97:1, `tel:`) at ≥1024 only when the café has a phone number.
+- **768–1279:** dark menu button (`bg-white/10`) opens the light drawer (links + Staff portal). **<768:** compact black row + light bottom nav.
+- The admin sign-in page keeps the light logo (`Logo` default `tone="light"`, caption in `primary`).
 
 ### 8.2 Bottom nav (mobile, from the mobile Stitch screen)
 - `fixed bottom-0 bg-surface/95 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.05)] h-16`, five items of `min-w-[56px] min-h-[48px]`: **Home · Menu · Offers · Students · More**.
@@ -250,14 +263,17 @@ Stitch badges such as "CHEF SPECIAL", "SPICY ZING", "STEAM FRESH" and "6 PCS" ar
 - "More" opens a bottom sheet: Gallery · About & Contact · Feedback · QR Menu.
 - `main` gets `pb-24` on mobile, plus iOS safe-area padding.
 
-### 8.3 Footer (all public pages)
-`bg-surface-warm-cream pt-space-2xl pb-space-xl`, grid `md:grid-cols-2 lg:grid-cols-4`:
-1. Brand tile and a one-line neutral description, plus the "100% VEG" pill only when the flag is set.
-2. Outlet location and hours (from the database): address, today's hours or a weekly summary, phone (`tel:` link).
-3. Links: Digital Menu · Offers & Combos · Student Zone · Gallery · About & Contact · Feedback · QR Menu.
-4. Connect: Instagram, Facebook and WhatsApp chat (each only when configured) as pills.
-
-Bottom row: "ZORKO Sangli — student project, not an official ZORKO website." No copyright/ownership line and no Privacy/Terms links until real pages exist.
+### 8.3 Footer (all public pages) — zorko.in style, Phase 7 Round 2B (ADR-059)
+1. **Skyline wave** (`public/brand/footer-skyline.webp`, zorko.in artwork, sky made transparent so it sits on any page background), full width, `min-h-20` with `object-cover` on phones.
+2. **Black body** `bg-brand-ink`, grid `md:grid-cols-2 lg:grid-cols-12`:
+   - Brand (4): plain ZORKO logo, one-line neutral description, "100% VEG" pill (`tone="dark"`), social pills (orange outline) only when configured.
+   - Explore (2): live main pages. `nav aria-label="Footer"`.
+   - Visit us (3): address, phone (`tel:`), "Directions on Google Maps" (only with a directions URL), weekly hours; "Hours to be confirmed" in `brand-yellow` when unverified.
+   - Quick links (3): Feedback · QR Menu · Image credits · Staff portal. `nav aria-label="Quick links"`.
+   - Headings white Sora; links `brand-ink-soft` (14.2:1), hover `brand-orange` (6.97:1 on black); icons orange.
+3. **Food strip** (zorko.in artwork): `footer-food.webp` ≥768, taller `footer-food-mobile.webp` below.
+4. **Plank band** `bg-brand-plank` (#5c4128, white 9.37:1): "ZORKO Sangli — student project, not an official ZORKO website. Menu photos are illustrative."
+- **Not copied from zorko.in:** corporate office/warehouse addresses, franchise emails, the subscribe form (no backend: rule 7), the "© ZORKO Limited" line. No Privacy/Terms links until real pages exist.
 
 ### 8.4 Admin navigation
 - **Sidebar (≥1024):** `w-64 sticky top-0 h-dvh bg-surface-container-low p-space-md`, logo tile + "Admin".

@@ -7,9 +7,13 @@ import {
   fieldErrors,
   idSchema,
   imageAltSchema,
+  ITEM_FLAG_LABELS,
+  itemFlagSchema,
   itemInputSchema,
+  quickPriceSchema,
   relationsSchema,
 } from '@/lib/validation/admin-menu'
+import { formatRupees } from '@/lib/format'
 import { requireAdmin } from '@/server/auth/admin'
 import { recordAudit, type AuditAction } from '@/server/audit'
 import { itemImagePath, processImageUpload } from '@/server/media/image-upload'
@@ -96,6 +100,39 @@ export async function setAvailabilityAction(itemId: string, isAvailable: boolean
       message: `"${item.name}" is now ${value.data ? 'available' : 'out of stock'}.`,
       errors: {},
     }
+  })
+}
+
+/** Inline ₹ price from the item list (Round 2C): rupees text → validated paise. */
+export async function setPriceAction(itemId: string, rupees: string) {
+  const admin = await requireAdmin('/admin/menu')
+  const id = parseId(itemId)
+  if (!id.success) return fail('Invalid request.')
+  const price = quickPriceSchema.safeParse(rupees)
+  if (!price.success) return fail(price.error.issues[0]?.message ?? 'Invalid price.')
+  return guarded('item.price', async () => {
+    const item = await menu.setItemPrice(id.data, price.data)
+    const label = formatRupees(price.data)
+    await audit(admin.id, 'UPDATE', 'menu_item', id.data, `Set price of "${item.name}" to ${label}`)
+    expireMenu(item.slug)
+    return { ok: true, message: `"${item.name}" now costs ${label}.`, errors: {} }
+  })
+}
+
+/** One-click Best seller / Trending / Featured from the item list (Round 2C). */
+export async function setItemFlagAction(itemId: string, flag: string, value: boolean) {
+  const admin = await requireAdmin('/admin/menu')
+  const id = parseId(itemId)
+  const which = itemFlagSchema.safeParse(flag)
+  const on = z.boolean().safeParse(value)
+  if (!id.success || !which.success || !on.success) return fail('Invalid request.')
+  return guarded('item.flag', async () => {
+    const item = await menu.setItemFlag(id.data, which.data, on.data)
+    const label = ITEM_FLAG_LABELS[which.data]
+    const summary = `${on.data ? 'Marked' : 'Unmarked'} "${item.name}" as ${label}`
+    await audit(admin.id, 'UPDATE', 'menu_item', id.data, summary)
+    expireMenu(item.slug)
+    return { ok: true, message: `${summary}.`, errors: {} }
   })
 }
 

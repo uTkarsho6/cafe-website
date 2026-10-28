@@ -407,6 +407,12 @@ test.describe('branding and staff entry (TC-E2E-092, ADR-055)', () => {
     expect(
       await home.locator('img').evaluate((i: HTMLImageElement) => i.naturalWidth),
     ).toBeGreaterThan(0)
+    const footerLogo = page.getByRole('contentinfo').getByRole('img', { name: /ZORKO/ })
+    await footerLogo.scrollIntoViewIfNeeded()
+    // next/image lazy-loads below the fold: wait for the load instead of reading it at once.
+    await expect
+      .poll(() => footerLogo.evaluate((i: HTMLImageElement) => (i.complete ? i.naturalWidth : 0)))
+      .toBeGreaterThan(0)
     await page.getByRole('contentinfo').getByRole('link', { name: 'Staff portal' }).click()
     await expect(page).toHaveURL(/\/admin\/login$/)
   })

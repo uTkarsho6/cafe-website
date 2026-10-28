@@ -13,7 +13,7 @@ export const ADMIN_NAV: NavItem[] = [
   { href: '/admin/cafe', label: 'Café info', live: true }, // 5C
   { href: '/admin/gallery', label: 'Gallery', live: true }, // 5C
   { href: '/admin/feedback', label: 'Feedback', live: true }, // 6
-  { href: '/admin/qr', label: 'QR code', live: true }, // 6
+  { href: '/admin/qr', label: 'QR codes', live: true }, // 6
 ]
 
 export const liveAdminNav = () => ADMIN_NAV.filter((i) => i.live)

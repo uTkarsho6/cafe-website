@@ -32,7 +32,7 @@ function MobileNavView({ items, pathname }: { items: NavItem[]; pathname: string
         aria-expanded={open}
         aria-controls="site-nav-drawer"
         onClick={() => setOpen(true)}
-        className="hidden size-12 items-center justify-center rounded-full bg-surface-container text-on-surface hover:bg-surface-container-high md:inline-flex xl:hidden"
+        className="hidden size-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 md:inline-flex xl:hidden"
       >
         <Menu aria-hidden="true" className="size-5" />
       </button>

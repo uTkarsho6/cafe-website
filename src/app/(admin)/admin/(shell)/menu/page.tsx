@@ -9,7 +9,7 @@ import { Select, TextField } from '@/components/ui/field'
 import { Pagination } from '@/components/ui/pagination'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/ui/states'
-import { AvailabilityToggle } from '@/features/admin/menu/item-controls'
+import { AvailabilityToggle, FlagToggles, PriceEditor } from '@/features/admin/menu/item-controls'
 import { adminItemQuerySchema } from '@/lib/validation/admin-menu'
 import { requireAdmin } from '@/server/auth/admin'
 import { listAdminItems, listCategoryOptions } from '@/server/services/admin-menu'
@@ -31,7 +31,8 @@ export default function AdminMenuPage({ searchParams }: PageProps<'/admin/menu'>
         <div>
           <h1 className="text-headline-lg-mobile md:text-headline-lg">Menu items</h1>
           <p className="text-body-md text-on-surface-variant">
-            Changes appear on the public site immediately (at most 30 seconds).
+            Edit a price (press Enter to save), switch labels or availability right here. Changes
+            appear on the public site immediately (at most 30 seconds).
           </p>
         </div>
         <LinkButton href="/admin/menu/new" icon={<Plus aria-hidden="true" className="size-4" />}>
@@ -121,7 +122,7 @@ async function ItemList({
         <EmptyState title="No items match" description="Change the filters or add a new item." />
       ) : (
         <div className="relative overflow-x-auto rounded-2xl bg-surface-container-lowest shadow-sm">
-          <table className="w-full min-w-[46rem] text-left text-body-sm">
+          <table className="w-full min-w-[60rem] text-left text-body-sm">
             <caption className="sr-only">
               Menu items, page {query.page} of {totalPages}
             </caption>
@@ -160,16 +161,26 @@ async function ItemList({
                     </Link>
                   </th>
                   <td className="px-space-md py-space-sm">{it.categoryName}</td>
-                  <td className="px-space-md py-space-sm font-heading">{it.priceLabel}</td>
                   <td className="px-space-md py-space-sm">
-                    <div className="flex flex-wrap gap-1">
-                      {it.isArchived && <Badge tone="scheduled">Archived</Badge>}
-                      {!it.isPublished && <Badge tone="scheduled">Unpublished</Badge>}
-                      {it.isBestSeller && <Badge tone="bestSeller">Best seller</Badge>}
-                      {it.isTrending && <Badge tone="trending">Trending</Badge>}
-                      {it.isFeatured && <Badge tone="featured">Featured</Badge>}
-                      {it.isDemo && <Badge tone="demo">Demo</Badge>}
-                    </div>
+                    <PriceEditor itemId={it.id} name={it.name} pricePaise={it.pricePaise} />
+                  </td>
+                  <td className="px-space-md py-space-sm">
+                    <FlagToggles
+                      itemId={it.id}
+                      name={it.name}
+                      flags={{
+                        isBestSeller: it.isBestSeller,
+                        isTrending: it.isTrending,
+                        isFeatured: it.isFeatured,
+                      }}
+                    />
+                    {(it.isArchived || !it.isPublished || it.isDemo) && (
+                      <div className="flex flex-wrap gap-1">
+                        {it.isArchived && <Badge tone="scheduled">Archived</Badge>}
+                        {!it.isPublished && <Badge tone="scheduled">Unpublished</Badge>}
+                        {it.isDemo && <Badge tone="demo">Demo</Badge>}
+                      </div>
+                    )}
                   </td>
                   <td className="px-space-md py-space-sm">
                     <AvailabilityToggle itemId={it.id} name={it.name} available={it.isAvailable} />

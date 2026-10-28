@@ -13,7 +13,7 @@ import { cachedGallery } from '@/server/public-data'
 
 export const metadata: Metadata = pageMetadata({
   title: 'Gallery',
-  description: 'Photos from ZORKO Sangli.',
+  description: 'Photos of ZORKO Sangli and the ZORKO brand.',
   path: '/gallery',
 })
 
@@ -25,7 +25,8 @@ export default function GalleryPage() {
         <Container className="flex flex-col gap-1 py-space-lg">
           <h1 className="text-headline-lg-mobile md:text-headline-lg">Gallery</h1>
           <p className="text-body-md text-on-surface-variant">
-            A look inside ZORKO Sangli, shared by the café.
+            Our Sangli outlet, plus photos from other ZORKO cafés and the ZORKO menu. Open a photo
+            to see where it is from.
           </p>
         </Container>
       </div>

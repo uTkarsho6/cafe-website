@@ -2,6 +2,7 @@
 import QRCode from 'qrcode'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { adminFeedbackQuerySchema, feedbackInputSchema } from '@/lib/validation/feedback'
+import { TABLE_NUMBERS, tableNumberSchema, tableQrSrc } from '@/features/qr/tables'
 import { qrPng, qrSvg, qrTarget, qrWarnings } from '@/server/qr'
 
 describe('feedback input (TC-UNIT-050)', () => {
@@ -51,6 +52,17 @@ describe('QR code (TC-UNIT-030)', () => {
     expect(qrTarget('https://zorko-sangli.example/')).toBe(
       'https://zorko-sangli.example/menu?src=qr',
     )
+  })
+  it('table cards (TC-UNIT-122): tables 1–20 add only table=N to the same menu URL', () => {
+    expect(TABLE_NUMBERS).toEqual(Array.from({ length: 20 }, (_, i) => i + 1))
+    expect(qrTarget('https://zorko-sangli.example', 7)).toBe(
+      'https://zorko-sangli.example/menu?src=qr&table=7',
+    )
+    expect(tableQrSrc(7, 'png', true)).toBe('/api/v1/qr?format=png&table=7&download=1')
+    for (const ok of ['1', '9', '10', '20'])
+      expect(tableNumberSchema.safeParse(ok).success).toBe(true)
+    for (const bad of ['0', '21', '05', '-1', '1.5', '1e1', ' 3', 'abc', '', '100'])
+      expect(tableNumberSchema.safeParse(bad).success, bad).toBe(false)
   })
   it('the generated code contains exactly that URL', () => {
     const target = 'https://zorko-sangli.example/menu?src=qr'

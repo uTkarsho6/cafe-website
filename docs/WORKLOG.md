@@ -12,13 +12,13 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 7 — Round 2A (team-requested UI port: security upgrade, logo, 1480 px width, staff link, outlet photos) |
-| **Phase status** | AWAITING TEAM VERIFICATION of Round 2A. Do **not** start Round 2B (admin quick edit + table QR cards) until the team approves 2A. Phase 7 itself still awaits `approved, go to Phase 8`. |
+| **Current phase** | Phase 7 — Round 2C (admin quick edits, table QR cards 1–20) |
+| **Phase status** | AWAITING TEAM VERIFICATION of Rounds 2B and 2C (committed 2026-10-28 with permission; future commits still only when the team says so). Next: Round 2D (feedback quick tags + full regression). Phase 7 itself still awaits `approved, go to Phase 8`. |
 | **Git** | Branch `phase-7-round2` (from `phase-7`). Local commits only. |
-| **Last task completed** | Round 2A (2026-10-28): ADR-054…057, 310 unit, 103 integration, E2E 256 + 13 pass (1 WebKit timing flake re-run 6/6 PASS), 42 signed-in NOT RUN (no test accounts in the current Supabase project). |
-| **Next action** | Wait for the team's Round 2A verdict. Then 2B, then 2C (PROGRESS.md). |
-| **Waiting on the team** | Round 2A check; delete 2 broken gallery rows in Admin → Gallery; rotate the password in the unofficial copy's README-FOR-TEAM.md; Q-21; test accounts in the current Supabase project. |
-| **Note** | This Mac runs under very high load (BTLEServer ~97 % CPU), so E2E with 4 workers can time out on static files. Run `npx playwright test --workers=2` locally. |
+| **Last task completed** | Round 2C (2026-10-28): ADR-061, Ice Tea photo; see the phase-7 report "Round 2C" for results. Signed-in admin E2E incl. real Storage uploads PASS after the team added `SUPABASE_SECRET_KEY` (report: "Round 2C — signed-in admin verification"). |
+| **Next action** | Wait for the team's verdict on 2B/2C; then 2D (feedback quick tags; needs a migration, ask first). |
+| **Waiting on the team** | Round 2A check; delete 2 broken gallery rows in Admin → Gallery; rotate the password in the unofficial copy's README-FOR-TEAM.md; Q-21. |
+| **Note** | This Mac runs under very high load (BTLEServer ~97 % CPU), so E2E with 4 workers can time out on static files. Run `npx playwright test --workers=2` locally. The current network uses NAT64 (`64:ff9b::`), so Next's image optimizer refuses Supabase Storage images locally (SSRF guard) and DNS/Supabase calls fail now and then; re-run affected tests. |
 
 ### On approval (the CLAUDE.md §0.2 step 8 routine)
 1. In `PROGRESS.md`: add a row to "Approved phases" (date + quoted message), set the current phase and status to `IN PROGRESS`, and update the branch.

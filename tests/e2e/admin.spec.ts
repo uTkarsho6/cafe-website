@@ -46,8 +46,11 @@ test.describe('admin access without signing in (TC-SEC-001, TC-E2E-060)', () => 
 
   test('wrong credentials show one generic message (no account enumeration)', async ({ page }) => {
     await signIn(page, 'nobody-here@example.invalid', 'wrong-password-123')
+    // The answer needs a round trip to Supabase Auth; under heavy local load WebKit exceeded the
+    // default 5 s twice (Round 2A/2B). Same assertion, longer wait.
     await expect(page.getByRole('main').getByRole('alert')).toHaveText(
       'Email or password is incorrect.',
+      { timeout: 15_000 },
     )
     await expect(page).toHaveURL(/\/admin\/login/)
     await expect(page.getByLabel('Password')).toHaveValue('')

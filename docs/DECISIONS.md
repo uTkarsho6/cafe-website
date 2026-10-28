@@ -469,3 +469,52 @@ Prisma parameterises `contains`, but it does **not** escape `%`, `_` and `\`. A 
 
 ## ADR-057 Next.js 16.4.3 security upgrade — Accepted (2026-10-28, Phase 7 Round 2A)
 - `npm audit` reported **critical** advisories for next 16.0.0–16.4.0 (GHSA-2464-fhr4-w9xw, GHSA-673q-mjm6-r5xr: unauthenticated RCE; GHSA-p3m5-59mp-jv5r: DoS) and a moderate one for `fast-uri`. Upgraded `next` and `eslint-config-next` to 16.4.3 (patch release, exact pin) and ran `npm audit fix` for `fast-uri`. `npm audit --omit=dev`: 0 vulnerabilities. All suites re-run (Round 2A report).
+
+## ADR-058 Round 2A fixes: brand assets from zorko.in, balanced footer, admin reset — Accepted (2026-10-28, Phase 7 Round 2A fixes)
+- **Permission.** The team states the franchise owner allows the project to use ZORKO's logo and photos. Recorded here as the team's assertion; this project cannot verify it.
+- **Logo.** `public/logo.webp` is now the official 1186×452 logo from zorko.in, re-encoded to 600 px wide (previous file was 246 px and looked soft on high-density screens). `public/logo-plain.webp` (no white outline, from the zorko.in footer) sits in the footer.
+- **Footer.** The fourth grid column used to render only when social links exist (none are confirmed yet), which left the right quarter empty. It is now always present: the ZORKO logo, right-aligned on desktop (bottom-right on tablet), with social links below it once confirmed.
+- **Gallery.** Added 3 photos of other ZORKO cafés (`PLACE 3/4/5`, answers Q-21) and 4 official ZORKO food photos (zorko.in hero images, transparency flattened onto `surface-warm-cream`). Captions say "A ZORKO café (brand photo)" / "ZORKO brand food photo", and the page intro says the gallery mixes the Sangli outlet and brand photos, so nothing is presented as taken at Sangli when it was not (rule 12).
+  - **Rejected from zorko.in:** its "outlet" images are promotional posters for other cities (with their addresses and phone numbers), and the small product shots are under 230 px.
+  - **Not used:** third-party photos on Google Maps or Zomato. They belong to the people who took them, so the owner's permission does not cover them.
+  - **Re-encoding.** All downloaded files were re-encoded through `sharp` (no original bytes or metadata kept).
+- **Broken gallery rows.** `npm run gallery:outlet-photos -- repair` re-points the 2 rows added by the unofficial copy (missing files) to `zorko-cafe-blue-booths.webp` / `zorko-cafe-floral-ceiling.webp`. It updates rows; nothing is deleted.
+- **Admins.** No Supabase password worked: one account had never signed in through Supabase Auth (its password was set in the database directly and only worked through the unofficial copy's raw-SQL login), and the other's password had changed. At the team's request both allowlist rows were **disabled** (`admin:disable`, audit history kept). New admins are created through the Supabase dashboard and `admin:add` (DEPLOYMENT.md §6). Accounts are never inserted directly into `auth.users`.
+
+## ADR-059 Brand redesign of header and footer in the zorko.in style — Accepted (2026-10-28, Phase 7 Round 2B)
+- **Context.** The team asked for the footer to look like zorko.in, for a better header, and for one consistent look across the site, using zorko.in's colours (owner's permission, ADR-058). This deliberately changes the approved Stitch header/footer (CLAUDE.md 6.6: reason stated, UI_SPEC updated, applied everywhere).
+- **Colours.** zorko.in's most-used colours become tokens: `brand-orange` #fb6514, `brand-yellow` #fbe414, `brand-blue` #04aded, `brand-ink` #000, plus `brand-ink-soft` and `brand-plank` (UI_SPEC §2.4). Orange on white is only 3.01:1, so on white it is used for marks and lines only. Text and buttons on white keep `primary` #a93200, so contrast results stay valid.
+- **Footer.** zorko.in's wave/skyline and food-strip artwork (re-encoded; the wave's white sky made transparent by a flood fill from the top edge, the strip's light edge columns trimmed). The outlet's own content goes on black. Not copied: ZORKO Limited's corporate addresses, emails, subscribe form and copyright line (not this outlet's; a subscribe form without a backend would be a fake control).
+- **Header.** One black block (team feedback: the logo looks better on black, as on zorko.in): info line and main row together, official logo, light text nav with the current page in orange plus an orange underline, dark pill search, an orange "Call" button (`tel:`, only with a phone number), orange focus outlines (6.97:1), and a 3 px orange rule.
+- **Site-wide.** The homepage "At a glance" band moved from `bg-primary` to the same black band with orange rules. `PureVegPill` gained `tone="dark"` (white pill, 6.75:1) for black surfaces, and no longer wraps.
+- **Build note.** Turbopack kept a stale CSS chunk after `globals.css` gained new tokens; `rm -rf .next` before building fixed it. Documented in the report's troubleshooting.
+
+## ADR-060 Site-wide UI refinement: ZORKO palette, Inter + DM Sans, real food imagery — Accepted (2026-10-28, Phase 7 Round 2B part 2)
+- **Context.** The team's design brief: the site looked generic (repeated icon cards, peach icon circles, weak hierarchy). It asked for the ZORKO palette, Inter headings, DM Sans body, real food photography for categories, a stronger Popular Picks section, and no regressions. It also said to keep the architecture and footer.
+- **Tokens, not components.** The existing Stitch token names are re-pointed (`primary` → ZORKO brown #a54e30, `surface` → #faf7f4, `on-surface` → #211c19, `on-surface-variant` → #76645a, containers → warm neutrals, `surface-warm-cream` → #fff3e7, `brand-orange` → #ff7916, `brand-ink` → #111111). New tokens: `cta`, `cta-hover`, `on-cta`, `border`, `brand-ink-raised`, `brand-peach`. Every component picks the palette up without being rewritten.
+- **Contrast decisions (deviations from the brief, for WCAG AA):**
+  - **Primary buttons:** orange #ff7916 with **near-black text #211c19** (6.43:1; 5.09:1 on hover #e8660a). The brief's white text on that orange is 2.63:1 and fails.
+  - **Muted text:** #8c817a (3.55:1) is not used for small text; metadata uses #76645a (5.26:1).
+  - **Surface containers:** chosen so that secondary and brown text stay ≥4.5:1 on them (#f1eae4, #eee7e1).
+  - **Green #16845b** is 4.39:1 on the page background, so it is used for veg marks only; veg text keeps `tertiary`.
+- **Typography.** Inter (600/700/800) for headings and DM Sans (400–700) for body, self-hosted by `next/font` as before (ADR-007).
+  - Hero `clamp(2.5rem…3.5rem)`, line height 1.08.
+  - Section headings `clamp(1.875rem…2.25rem)`.
+  - Body 16 px with line height 1.55, lead text 17 px with 1.65.
+  - Labels and buttons 15 px / 600; metadata 13 px.
+- **Category thumbnails.** Official ZORKO menu photography from zorko.in (`best-fast-food-1-N.webp`, owner's permission, ADR-058), cropped to the dish (the zorko.in cards also carry ZORKO-wide item counts, which are not Sangli's). All 16 real categories have a matching photo (Ice Tea, which has no zorko.in menu card, uses the ZORKO-branded glass from zorko.in's printed menu board `menu-6.jpg`, added 2026-10-28 at the team's request); admin-created categories keep a clean icon fallback (no stand-in photos). `src/features/menu/category-photos.ts`; images are decorative because the card text names the category.
+- **Homepage.**
+  - **Hero:** warm off-white with one faint peach glow; feature tiles are white with a border and a plain brown icon (no tinted squares).
+  - **Category cards:** photo 4:3 + name + count, 2/3/4/6 columns, orange border on hover. Categories with 0 visible items are skipped on the homepage only.
+  - **Popular Picks:** peach `#fff3e7` band with borders and more vertical space.
+  - **Gallery block:** retitled "A Look Around ZORKO", because the gallery now also holds other ZORKO cafés' photos.
+- **Cards and buttons site-wide.** Menu cards use a 1 px border instead of a shadow, with an orange border on hover; Popular Picks images are 4:3. Section eyebrows get the hero's short orange rule. Secondary buttons are white with a border and brown text.
+- **Footer and header.** Kept (ADR-059). Orange is now #ff7916 via the token, the header search uses `brand-ink-raised` #1d1d1d, and the footer hours have more line spacing.
+- **Not changed:** routes, data, filters, search, `tel:` actions, admin logic.
+
+## ADR-061 Admin quick edits and table QR cards — Accepted (2026-10-28, Phase 7 Round 2C)
+- **Context.** The team asked for the unofficial copy's admin conveniences (inline ₹ price, one-click labels) and table QR cards 1–20 with bulk printing and PNG/SVG downloads, built on the existing secure actions instead of porting the copy's code.
+- **Quick edits.** Two new Server Actions, `setPriceAction` and `setItemFlagAction`, follow the same pattern as `setAvailabilityAction`: `requireAdmin()` first, Zod validation of every argument (ID format; price via the item form's own rupees→paise rule, > ₹0 and ≤ ₹1,00,000; flag from the fixed enum `isBestSeller | isTrending | isFeatured`, so a client cannot set `isArchived`, `isDemo` or any other column), an audit entry, and expiry of the public cache tags. The database CHECK on price still applies. In the item list the price is a field that saves on Enter or when focus leaves it (Escape restores), and the labels are `aria-pressed` toggles; both are optimistic and revert on a refused save. "+ Add dish" already existed as **New item**.
+- **Table cards.** `/api/v1/qr` accepts `table=1…20` (strict: `05`, `1.5`, `21` → 400) and encodes `/menu?src=qr&table=N`. The table number is informational only: it is not stored or tracked, and there is no table ordering (CLAUDE.md §3.0). Files download as `zorko-sangli-table-N-qr.png|svg`. `/admin/qr` shows the 20 cards (logo, "Table N", code, "Scan to see our menu"); **Print all 20 cards** uses the browser's print dialog, with print styles that hide the admin navigation and everything except the cards (two per row, dashed cut lines). The count is the `TABLE_COUNT` constant in `src/features/qr/tables.ts`.
+- **Alternatives rejected.** A JSON "update any field" action (mass-assignment risk); generating a PDF on the server (new dependency; the browser's "Save as PDF" covers it); storing tables in the database (no feature needs it yet).
+

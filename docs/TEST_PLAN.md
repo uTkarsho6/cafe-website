@@ -68,6 +68,9 @@ Added in Phase 3:
 |---|---|---|
 | TC-UNIT-070 | Seed guard: no `ALLOW_DEMO_SEED`, `=1`, production `NODE_ENV`/`VERCEL_ENV`, missing URL | Refused with reason |
 | TC-UNIT-071 | `mediaUrl`: demo and `photos/` paths, storage path, traversal, sub-folders, absolute/external URL, SVG, Storage unconfigured | Local/bucket URL or null |
+| TC-UNIT-121 | Category thumbnails (ADR-060): every mapped file exists, all 16 real categories have one, unmapped slugs fall back to the icon | Pass |
+| TC-UNIT-122 | Table QR cards (ADR-061): tables 1–20, `table=N` added to the menu URL, strict table-number parsing (`0`, `21`, `05`, `1.5`, `1e1` refused) | Pass |
+| TC-UNIT-123 | Quick-edit actions (ADR-061): require an admin; bad prices, non-label flags (`isArchived`, `isDemo`, `__proto__`…), non-boolean values and forged IDs refused before any write; `149.50` → 14950 paise | Pass |
 | TC-UNIT-120 | Outlet photo list (ADR-056): every file exists in `public/`, resolves locally, alt text and caption fit the schema, no duplicates | Pass |
 | TC-UNIT-080 | Error mapping: Prisma P2002/P2025/P2003/P1001/unknown, Zod, ApiError | 409/404/409/503/500/400; no internal text |
 
@@ -123,6 +126,8 @@ Added in Phase 4A: menu URL state (invalid values dropped, hrefs keep filters, c
 | TC-COMP-008 | ReviewCard renders `<script>` text literally | Escaped text, no element |
 | TC-COMP-009 | Pagination marks the current page with `aria-current` | Pass |
 | TC-COMP-010 | Gallery lightbox: open a tile, previous/next buttons, ←/→ keys wrap, caption falls back to alt text | Correct photo and "Photo N of M" after each step |
+| TC-COMP-020 | Inline price field: saves on Enter, no call when unchanged, Escape restores, server error shown and linked with `aria-describedby` | Pass |
+| TC-COMP-021 | Label toggles: `aria-pressed` state, one click saves, reverts when the server refuses | Pass |
 
 ### 4.3 Integration (TC-INT) — dev DB / local Postgres
 
@@ -149,6 +154,7 @@ Added in Phase 4A: menu URL state (invalid values dropped, hrefs keep filters, c
 | TC-INT-062 | Dashboard counts equal database counts (public items, available, active/scheduled offers, pending feedback, photos) | Matches the fixtures |
 | TC-INT-070 | Admin service transactions (add-on save replaces groups atomically; failure rolls back) | No partial writes |
 | TC-INT-071 | Audit entry written with every admin mutation | Present, no secrets |
+| TC-ADM-011 | Quick edits (ADR-061): inline price and label toggles persist and show publicly; missing item refused; DB CHECK rejects ₹0 | Pass |
 | TC-INT-080 | `/api/health` with DB up/down (mock) | 200 ok / 503 down, no internals |
 
 ### 4.4 Security (TC-SEC)
@@ -211,7 +217,7 @@ Phase 5B note: uploads go through a Server Action, so TC-SEC-060…063 are refus
 | TC-E2E-040 | Gallery lightbox keyboard (arrows, Esc, focus restore) | Pass |
 | TC-E2E-041 | Contact: tel/mailto/wa.me/social links have valid hrefs; map iframe has a title; directions link | Pass |
 | TC-E2E-042 | Feedback submit → success; appears publicly only after admin approval | Pass |
-| TC-E2E-043 | QR page: decode the rendered QR (jsQR in test) equals `${SITE_URL}/menu?src=qr`; PNG/SVG download | Pass |
+| TC-E2E-043 | QR page: decode the rendered QR (jsQR in test) equals `${SITE_URL}/menu?src=qr`; PNG/SVG download; table code `table=12` downloads as `zorko-sangli-table-12-qr.png`, invalid tables → 400; admin page shows 20 table cards with downloads and Print all (signed-in part needs test accounts) | Pass |
 | TC-E2E-044 | Visiting the QR target URL on a mobile viewport opens the menu with no login | Pass |
 | TC-E2E-045 | SEO: title/description/canonical/OG/Twitter tags; noindex on missing pages; sitemap and robots.txt | Tags present; sitemap has only visible content and every URL resolves |
 | TC-E2E-050 | **Freshness:** admin toggles availability → public item page reflects it within ≤30 s (poll every 2 s) | Pass with measured seconds recorded |

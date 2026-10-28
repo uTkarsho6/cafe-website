@@ -6,17 +6,18 @@
  * px-margin-desktop, …) carry over unchanged. Radii use Tailwind v4 defaults (ADR-005).
  */
 @theme {
-  /* Core palette */
-  --color-primary: #a93200;
+  /* Core palette — re-pointed to the ZORKO palette in ADR-060 (names kept so components are unchanged).
+     primary = ZORKO brown #a54e30 (text, links, prices, filled chips: 5.27:1 on the page). */
+  --color-primary: #a54e30;
   --color-on-primary: #ffffff;
-  --color-primary-container: #d1430a;
-  --color-on-primary-container: #fffbff;
-  --color-primary-fixed: #ffdbd0;
-  --color-primary-fixed-dim: #ffb59e;
+  --color-primary-container: #8b3f26;
+  --color-on-primary-container: #ffffff;
+  --color-primary-fixed: #ffe8d6;
+  --color-primary-fixed-dim: #fecda5;
   --color-on-primary-fixed: #3a0b00;
   --color-on-primary-fixed-variant: #842500;
   --color-inverse-primary: #ffb59e;
-  --color-surface-tint: #ad3300;
+  --color-surface-tint: #a54e30;
 
   --color-secondary: #7c5800;
   --color-on-secondary: #ffffff;
@@ -41,37 +42,37 @@
   --color-error-container: #ffdad6;
   --color-on-error-container: #93000a;
 
-  --color-background: #fcf9f8;
-  --color-on-background: #1c1b1b;
-  --color-surface: #fcf9f8;
-  --color-surface-dim: #dcd9d9;
-  --color-surface-bright: #fcf9f8;
+  --color-background: #faf7f4;
+  --color-on-background: #211c19;
+  --color-surface: #faf7f4;
+  --color-surface-dim: #e2d5ca;
+  --color-surface-bright: #faf7f4;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f6f3f2;
-  --color-surface-container: #f0eded;
-  --color-surface-container-high: #eae7e7;
-  --color-surface-container-highest: #e5e2e1;
-  --color-surface-variant: #e5e2e1;
-  --color-on-surface: #1c1b1b;
-  --color-on-surface-variant: #5a4139;
-  --color-inverse-surface: #313030;
+  --color-surface-container-low: #f4efeb;
+  --color-surface-container: #f1eae4;
+  --color-surface-container-high: #eee7e1;
+  --color-surface-container-highest: #e9ded5;
+  --color-surface-variant: #e9ded5;
+  --color-on-surface: #211c19;
+  --color-on-surface-variant: #76645a;
+  --color-inverse-surface: #211c19;
   --color-inverse-on-surface: #f3f0ef;
-  --color-outline: #8e7067;
-  --color-outline-variant: #e2bfb4;
+  --color-outline: #8c817a;
+  --color-outline-variant: #e9ded5;
 
   /* Extended accents (see UI_SPEC §2.2 for allowed uses) */
   --color-culinary-orange-deep: #e64a19;
   --color-mustard-gold: #ffa000;
   --color-veg-pure-green: #15803d;
   --color-non-veg-red: #8b1a1a;
-  --color-surface-warm-cream: #fffbf5;
-  --color-surface-canvas-subtle: #f7f8fa;
+  --color-surface-warm-cream: #fff3e7;
+  --color-surface-canvas-subtle: #f4efeb;
   --color-smart-cyan: #04aded;
 
   /* Fonts (CSS variables injected by next/font in layout.tsx) */
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
-  /* Stitch-compatible aliases: font-display-hero, font-headline-*, font-title-price → Sora */
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Stitch-compatible aliases: font-display-hero, font-headline-*, font-title-price → Inter (ADR-060) */
   --font-display-hero: var(--font-heading);
   --font-display-hero-mobile: var(--font-heading);
   --font-headline-lg: var(--font-heading);
@@ -86,55 +87,55 @@
   --font-label-md: var(--font-sans);
   --font-label-sm: var(--font-sans);
 
-  /* Type scale (UI_SPEC §3) */
-  --text-display-hero: 48px;
-  --text-display-hero--line-height: 56px;
+  /* Type scale (UI_SPEC §3, refined in ADR-060: Inter headings, DM Sans 16 px body) */
+  --text-display-hero: clamp(2.5rem, 1.25rem + 2.6vw, 3.5rem);
+  --text-display-hero--line-height: 1.08;
   --text-display-hero--letter-spacing: -0.03em;
   --text-display-hero--font-weight: 800;
-  --text-display-hero-mobile: 32px;
-  --text-display-hero-mobile--line-height: 40px;
+  --text-display-hero-mobile: 2.125rem;
+  --text-display-hero-mobile--line-height: 1.1;
   --text-display-hero-mobile--letter-spacing: -0.02em;
   --text-display-hero-mobile--font-weight: 800;
-  --text-headline-lg: 32px;
-  --text-headline-lg--line-height: 40px;
+  --text-headline-lg: clamp(1.875rem, 1.4rem + 1vw, 2.25rem);
+  --text-headline-lg--line-height: 1.15;
   --text-headline-lg--letter-spacing: -0.02em;
   --text-headline-lg--font-weight: 700;
-  --text-headline-lg-mobile: 24px;
-  --text-headline-lg-mobile--line-height: 32px;
+  --text-headline-lg-mobile: 1.625rem;
+  --text-headline-lg-mobile--line-height: 1.2;
   --text-headline-lg-mobile--letter-spacing: -0.01em;
   --text-headline-lg-mobile--font-weight: 700;
-  --text-headline-md: 22px;
-  --text-headline-md--line-height: 28px;
+  --text-headline-md: 1.375rem;
+  --text-headline-md--line-height: 1.3;
   --text-headline-md--letter-spacing: -0.01em;
   --text-headline-md--font-weight: 700;
-  --text-headline-sm: 18px;
-  --text-headline-sm--line-height: 24px;
+  --text-headline-sm: 1.125rem;
+  --text-headline-sm--line-height: 1.35;
   --text-headline-sm--font-weight: 600;
   --text-title-price: 20px;
   --text-title-price--line-height: 24px;
   --text-title-price--letter-spacing: -0.01em;
   --text-title-price--font-weight: 800;
-  --text-body-lg: 16px;
-  --text-body-lg--line-height: 24px;
-  --text-body-lg--font-weight: 500;
-  --text-body-md: 14px;
-  --text-body-md--line-height: 20px;
+  --text-body-lg: 1.0625rem;
+  --text-body-lg--line-height: 1.65;
+  --text-body-lg--font-weight: 400;
+  --text-body-md: 1rem;
+  --text-body-md--line-height: 1.55;
   --text-body-md--font-weight: 400;
-  --text-body-sm: 12px;
-  --text-body-sm--line-height: 16px;
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.45;
   --text-body-sm--font-weight: 400;
-  --text-label-lg: 14px;
-  --text-label-lg--line-height: 18px;
-  --text-label-lg--letter-spacing: 0.02em;
-  --text-label-lg--font-weight: 700;
-  --text-label-md: 12px;
-  --text-label-md--line-height: 16px;
-  --text-label-md--letter-spacing: 0.03em;
-  --text-label-md--font-weight: 700;
-  --text-label-sm: 10px;
-  --text-label-sm--line-height: 12px;
+  --text-label-lg: 0.9375rem;
+  --text-label-lg--line-height: 1.25;
+  --text-label-lg--letter-spacing: 0;
+  --text-label-lg--font-weight: 600;
+  --text-label-md: 0.8125rem;
+  --text-label-md--line-height: 1.25;
+  --text-label-md--letter-spacing: 0.01em;
+  --text-label-md--font-weight: 600;
+  --text-label-sm: 0.75rem;
+  --text-label-sm--line-height: 1.2;
   --text-label-sm--letter-spacing: 0.05em;
-  --text-label-sm--font-weight: 800;
+  --text-label-sm--font-weight: 700;
 
   /* Named spacing (UI_SPEC §4) — usable as p-space-md, px-margin-desktop, gap-gutter, … */
   --spacing-space-xs: 0.25rem;
@@ -148,6 +149,23 @@
   --spacing-margin: 1rem;
   --spacing-margin-tablet: 1.5rem;
   --spacing-margin-desktop: 2.5rem;
+
+  /* ZORKO brand colours (UI_SPEC §2.4, ADR-059/060). Orange on white is 2.63:1, so on light
+     surfaces it is a fill (with dark text) or a line/mark, never text; text accents use primary. */
+  --color-brand-orange: #ff7916;
+  --color-brand-yellow: #fbe414;
+  --color-brand-blue: #04aded;
+  --color-brand-ink: #111111;
+  --color-brand-ink-soft: #bdbdbd;
+  --color-brand-plank: #5c4128;
+  --color-brand-ink-raised: #1d1d1d;
+  --color-brand-peach: #fecda5;
+  /* Primary call to action (ADR-060): ZORKO orange with near-black text. White on #ff7916 is
+     only 2.63:1 (fails WCAG AA), so the label is #211c19 (6.43:1; 5.09:1 on the hover colour). */
+  --color-cta: #ff7916;
+  --color-cta-hover: #e8660a;
+  --color-on-cta: #211c19;
+  --color-border: #e9ded5;
 
   /* Page width (UI_SPEC §4, ADR-054): one token for every page row — header, sections, footer. */
   --container-page: 1480px;

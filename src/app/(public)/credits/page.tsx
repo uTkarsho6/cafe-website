@@ -27,7 +27,10 @@ export default function CreditsPage() {
           resized. Real photos from the café will replace them.
         </p>
         <p className="text-body-md text-on-surface-variant">
-          The ZORKO logo and the outlet photos in the gallery were supplied by the project team.
+          The ZORKO logo, the footer artwork, the menu-category photos on the home page and the
+          ZORKO food photos in the gallery come from the official ZORKO website (zorko.in), used
+          with the franchise owner&apos;s permission. The café photos were supplied by the project
+          team.
         </p>
         <ul className="flex flex-col divide-y divide-surface-container rounded-2xl bg-surface-container-lowest px-space-md shadow-sm">
           {credits.map((c) => (

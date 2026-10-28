@@ -55,6 +55,13 @@ test.describe('public: QR menu', () => {
     expect(svg.headers()['content-type']).toContain('image/svg+xml')
     expect(await svg.text()).toMatch(/^<svg/)
 
+    // Table cards (ADR-061): a valid table gets its own file name; anything else is refused.
+    const table = await request.get('/api/v1/qr?format=png&table=12&download=1')
+    expect(table.status()).toBe(200)
+    expect(table.headers()['content-disposition']).toContain('zorko-sangli-table-12-qr.png')
+    for (const bad of ['0', '21', 'abc', '1;drop', '../1'])
+      expect((await request.get(`/api/v1/qr?format=svg&table=${bad}`)).status(), bad).toBe(400)
+
     // The destination opens the menu with no login.
     await page.goto(target)
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
@@ -178,9 +185,21 @@ test.describe('admin: moderation and QR', () => {
     page,
   }) => {
     await page.goto('/admin/qr')
-    await expect(page.getByRole('heading', { level: 1, name: 'QR code' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'QR codes' })).toBeVisible()
     await expect(page.getByRole('main').getByRole('alert')).toContainText('localhost')
     await expect(page.getByTestId('qr-image')).toBeVisible()
+    // Table cards 1–20 (ADR-061), each with its own downloads and a working code image.
+    await expect(page.getByTestId('table-card')).toHaveCount(20)
+    await expect(page.getByText('Table 20', { exact: true })).toBeVisible()
+    const card = page.getByRole('img', { name: /QR code for table 20:/ })
+    await card.scrollIntoViewIfNeeded()
+    await expect
+      .poll(() => card.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth))
+      .toBeGreaterThan(0)
+    await expect(
+      page.getByRole('link', { name: 'Download table 20 QR code as PNG' }),
+    ).toHaveAttribute('href', '/api/v1/qr?format=png&table=20&download=1')
+    await expect(page.getByRole('button', { name: 'Print all 20 cards' })).toBeVisible()
   })
 
   test('Phase 6 pages are accessible (axe) and have no horizontal scroll', async ({ page }) => {

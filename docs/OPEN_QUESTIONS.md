@@ -24,4 +24,4 @@ Information or decisions the team, the café or the guide must supply. Until ans
 | Q-18 | Vercel account | Team | — | 8 |
 | Q-19 | Confirm UI decisions: hover colour (ADR-004), header fixes (ADR-024), 4 trending items (ADR-023), feedback without ratings (ADR-026) | Team | As proposed | 2 |
 | Q-20 | Hero/about marketing copy: keep the Stitch-style tagline "Hungry? Bite Into Joy at ZORKO Sangli!"? | Team / café | Keep (not a factual claim) | 4A |
-| Q-21 | Are `PLACE 3` (pop-art walls), `PLACE 4` (blue booths) and `PLACE 5` (floral ceiling) photos of the **Sangli** outlet? They look like different interiors. | Team | Not added to the gallery (ADR-056) | Round 2A |
+| Q-21 | Are `PLACE 3/4/5` photos of the Sangli outlet? | Team | **Answered 2026-10-28:** owner allows any ZORKO café photo; added as "A ZORKO café (brand photo)", not as Sangli (ADR-058) | Round 2A |

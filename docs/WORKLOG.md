@@ -12,12 +12,12 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase R3 — Recommendation: TypeScript engine, training and APIs |
-| **Phase status** | AWAITING TEAM VERIFICATION. R2 approved 2026-10-30 (`phase-r2-approved`, merged into LOCAL `main`). |
-| **Git** | Branch `phase-r3`. **Local `main` and `phase-r3` contain migrations production lacks: never push before the R5 production migration.** |
-| **Last task completed** | R3 (2026-10-30): engine `src/lib/reco/engine.ts` (exact parity with `notebooks/reco_lib.py`), `src/server/reco/train.ts` + `npm run reco:train`, read path `src/server/services/recommendations.ts`, APIs `/api/v1/menu/[slug]/recommendations` + `/api/v1/recommendations/suggest`, migration `20261030140000_reco_tuned_weights` (applied to dev), `npm run reco:validate`; notebook flag bug fixed (ADR-074); dev DB: run v1 ACTIVE and `RecoSettings.enabled = true`. |
-| **Next action** | On "approved, go to Phase R4": item-page sections (reuse `CompactList`), `/help-me-choose` page, menu entry points, `cachedItemRecommendations`/`cachedSuggestions` in `public-data.ts` (tag `reco`), component/E2E/a11y/visual tests (TC-COMP-030/031, TC-E2E-093…096, TC-A11Y-007, TC-RESP-005, TC-VIS-101…). |
-| **Waiting on the team** | R3 check; Q-22 (tags), Q-23 (guide), Q-25; hero photo (ADR-065). |
+| **Current phase** | Phase R4 — Recommendation: customer-facing UI |
+| **Phase status** | AWAITING TEAM VERIFICATION. R3 approved 2026-10-30 (`phase-r3-approved`, merged into LOCAL `main`). |
+| **Git** | Branch `phase-r4`. **Local `main` and `phase-r4` contain migrations production lacks: never push before the R5 production migration.** |
+| **Last task completed** | R4 (2026-10-30): item-page "Goes well with" / "You may also like" (`src/features/reco/reco-parts.tsx`), `/help-me-choose` (page + `choose-form.tsx` + `choose-params.ts`), menu entry points, `cachedItemRecommendations` / `cachedSuggestions`, `flavours` labels on DTOs, `npm run test:db:reco` in `test:e2e`, tests (component 12, `tests/e2e/reco.spec.ts`, TC-E2E-094 in admin-menu). Full E2E 366 passed / 0 failed. Finding: streamed pages need JavaScript (ADR-075, backlog). |
+| **Next action** | On "approved, go to Phase R5": admin recommendations page (switch, retrain, weights, runs/rollback, inspect; `updateTag('reco')` on activation), flavour-tag and meal-role editors, auto-retrain hooks; then, with written approval only, production migration + generate + train, push → Vercel, live `reco:validate`. |
+| **Waiting on the team** | R4 check; decision on the no-JavaScript limitation (ADR-075); Q-22 (tags), Q-23 (guide), Q-25; hero photo (ADR-065). |
 | **Note** | Chat history for the deployment lives in a session opened from `~/projects` (not `~/projects/zorko-sangli`). This Mac runs under very high load, so run E2E with `--workers=2`. NAT64 network: Next's image optimiser refuses Supabase Storage images locally; re-run flaky network tests. |
 
 ### On approval (the CLAUDE.md §0.2 step 8 routine)

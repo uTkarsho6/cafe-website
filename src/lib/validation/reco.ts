@@ -26,6 +26,10 @@ export type FlavorTagKey = keyof typeof FLAVOR_TAGS
 export const FLAVOR_TAG_KEYS = Object.keys(FLAVOR_TAGS) as FlavorTagKey[]
 export const MAX_FLAVOR_TAGS = 5
 
+/** Display labels for stored tags, canonical order, unknown values dropped. */
+export const flavourLabels = (tags: readonly string[]): string[] =>
+  FLAVOR_TAG_KEYS.filter((k) => tags.includes(k)).map((k) => FLAVOR_TAGS[k])
+
 export const MEAL_ROLES = {
   MAIN: 'Main',
   SIDE: 'Side',

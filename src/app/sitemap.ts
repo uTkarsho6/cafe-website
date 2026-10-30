@@ -11,7 +11,9 @@ import { cachedSitemapEntries } from '@/server/public-data'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection() // request time only: never query the database during `next build`
   const url = (path: string) => new URL(path, publicEnv.siteUrl).toString()
-  const pages = [...liveNav(), ...liveMore()].map((p) => ({ url: url(p.href) }))
+  const pages = [...liveNav(), ...liveMore(), { href: '/help-me-choose' }].map((p) => ({
+    url: url(p.href),
+  }))
   const details = (await cachedSitemapEntries()).map((e) => ({
     url: url(e.path),
     lastModified: e.updatedAt,

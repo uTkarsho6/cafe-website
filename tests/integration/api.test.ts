@@ -70,6 +70,7 @@ const detail = card
         })
         .strict(),
     ),
+    flavours: z.array(z.string()),
     related: z.array(card),
     frequentlyBoughtTogether: z.array(card),
     combos: z.array(offerSummary),

@@ -1,9 +1,10 @@
+import { Sparkles } from 'lucide-react'
 import type { Metadata } from 'next'
 import { pageMetadata } from '@/lib/site/seo'
 import Link from 'next/link'
 import { connection } from 'next/server'
 import { Suspense } from 'react'
-import { buttonClasses } from '@/components/ui/button'
+import { buttonClasses, LinkButton } from '@/components/ui/button'
 import { FilterChip, PillLink, PillRow } from '@/components/ui/chip'
 import { Container } from '@/components/ui/container'
 import { Pagination } from '@/components/ui/pagination'
@@ -134,6 +135,22 @@ async function MenuContent({ searchParams }: Pick<PageProps<'/menu'>, 'searchPar
           </div>
           <DesktopFilters params={params} />
         </section>
+        {/* Help me choose entry point (UI_SPEC §12.12). */}
+        <section
+          aria-labelledby="choose-heading"
+          className="flex flex-col gap-space-sm rounded-2xl bg-secondary-container/20 p-space-md shadow-sm"
+        >
+          <h2 id="choose-heading" className="flex items-center gap-2 text-headline-sm">
+            <Sparkles aria-hidden="true" className="size-5 text-primary" />
+            Not sure what to pick?
+          </h2>
+          <p className="text-body-sm text-on-surface-variant">
+            Answer three quick questions and get five suggestions from the menu.
+          </p>
+          <LinkButton href="/help-me-choose" variant="secondary" size="sm">
+            Help me choose
+          </LinkButton>
+        </section>
       </aside>
 
       {/* ---------------- main */}
@@ -145,6 +162,15 @@ async function MenuContent({ searchParams }: Pick<PageProps<'/menu'>, 'searchPar
               <SortControl params={params} />
             </div>
             <MobileFilters params={params} />
+            <LinkButton
+              href="/help-me-choose"
+              variant="secondary"
+              size="sm"
+              className="lg:hidden"
+              icon={<Sparkles aria-hidden="true" className="size-4" />}
+            >
+              Help me choose
+            </LinkButton>
             <ViewToggle params={params} />
           </div>
         </div>

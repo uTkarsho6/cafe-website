@@ -8,9 +8,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 | Field | Value |
 |---|---|
-| Current phase | **Phase R5a — Recommendation: admin page, tag/meal-role editors, automatic retrain** (R5 split into R5a local work + R5b production go-live, 2026-10-30, to keep each step small) |
-| Status | **AWAITING TEAM VERIFICATION** (R5a) |
-| Branch | `phase-r5` (from `main`) |
+| Current phase | **Phase R5b — Recommendation: production go-live** (after R5a: admin page, tag/meal-role editors, automatic retrain; (R5 split into R5a local work + R5b production go-live, 2026-10-30, to keep each step small) |
+| Status | **IN PROGRESS** — every production step needs the team's written go-ahead |
+| Branch | `phase-r5b` (from `main`) |
 | R5a task list | 1. `/admin/recommendations` (Overview: cards, switch, retrain, weights; Runs: table + activate; Inspect: per-item lists with components) · 2. Server Actions with allowlist + audit + `updateTag('reco')` · 3. Flavour-tag chips in the item editor, meal-role select in the category editor · 4. Auto-retrain after menu-structure edits (coalesced) · 5. Tests TC-COMP-032, TC-SEC-133/134, TC-E2E-097/098, TC-A11Y-007, TC-RESP-005, TC-VIS-105/106 · 6. Report |
 | Latest report | `docs/PHASE_REPORTS/phase-r5a.md` |
 | Live site | https://zorko-sangli.vercel.app (deployed 2026-10-29 IST; auto-deploys from GitHub `main`) |
@@ -39,6 +39,7 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Phase R2 | 2026-10-30 | "approved, go to Phase R3" |
 | Phase R3 | 2026-10-30 | "approved, go to Phase R4" |
 | Phase R4 | 2026-10-30 | "approved, go to Phase R5" |
+| Phase R5a | 2026-10-30 | "approved, go to Phase R5b" |
 
 **Production go-live:** 2026-10-29 (IST, about 02:10), https://zorko-sangli.vercel.app (Vercel `bom1` + production Supabase, Mumbai). Started for R0 on 2026-10-30 with "sure add falvour tags as it is pure veg, and proceedRo".
 

@@ -1,6 +1,6 @@
 # Phase R5a — Recommendation: admin page, editors, automatic retrain
 
-**Status:** AWAITING TEAM VERIFICATION (2026-10-30)
+**Status:** APPROVED (2026-10-30, "approved, go to Phase R5b")
 **Branch:** `phase-r5` (from local `main` after the R4 merge). Not pushed; the live site is unchanged.
 **Approval that started it:** "approved, go to Phase R5" (2026-10-30). R5 was split into R5a (this) and R5b (production go-live), ADR-076.
 

@@ -62,8 +62,20 @@ Requirement → design/module → implementation location (planned) → tests �
 | NFR-008 Freshness | M | ADR-013 | — | TC-E2E-050 | 5B | Verified (on-demand expiry ~0.1–0.2 s measured; ≤30 s fallback; ADR-049/050) | phase-5b.md, phase-5c.md |
 | NFR-009 Browser support | M | TEST_PLAN §1 | `playwright.config.ts` (Chromium + WebKit) | All E2E on both engines | 2+ | Verified (all E2E on Chromium + WebKit through Phase 7) | phase-2.md … phase-7.md |
 | NFR-010 Content honesty | M | CLAUDE.md 6.2 | seed + UI | TC-E2E-090, TC-E2E-001/031/041, review | 3–7 | Verified (no ordering/coupon/rating UI (TC-E2E-090); unconfirmed details labelled; demo data badged; real offers start as drafts) | phase-4b.md, phase-7.md |
-| NFR-011 Deployability | M | DEPLOYMENT.md | — | Phase 8 checklist | 8 | Planned | — |
+| NFR-011 Deployability | M | DEPLOYMENT.md | `vercel.json`, `scripts/preflight.mjs`, `scripts/scan-build.mjs` | Phase 8 checklist, TC-UNIT-125/142 | 8, R0 | Verified (live at https://zorko-sangli.vercel.app since 2026-10-29; DEPLOYMENT §14 E live checks passed; ADR-067) | phase-8.md, phase-r0.md |
 | NFR-012 Data integrity | M | TRD §4 | Prisma schema + SQL CHECKs | TC-INT-001…003, 070 | 3 | Verified (DB CHECK/UNIQUE/FK; admin multi-record changes in transactions with rollback tests, 5B/5C) | phase-3.md, phase-5b.md, phase-5c.md |
+| FR-060 Demo feedback dataset | M | RECOMMENDATION §3; ADR-068, ADR-071 | `prisma/reco-generate.ts`, `scripts/reco-export.mjs` | TC-UNIT-130…132, TC-INT-093 | R1 | Planned | — |
+| FR-061 Flavour tags and meal roles | M | RECOMMENDATION §2; ADR-069 | schema, `prisma/reco-tags.ts`, item/category admin forms | TC-UNIT-133/134, TC-INT-092, TC-E2E-098 | R1, R5 | Planned | — |
+| FR-062 Training and model runs | M | RECOMMENDATION §4–5; TRD §14 | `src/server/reco/*` | TC-UNIT-135…138/140, TC-INT-094/095, TC-PERF-003 | R3 | Planned | — |
+| FR-063 Goes well with | M | RECOMMENDATION §4.6; UI_SPEC §12.3 | `services/recommendations.ts`, `features/reco/*` | TC-INT-097, TC-COMP-030, TC-E2E-093/094 | R3, R4 | Planned | — |
+| FR-064 You may also like | M | same | same | same | R3, R4 | Planned | — |
+| FR-065 Help me choose | M | RECOMMENDATION §4.5; UI_SPEC §12.12; ADR-070 | `src/app/(public)/help-me-choose/` | TC-UNIT-139, TC-COMP-031, TC-E2E-095, TC-A11Y-007 | R3, R4 | Planned | — |
+| FR-066 Recommendation APIs | M | TRD §14.4 | `src/app/api/v1/…` | TC-INT-098, TC-SEC-131/132 | R3 | Planned | — |
+| FR-067 Admin recommendations | M | RECOMMENDATION §10; UI_SPEC §13 | `admin/(shell)/recommendations/` | TC-COMP-032, TC-SEC-133/134, TC-E2E-097 | R5 | Planned | — |
+| FR-068 Automatic retrain | S | RECOMMENDATION §5 | `train.ts` + admin menu actions | TC-INT-096, TC-E2E-098 | R3, R5 | Planned | — |
+| FR-069 Evaluation notebook | M | RECOMMENDATION §8–9 | `notebooks/recommendation.ipynb` | TC-NB-001, TC-UNIT-140 | R2 | Planned | — |
+| NFR-013 Recommendation performance | S | TRD §14.5 | — | TC-PERF-003, TC-INT-097 | R3 | Planned | — |
+| NFR-014 Recommendation honesty | M | RECOMMENDATION §6 | reason codes | TC-UNIT-141, TC-E2E-096 | R3, R4 | Planned | — |
 
 **Phase 1 documentation deliverables** (CLAUDE.md §12): PRD, TRD, UI_SPEC, SECURITY, TEST_PLAN, TRACEABILITY, DEPLOYMENT, DECISIONS, OPEN_QUESTIONS, `design/reference/*` — Implemented in Phase 1; verified by team review.
 

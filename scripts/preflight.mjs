@@ -109,6 +109,10 @@ export function checkProductionEnv(env, devEnv = null) {
   const api = url(env.NEXT_PUBLIC_SUPABASE_URL ?? '')
   if (env.NEXT_PUBLIC_SUPABASE_URL && (!api || api.protocol !== 'https:'))
     errors.push('NEXT_PUBLIC_SUPABASE_URL must be the https project URL')
+  // The dashboard's "API URL" ends in /rest/v1/; the client libraries need the bare project URL
+  // (seen during the 2026-10-29 go-live, ADR-067).
+  else if (api && api.pathname.replace(/\/+$/, '') !== '')
+    errors.push('NEXT_PUBLIC_SUPABASE_URL must be the bare project URL (remove /rest/v1/ etc.)')
 
   const salt = env.RATE_LIMIT_SALT?.trim() ?? ''
   if (salt && salt.length < 32) errors.push('RATE_LIMIT_SALT must be at least 32 characters')

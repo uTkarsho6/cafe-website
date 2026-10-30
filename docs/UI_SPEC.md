@@ -196,6 +196,9 @@ Atmospheric glows: blurred circles (`bg-primary-container/10 blur-3xl`, `bg-seco
   - Mobile: one horizontal row, `overflow-x-auto snap-x snap-mandatory`, no visible scrollbar, edge-to-edge.
 - **Active-filter chip:** `bg-primary-fixed text-on-primary-fixed rounded-full` with a × button (`aria-label="Remove filter: …"`).
 - **Nav pill:** active `bg-primary-container text-on-primary-container font-bold`; inactive `text-on-surface-variant hover:bg-surface-container`; container `p-1 rounded-full bg-surface-container-low`.
+- **Flavour tag chip** (ADR-069, R4): display-only `bg-surface-container text-on-surface-variant rounded-full px-2.5 py-0.5 text-label-sm`, no icon. Shown on the item page (under the description, max 5) and in Help me choose results. **Not** on menu grid cards (keeps the Stitch card unchanged).
+- **Selectable chip** (Help me choose): the category-pill styles above on a native radio/checkbox inside a `relative` label (same technique as the feedback highlights, ADR-062); checked = active pill; `min-h-12` under 1024 px; visible focus ring on the label.
+- **Reason chip** (recommendation cards): `text-body-sm text-on-surface-variant` with a 14 px Lucide `Sparkles` icon in `text-primary`; one line, truncated; max 2 per card. Text only from the fixed reason list (RECOMMENDATION §6).
 
 ### 7.4 Badges (`font-label-sm uppercase rounded-full px-2.5 py-0.5`)
 
@@ -389,6 +392,7 @@ Default size is 18–20 px (16 px inside small buttons), `stroke-width` 2, inher
     - **Frequently bought together / Related items:** compact cards (56 px thumbnail, name, price) linking to their pages.
     - **Combos with this item:** active combo offers containing the item, as compact combo cards.
 - **Removed:** Jain/nutrition/allergen blocks, server code, special-instructions input, sticky order bar, quantity stepper.
+- **Recommendations (R4, derived, FR-063/064).** The two existing compact lists become **"Goes well with"** (replaces "Frequently bought together") and **"You may also like"** (replaces "Related items"), same `CompactList` card (`rounded-3xl bg-surface-container-lowest p-space-lg shadow-sm`, 56 px thumbnails, name, price), 4 rows each. Each row adds one reason chip under the name. Admin-curated links come first and use the reason "Café pick". Below the second list: caption `text-body-sm text-on-surface-variant` "Suggestions are generated automatically from our menu." + link "Help me choose" (`/help-me-choose`). Loading: skeleton rows of the same shape. A list with no items is hidden. Sold-out items never appear in these lists (they still appear on the menu, FR-009).
 
 ### 12.4 Offers & combos (`/offers`) — Stitch `desktop_offers_combos` + `offers_combos` (mobile)
 - **Hero:** eyebrow pill (short address), H1 "Offers & Combo Feasts at **ZORKO Sangli**", lead text, and a summary card ("N active offers", "Jump to combos" anchor). The coupon block and voucher card are removed.
@@ -430,6 +434,17 @@ Centred card: QR SVG (min 240 px, white quiet zone), the destination URL as text
 ### 12.11 404 / error / offline — derived
 Empty-state layout with a large `display-hero` "404" in `text-primary`, the message, and "Go home" + "View menu" buttons. The global error page uses "Try again" (reset) + "Go home". Never shows stack traces.
 
+### 12.12 Help me choose (`/help-me-choose`) — derived (R4, FR-065, ADR-070)
+- Same page frame as `/menu`: info strip ("Help me choose" + "Answer three quick questions"), `Container`, breadcrumb (Home / Digital Menu / Help me choose).
+- **Form card** (`rounded-3xl bg-surface-container-lowest p-space-lg shadow-sm`), a GET form with three fieldsets, each with a `legend` in `text-headline-sm`:
+  1. **What are you in the mood for?** selectable chips (radio, required): A meal · A snack · A drink · Something sweet (Lucide `UtensilsCrossed`, `Cookie`, `CupSoda`, `IceCreamCone`, 18 px).
+  2. **Budget per person:** Any · Under ₹100 · ₹100–₹200 · ₹200+ (radio; same bands as the menu filter).
+  3. **Flavours you like (up to 3):** flavour chips (checkbox); a fourth tick shows an inline hint and is refused by the server too.
+  - Primary button "Show suggestions" + ghost "Start over". Desktop: fieldsets side by side `lg:grid-cols-3`; mobile: stacked, buttons full width.
+- **Results** (`aria-live="polite"` heading "5 suggestions for you"): menu grid cards (`MenuCard` grid variant, 2 columns mobile / 3 `xl`) with up to 2 reason chips and flavour chips under the title; for "A meal", a compact row under each card "Pairs well with: <thumbnail> Name ₹price" linking to that item, and the pair total "Together ₹X" (real arithmetic of current prices, not an offer).
+- **States:** before submitting, an illustration-free intro line; empty results → `EmptyState` "Nothing matches all three answers" with "Remove flavours" (keeps mood and budget) and "Start over"; error → `ErrorState` with "Try again".
+- Entry points: desktop menu sidebar card below Filters (same style as the Student Zone card, `bg-secondary-container/20`, `Sparkles` icon, "Not sure what to pick?" + link button); mobile menu toolbar: secondary button "Help me choose" next to "Filters"; item page caption link.
+
 ## 13. Page layouts — admin (all derived; same tokens; `bg-surface`)
 
 | Screen | Route | Layout |
@@ -446,6 +461,7 @@ Empty-state layout with a large `display-hero` "404" in `text-primary`, the mess
 | Feedback | `/admin/feedback` | Tabs Pending · Approved · Rejected; rows with message (escaped text), name, date, actions Approve / Reject / Delete (confirm). Counts in the tabs. |
 | QR code | `/admin/qr` | Same as `/qr` plus a warning if `NEXT_PUBLIC_SITE_URL` is not https. |
 | Audit log | `/admin/audit` | Read-only table: time (IST), admin email, action, entity, summary. Filters: entity, admin. Paginated. |
+| Recommendations | `/admin/recommendations` | Derived (R5). `Tabs`: **Overview** — summary cards (active version, trained at, data source "Demo feedback", RMSE, HitRate@5), `Switch` "Show recommendations on the website", "Retrain now" primary button (spinner + disabled while running), weights form (number fields 0–1000 with the normalised % next to each). **Runs** — `DataTable`: version, status badge, trained at, RMSE / HitRate@5 / coverage, gate result, started by, "Activate" (confirm dialog naming the version). **Inspect** — item select, then two tables (Goes well with / You may also like): rank, item, score, content / taste / co-occurrence / quality components, reasons, and whether it is filtered out now (sold out, archived). Mobile: tables become stacked cards. Item editor gains a "Flavour tags" chip group (max 5); category editor gains a "Meal role" select. |
 | Session expired | (state) | Toast "Your session expired. Please sign in again", then redirect to `/admin/login?next=…` (internal paths only). |
 
 **Data table component:** `rounded-2xl bg-surface-container-lowest shadow-sm overflow-hidden`; header row `bg-surface-container-low font-label-md uppercase text-on-surface-variant`; rows `border-t border-outline-variant/40 hover:bg-surface-container-low`. Below 768 px it becomes stacked cards, with no horizontal page scroll; wide tables may scroll inside their own container, with a visible focus outline on the scroll region.
@@ -474,7 +490,7 @@ Empty-state layout with a large `display-hero` "404" in `text-primary`, the mess
 
 ## 15. Derived screens (no Stitch source)
 
-Mobile home · mobile menu (with filter sheet) · mobile item details · tablet layouts · offer details · Student Zone · Gallery (+ lightbox) · About & Contact · Feedback · QR page · 404 · error · loading skeletons · empty states · admin login · admin dashboard · menu items list · item editor · categories · offers list and editor · banners · café info · gallery management · feedback moderation · admin QR · audit log · session-expired state · confirm dialog · toasts.
+Mobile home · mobile menu (with filter sheet) · mobile item details · tablet layouts · offer details · Student Zone · Gallery (+ lightbox) · About & Contact · Feedback · QR page · 404 · error · loading skeletons · empty states · admin login · admin dashboard · menu items list · item editor · categories · offers list and editor · banners · café info · gallery management · feedback moderation · admin QR · audit log · Help me choose (R4) · item-page recommendation lists (R4) · admin recommendations (R5) · session-expired state · confirm dialog · toasts.
 
 ## 16. Component inventory (`src/components`)
 
@@ -486,7 +502,8 @@ Mobile home · mobile menu (with filter sheet) · mobile item details · tablet 
   - `features/cafe`: HoursTable, ContactCard, MapEmbed, OpenStatus.
   - `features/gallery`: GalleryGrid, Lightbox.
   - `features/feedback`: ReviewCard, FeedbackForm.
-  - `features/admin`: SummaryCard, ImageUploader, AddOnEditor, RelationPicker, AuditTable.
+  - `features/admin`: SummaryCard, ImageUploader, AddOnEditor, RelationPicker, AuditTable, RecoWeightsForm, RecoRunsTable, RecoInspector (R5).
+  - `features/reco` (R4): RecoList (extends the item page CompactList), ReasonChip, FlavorChips, ChooseForm, SuggestionCard.
 - **Style/preview page** (Phase 2): `/dev/styleguide` renders every primitive in every state. It is development only and returns 404 in production.
 
 ## 17. Responsive verification matrix (CLAUDE.md 6.7)

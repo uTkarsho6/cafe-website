@@ -1,6 +1,6 @@
 # SECURITY — Threat Model and Controls
 
-**Version:** 1.0 (Phase 1, initial threat model), 2026-10-13. Reviewed again in Phase 5A, 5B and 7.
+**Version:** 1.0 (Phase 1, initial threat model), 2026-10-13. Reviewed again in Phase 5A, 5B and 7; recommendation system added in Phase R0 (2026-10-30).
 **Checklists used:** OWASP Top 10:2025 and OWASP API Security Top 10:2023. Category names are to be re-checked against owasp.org at the Phase 7 review.
 **Status legend:** Planned · Implemented (phase) · Verified (test ID).
 
@@ -15,6 +15,7 @@
 | Audit log | Medium | Accountability; must not be tampered with |
 | Storage bucket | Medium | Hosting malicious files under the café's domain |
 | Availability of the public site | Medium | Demo, viva, customers at the counter |
+| Recommendation model runs, weights and settings | Low–medium (integrity) | A tampered or bad run shows poor or misleading suggestions; demo ratings must never be presented as real reviews or sales data |
 
 ## 2. Trust boundaries
 
@@ -66,6 +67,11 @@
 | AB-14 | Clickjacking the admin | `frame-ancestors 'none'` / `X-Frame-Options: DENY`; TC-SEC-110 |
 | AB-15 | Showing expired offers or unapproved feedback | Server-side status filters; TC-INT-030, TC-INT-040 |
 | AB-16 | QR code pointing to a wrong or attacker site | URL from env, validated (https, not localhost, in production); shown in the admin with a warning; TC-UNIT-030 |
+| AB-17 | Flood or probe the recommendation endpoints (huge or odd `tags`, unknown slugs, cache-key explosion) | Zod enums only (mood, budget, ≤3 known tags, slug regex) → finite cache keys; 60/min rate limit; no scores or IDs in responses; TC-SEC-131/132 |
+| AB-18 | Tamper with weights, activate a run, or switch recommendations off without being an admin; mass-assign `status`/`activeRunId` | `requireAdmin()` in every reco action (covered by `authz-guard.test.ts`); Zod `.strict()` per-mille integers; run ID must exist and be ACTIVE/ARCHIVED; audit entry; TC-SEC-133/134 |
+| AB-19 | Poison the training data | No public input feeds training: demo ratings are generated server-side from the menu; real public feedback (no dish or rating fields today) and query parameters are never used. A future POS source is admin-provisioned (RECOMMENDATION §7); TC-INT-095 |
+| AB-20 | Exhaust the database by triggering many retrains | Retrain is admin-only, coalesced by a lock + pending flag, rate limited (5/min per admin), and auto-retrain runs at most once per admin action; TC-INT-096 |
+| AB-21 | Misleading public claims from demo data ("rated 4.8", "guests loved…", a demo comment shown as a review) | Demo ratings/comments live only in `DemoRating`, never in `Feedback`; no ratings, counts or comment text in DTOs; reason codes from a fixed list; TC-E2E-096 checks the page text |
 
 ## 6. STRIDE analysis
 
@@ -97,6 +103,9 @@ Scales: L(ikelihood) and I(mpact) are 1–3; Risk = L×I.
 | R-11 | Feedback contains personal data | 2 | 1 | 2 | Moderation, no contact fields, retention rule | Low |
 | R-12 | Dev-only advisory `braces` ≤3.0.3 via ESLint tooling, no patch available (ADR-032) | 1 | 1 | 1 | Not shipped; prod audit clean; re-check each phase | Low (accepted) |
 | R-13 | HSTS/upgrade on http hosts breaking Safari (found in Phase 2) | — | — | — | Fixed (ADR-028), regression-tested | Closed |
+| R-14 | Recommendations read as sales facts (CLAUDE.md §6.2) | 2 | 2 | 4 | Fixed reason codes, caption "generated automatically from our menu", admin labels the DEMO source, NFR-014 test | Low |
+| R-15 | A bad training run degrades suggestions on the live site | 2 | 1 | 2 | Quality gate, versioned runs with one-click rollback, on/off switch, read-time availability filter | Low |
+| R-16 | New tables reachable through Supabase REST | 1 | 2 | 2 | R1 migration enables RLS + REVOKE on every new table; TC-SEC-020 extended | Low |
 
 ## 8. OWASP Top 10:2025 checklist
 

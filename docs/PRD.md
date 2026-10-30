@@ -108,6 +108,21 @@ This project delivers:
 | FR-049 | Admin QR | M | `/admin/qr` shows and downloads the QR code; warns if the site URL is not https. |
 | FR-050 | Admin usability | M | Sidebar with active state, responsive layouts, loading, disabled, empty and error states, confirm dialogs for destructive actions, success toasts, visible logout. |
 
+### 5.3 Food recommendations (added 2026-10-30, guide's request; design in RECOMMENDATION.md)
+
+| ID | Requirement | Pri | Acceptance criteria |
+|---|---|---|---|
+| FR-060 | Demo feedback dataset | M | `npm run reco:generate` creates about 400 demo users, 1,100 visits and 2,400 ratings for the real published menu only, deterministically (same menu + seed → identical CSV export), in the team's feedback format plus `visit_id` (RECOMMENDATION §3). Rating distribution within ±3 points of the team's reference file. Rows are `isDemo`, stored in separate tables (never in `Feedback`), never returned by a public API or page. Refused on production without `--production`; never deletes existing demo rows without `--replace`. |
+| FR-061 | Flavour tags and meal roles | M | Items carry 0–5 tags from the fixed list (RECOMMENDATION §2.1); categories carry a meal role (MAIN/SIDE/DRINK/DESSERT). Both are editable in the admin with server validation and audit; unknown values are refused by Zod and the database enum. Initial values are set by a create-only script and reviewed by the team. |
+| FR-062 | Training and model runs | M | `npm run reco:train` and the admin "Retrain" compute COMPLEMENT and SIMILAR top-10 lists for every item (RECOMMENDATION §4) and store them as a versioned run with weights, counts and metrics. A run is activated only if it passes the quality gate (§5); otherwise it is stored as REJECTED with the reason and the active run stays. Only one run is active; activation is atomic. |
+| FR-063 | Item page: Goes well with | M | `/menu/[slug]` shows up to 4 items of other meal roles: admin FREQUENTLY_BOUGHT_TOGETHER links first, then the active run, then the fallback chain (§4.6). Never the item itself, never unavailable, unpublished or archived items. Each card shows one reason chip from the fixed list (§6). Hidden when empty. |
+| FR-064 | Item page: You may also like | M | Same rules with admin RELATED links first and the SIMILAR list; at most 2 items per category. |
+| FR-065 | Help me choose | M | `/help-me-choose`, reachable from the menu, asks mood, budget and up to 3 flavour tags (all optional except mood), works without JavaScript (GET form, URL state), and shows 5 available suggestions with reasons; for "meal", each main has one pairing whose combined price stays within the chosen budget. Invalid URL values are ignored on the page. |
+| FR-066 | Recommendation APIs | M | `GET /api/v1/menu/[slug]/recommendations` and `GET /api/v1/recommendations/suggest` per TRD §14.4: strict validation (400), 404 for unknown items, rate limited (429), safe errors, no scores, ratings, demo comments or internal IDs in responses. |
+| FR-067 | Admin recommendations | M | `/admin/recommendations`: on/off switch, retrain, weights (integers 0–1000 per weight, at least one weight > 0), run history with activate/rollback (confirm), per-item inspection with score components. Every action requires an allowlisted admin, is audited and expires the `reco` cache tag. |
+| FR-068 | Automatic retrain | S | Item create/archive/unarchive/publish/category change, tag edits and meal-role edits trigger one retrain after the response; concurrent triggers are coalesced (lock + pending flag). Availability and price changes do not retrain, but are reflected at read time within 30 s. |
+| FR-069 | Evaluation notebook | M | `notebooks/recommendation.ipynb` runs top to bottom from the committed CSVs, reports RMSE/MAE (rating prediction) and HitRate@5, Precision@5, Recall@5 and coverage for random, popularity, content, CF, co-occurrence and hybrid, and exports `reference_scores.json`; the app's lists match it (TC-UNIT-140). |
+
 ## 6. Non-functional requirements
 
 | ID | Requirement | Pri | Acceptance criteria |
@@ -124,11 +139,14 @@ This project delivers:
 | NFR-010 | Content honesty | M | No unverified claims (CLAUDE.md 6.2); demo data labelled. |
 | NFR-011 | Deployability | M | Vercel + Supabase; reproducible setup from README/DEPLOYMENT; separate development and production projects. |
 | NFR-012 | Data integrity | M | Money stored as integer paise; foreign keys; unique slugs; transactions for multi-record writes. |
+| NFR-013 | Recommendation performance | S | Item page adds at most one indexed query for recommendations (cached 30 s, tag `reco`); suggest endpoint p95 < 300 ms locally; training < 5 s for 100 items × 5,000 ratings. Measured numbers only. |
+| NFR-014 | Recommendation honesty | M | Public text never states ratings, counts, percentages, demo comments or behaviour derived from demo feedback; reason chips come only from the fixed list (RECOMMENDATION §6); the admin labels the data source as demonstration bills. |
 
 ## 7. Scope
 
 - **In scope:** everything in §5 and §6.
 - **Out of scope:** online ordering, cart, checkout, payments, delivery and order tracking, customer accounts, loyalty and rewards (synopsis D-01, open question Q-12), student-ID verification, table-side ordering, coupon redemption, analytics dashboards, multiple outlets, multiple languages.
+- **Recommendations (added 2026-10-30):** trained on a demo feedback (ratings) dataset because there is no ordering or billing; real item feedback or billing data is future work (RECOMMENDATION §7). No personalisation, tracking or customer profiles.
 - **Future-ready:** schema IDs and module boundaries allow `Order`/`Customer` tables and a cart feature to be added later without reshaping the menu tables.
 
 ## 8. Main journeys
@@ -152,6 +170,7 @@ This project delivers:
 /contact                About & Contact
 /feedback               Feedback form
 /qr                     QR menu code
+/help-me-choose         Help me choose (?mood,budget,tags) — R4
 /sitemap.xml, /robots.txt
 /api/health, /api/v1/*  (TRD §6)
 /admin/login
@@ -165,6 +184,7 @@ This project delivers:
 /admin/feedback
 /admin/qr
 /admin/audit
+/admin/recommendations  Recommendations (R5)
 ```
 
 ## 10. Assumptions (pending confirmation, also in PROGRESS.md)

@@ -1,6 +1,6 @@
 # Phase R4 — Recommendation: customer-facing UI
 
-**Status:** AWAITING TEAM VERIFICATION (2026-10-30)
+**Status:** APPROVED (2026-10-30, "approved, go to Phase R5")
 **Branch:** `phase-r4` (from local `main` after the R3 merge). Not pushed; the live site is unchanged.
 **Approval that started it:** "approved, go to Phase R4" (2026-10-30).
 

@@ -8,9 +8,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 | Field | Value |
 |---|---|
-| Current phase | **Phase R4 — Recommendation: customer-facing UI** (post-release addition requested by the guide) |
-| Status | **AWAITING TEAM VERIFICATION** |
-| Branch | `phase-r4` (from `main`) |
+| Current phase | **Phase R5 — Recommendation: admin and go-live** (post-release addition requested by the guide) |
+| Status | **IN PROGRESS** |
+| Branch | `phase-r5` (from `main`) |
 | Latest report | `docs/PHASE_REPORTS/phase-r4.md` |
 | Live site | https://zorko-sangli.vercel.app (deployed 2026-10-29 IST; auto-deploys from GitHub `main`) |
 | Last updated | 2026-10-30 |
@@ -37,6 +37,7 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Phase R1 | 2026-10-30 | "approved, go to Phase R2" |
 | Phase R2 | 2026-10-30 | "approved, go to Phase R3" |
 | Phase R3 | 2026-10-30 | "approved, go to Phase R4" |
+| Phase R4 | 2026-10-30 | "approved, go to Phase R5" |
 
 **Production go-live:** 2026-10-29 (IST, about 02:10), https://zorko-sangli.vercel.app (Vercel `bom1` + production Supabase, Mumbai). Started for R0 on 2026-10-30 with "sure add falvour tags as it is pure veg, and proceedRo".
 

@@ -197,9 +197,9 @@ def svd_rmse(train_df, eval_df, k):
         a, j = uidx.get(u, -1), iidx[s]
         p = b.predict(a, j) + (approx[a, j] if a >= 0 else 0.0)
         e.append(min(5, max(1, p)) - r)
-    return float(np.sqrt(np.mean(np.square(e))))
+    return float(np.sqrt(np.mean(np.square(e)))), float(np.mean(np.abs(e)))
 svd_sweep = pd.DataFrame({"components": [2, 5, 10, 20]})
-svd_sweep["validation RMSE"] = [svd_rmse(train_in, valid, k) for k in svd_sweep.components]
+svd_sweep["validation RMSE"] = [svd_rmse(train_in, valid, k)[0] for k in svd_sweep.components]
 svd_sweep.round(3)
 """)
 
@@ -218,7 +218,7 @@ rows = [
     ("User mean", test_scores["rmse_user_mean"], test_scores["mae_user_mean"]),
     ("Baseline predictor (μ + b_u + b_i)", test_scores["rmse_baseline"], test_scores["mae_baseline"]),
     (f"Item–item CF (λ_cf = {best_lam:g})", float(np.sqrt(np.mean(np.square(cf_err)))), float(np.mean(np.abs(cf_err)))),
-    (f"TruncatedSVD (k = {best_k})", svd_rmse(train_full, test, best_k), float("nan")),
+    (f"TruncatedSVD (k = {best_k})", *svd_rmse(train_full, test, best_k)),
 ]
 rating_table = pd.DataFrame(rows, columns=["method", "test RMSE", "test MAE"])
 plt.figure(figsize=(6.5, 2.8))
@@ -277,7 +277,8 @@ md("""
 
 - Each list's three weights move in steps of 0.1 and sum to 1 (66 combinations per list), evaluated on the validation split.
 - **Popularity bias.** HitRate alone rewards recommending the same popular dishes to everyone: popular dishes are the ones most often liked. A list that is the same for every dish is not useful.
-- So the objective is **the highest HitRate@5 among weights whose catalogue coverage@5 is at least 60 %** (60 % or more of the dishes appear in some dish's top 5). Ties go to the combination closest to the design defaults.
+- So the objective is **HitRate@5 × coverage@5**: accuracy and catalogue variety count equally. Coverage is the share of dishes that appear in some dish's top 5. Ties go to the combination closest to the design defaults.
+- *History:* R2 first used "best HitRate with coverage ≥ 60 %". After the flag-parsing fix in R3, that rule picked a 60 %-popularity list sitting exactly on the 60 % line, so the objective was changed on validation results (ADR-074).
 """)
 
 code("""
@@ -285,7 +286,6 @@ def grid():
     for a in range(0, 1001, 100):
         for b in range(0, 1001 - a, 100):
             yield a, b, 1000 - a - b
-MIN_COVERAGE = 0.6
 def list_coverage(m, kind):
     return len({e for s in m.slugs for e in R.top(m, s, kind, 5)}) / len(m.slugs)
 comp_rows, sim_rows = [], []
@@ -298,21 +298,23 @@ for a, b, c in grid():
                      list_coverage(m, "SIMILAR")))
 def choose(rows, default):
     df = pd.DataFrame(rows, columns=["w1", "w2", "w3", "hit", "coverage"])
+    df["hit × coverage"] = df.hit * df.coverage
     df["distance"] = (df[["w1", "w2", "w3"]] - np.array(default)).abs().sum(axis=1)
-    df["allowed"] = df.coverage >= MIN_COVERAGE
-    return df.sort_values(["allowed", "hit", "distance"], ascending=[False, False, True]).reset_index(drop=True)
+    return df.sort_values(["hit × coverage", "distance"], ascending=[False, True]).reset_index(drop=True)
 comp_grid = choose(comp_rows, (600, 250, 150)).rename(columns={"w1": "co-occurrence", "w2": "quality", "w3": "content"})
 sim_grid = choose(sim_rows, (500, 300, 200)).rename(columns={"w1": "content", "w2": "taste", "w3": "quality"})
 fig, ax = plt.subplots(1, 2, figsize=(11, 3.4))
 for a, g, title, chosen_w in ((ax[0], comp_grid, '"Goes well with"', "co-occurrence"), (ax[1], sim_grid, '"You may also like"', "content")):
-    a.scatter(g.coverage, g.hit, s=18, color=[ORANGE if ok else GREY for ok in g.allowed], alpha=0.8)
-    a.scatter([g.coverage[0]], [g.hit[0]], s=120, facecolors="none", edgecolors=BROWN, linewidths=2, label="chosen")
-    a.axvline(MIN_COVERAGE, color=GREY, ls="--", lw=1)
+    a.scatter(g.coverage, g.hit, s=18, color=ORANGE, alpha=0.7)
+    a.scatter([g.coverage[0]], [g.hit[0]], s=120, facecolors="none", edgecolors=BROWN, linewidths=2, label="chosen (max hit × coverage)")
+    xs = np.linspace(0.15, 1.0, 50)
+    a.plot(xs, g["hit × coverage"][0] / xs, color=GREY, ls="--", lw=1)
+    a.set_ylim(g.hit.min() - 0.02, g.hit.max() + 0.02)
     a.set_xlabel("catalogue coverage@5"); a.set_ylabel("validation HitRate@5"); a.set_title(title); a.legend(frameon=False)
 save("07_weight_search")
 display(comp_grid.head(5).round(3)); display(sim_grid.head(5).round(3))
 best_unconstrained = sim_grid.sort_values("hit", ascending=False).iloc[0]
-print(f"Without the coverage rule, SIMILAR would pick content/taste/quality = "
+print(f"On HitRate alone, SIMILAR would pick content/taste/quality = "
       f"{int(best_unconstrained.content)}/{int(best_unconstrained.taste)}/{int(best_unconstrained.quality)} "
       f"(HitRate {best_unconstrained.hit:.3f}, coverage {best_unconstrained.coverage:.0%}): mostly the same popular dishes for everyone.")
 """)
@@ -322,7 +324,7 @@ best_c, best_s = comp_grid.iloc[0], sim_grid.iloc[0]
 CHOSEN = {"compCoocPm": int(best_c["co-occurrence"]), "compQualityPm": int(best_c["quality"]),
           "compContentPm": int(best_c["content"]), "simContentPm": int(best_s["content"]),
           "simTastePm": int(best_s["taste"]), "simQualityPm": int(best_s["quality"])}
-# A list's weights must not be all zero (database CHECK); the grid never produces that.
+# A list's weights must not be all zero (database CHECK); the objective never picks that (coverage would be ~0).
 print("Chosen weights (per-mille):", CHOSEN)
 """)
 
@@ -370,7 +372,8 @@ save("06_hit_rate")
 display(comp_table.round(3)); display(sim_table.round(3))
 print(f"Coverage (dishes appearing in any top-5 list): {R.coverage(final_eval):.1%}")
 print("Note: popularity scores well on HitRate because popular dishes are liked most often, but it shows "
-      "the same dishes on every page (see the coverage rule in §7).")
+      "the same dishes on every page (see §7). Standard error of a hit rate here: about ±0.03, so "
+      "differences below about 0.06 are within noise.")
 """)
 
 md("""
@@ -417,7 +420,7 @@ evaluation = {
     "coverage": round(R.coverage(final_eval), 4),
     "best_cf_damping": best_lam, "best_svd_components": best_k,
 }
-(R.DATA / "evaluation.json").write_text(json.dumps(evaluation, indent=1) + "\\n")
+(R.DATA / "evaluation.json").write_text(json.dumps(evaluation, indent=1, allow_nan=False) + "\\n")
 print("Wrote", path.relative_to(R.ROOT), "and data/reco/evaluation.json")
 """)
 

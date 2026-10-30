@@ -14,6 +14,8 @@ export const RULES = {
   loginPerAccount: { scope: 'login', limit: 5, windowMs: 15 * 60_000 },
   loginPerIp: { scope: 'login-ip', limit: 20, windowMs: 15 * 60_000 },
   feedbackPerIp: { scope: 'feedback', limit: 3, windowMs: 10 * 60_000 },
+  /** Recommendation APIs (FR-066): 60 requests per minute per IP. */
+  recoPerIp: { scope: 'reco', limit: 60, windowMs: 60_000 },
 } as const satisfies Record<string, RateLimitRule>
 
 export type RateLimitResult = { allowed: boolean; retryAfterSec: number }

@@ -173,6 +173,9 @@ Scales: L(ikelihood) and I(mpact) are 1–3; Risk = L×I.
 | `npm audit --omit=dev` (TC-SEC-102) | 3 | PASS: 0. Full audit: only the accepted dev-only `braces` chain (ADR-032). Prisma CLI advisories fixed with overrides (ADR-036) |
 | Recommendation tables: RLS on, `anon` has no privileges (test DB) and the Supabase REST API cannot read/insert/update/delete `DemoVisit`, `DemoRating`, `RecoModelRun`, `ItemRecommendation`, `ItemPopularity`, `RecoSettings` on the dev project (TC-SEC-022, TC-SEC-020/135) | R1 | PASS (12 REST checks + RLS test) |
 | Demo data isolation: `reco:generate` never changes the real `Feedback` table; refuses production without `--production` and existing demo rows without `--replace` (TC-INT-093) | R1 | PASS |
+| Recommendation APIs: invalid / injection-style / oversized `mood`, `budget`, `tags`, `slug` → 400 without internals; unknown dish → 404; unknown params ignored (TC-SEC-131) | R3 | PASS |
+| Recommendation APIs rate limit: 61st request per minute per IP → 429 with Retry-After; another IP unaffected (TC-SEC-132) | R3 | PASS |
+| Recommendation responses contain no scores, ratings, run ids, flavour arrays or demo data (strict Zod contracts + live check on 65 dishes) | R3 | PASS |
 
 Manual threat-model review: initial version written in Phase 1; to be re-reviewed with the team in Phase 7. Automated scans cannot prove security.
 | **Phase 7 regression and hardening (2026-10-16)** | 7 | |

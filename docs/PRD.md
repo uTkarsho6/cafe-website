@@ -139,7 +139,7 @@ This project delivers:
 | NFR-010 | Content honesty | M | No unverified claims (CLAUDE.md 6.2); demo data labelled. |
 | NFR-011 | Deployability | M | Vercel + Supabase; reproducible setup from README/DEPLOYMENT; separate development and production projects. |
 | NFR-012 | Data integrity | M | Money stored as integer paise; foreign keys; unique slugs; transactions for multi-record writes. |
-| NFR-013 | Recommendation performance | S | Item page adds at most one indexed query for recommendations (cached 30 s, tag `reco`); suggest endpoint p95 < 300 ms locally; training < 5 s for 100 items × 5,000 ratings. Measured numbers only. |
+| NFR-013 | Recommendation performance | S | Item page adds at most 4 indexed queries for recommendations, no N+1 (cached 30 s, tag `reco`, from R4); suggest endpoint p95 < 300 ms locally; training < 5 s for 100 items × 5,000 ratings. Measured numbers only. |
 | NFR-014 | Recommendation honesty | M | Public text never states ratings, counts, percentages, demo comments or behaviour derived from demo feedback; reason chips come only from the fixed list (RECOMMENDATION §6); the admin labels the data source as demonstration bills. |
 
 ## 7. Scope

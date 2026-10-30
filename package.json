@@ -37,7 +37,9 @@
     "gallery:outlet-photos": "tsx prisma/outlet-photos.ts",
     "reco:tags": "tsx prisma/reco-tags.ts",
     "reco:generate": "tsx prisma/reco-generate.ts",
-    "reco:export": "tsx prisma/reco-export.ts"
+    "reco:export": "tsx prisma/reco-export.ts",
+    "reco:train": "tsx prisma/reco-train.ts",
+    "reco:validate": "node scripts/reco-validate.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",

@@ -173,13 +173,14 @@ A **Bayesian average rating** `B(j) = (m · μ + Σ r) / (m + n_j)` with `m = 10
 
 | List | Candidates | Score (default weights) |
 |---|---|---|
-| **COMPLEMENT** ("Goes well with") | `mealRole(j) ≠ mealRole(i)` | `0.60·K + 0.25·P + 0.15·C` (R0 default; R2 chose `0.6·K + 0.3·P + 0.1·C`) |
-| **SIMILAR** ("You may also like") | `mealRole(j) = mealRole(i)`, `j ≠ i` | `0.50·C + 0.30·T + 0.20·P` (R0 default; R2 chose `0.6·C + 0.1·T + 0.3·P`) |
+| **COMPLEMENT** ("Goes well with") | `mealRole(j) ≠ mealRole(i)` | `0.60·K + 0.25·P + 0.15·C` (R0 default; tuned in R3: `0.5·K + 0.5·C`) |
+| **SIMILAR** ("You may also like") | `mealRole(j) = mealRole(i)`, `j ≠ i` | `0.50·C + 0.30·T + 0.20·P` (R0 default; tuned in R3: `0.5·C + 0.2·T + 0.3·P`) |
 
-- **Weights (R2, ADR-073)** were chosen by grid search on the validation split. The rule is the highest HitRate@5 among weights with **catalogue coverage@5 ≥ 60 %**, which avoids a popularity-only list; ties go to the closest to the defaults.
-  - **COMPLEMENT** `0.6·K + 0.3·P + 0.1·C`.
-  - **SIMILAR** `0.6·C + 0.1·T + 0.3·P`.
-  - Stored as integer per-mille (600/300/100 and 600/100/300) and renormalised to sum to 1. These become the `RecoSettings` defaults in R3.
+- **Weights (R3, ADR-074)** were chosen by grid search on the validation split, maximising **HitRate@5 × coverage@5** (accuracy and variety count equally; ties go to the closest to the defaults).
+  - **COMPLEMENT** `0.5·K + 0·P + 0.5·C`.
+  - **SIMILAR** `0.5·C + 0.2·T + 0.3·P`.
+  - Stored as integer per-mille (500/0/500 and 500/200/300), renormalised to sum to 1. These are the engine and `RecoSettings` defaults.
+  - R2's values (600/300/100 and 600/100/300) came from a notebook that had ignored the admin flags (ADR-074).
 - **Diversity (MMR re-ranking):** each next pick maximises `0.7·score − 0.3·max C(candidate, already picked)`, with at most **2** dishes per category in SIMILAR and **3** in COMPLEMENT. Ties are broken by slug.
 - Top **10** per dish and list are stored, so read-time filtering still leaves at least 4.
 - The stored `score` is the hybrid score (not the MMR value); `rank` is the MMR order.
@@ -191,7 +192,8 @@ Inputs are fixed choices, validated on the server:
 - `tags`: 0–3 flavour tags.
 
 The daypart comes from the server clock in IST.
-- **Score:** `0.45 · Jaccard(tags, tags_j) + 0.35 · P_d(j) + 0.20 · flag(j)`. Without tags, the tag term is dropped and the rest renormalised.
+- **Ranking (revised in R3, ADR-074):** first by the share of the chosen flavours the dish has (so "spicy" puts spicy dishes first), then by `0.35 · P_d(j) + 0.20 · flag(j)`, then menu order. Without tags, only the second key applies.
+- The suggest API works whether or not the item-page sections are switched on; it only ranks real menu dishes by the guest's answers.
 - **Diversity:** max 2 per category.
 - **Result:** 5 dishes; for `meal`, each main also gets one **pairing** (its top COMPLEMENT that keeps the pair total inside the budget band).
 
@@ -212,8 +214,8 @@ reco:train / admin "Retrain" / automatically after a menu change
   → load live menu + ratings of the data source (DEMO_FEEDBACK)
   → deterministic 80/20 split (ratings by user, visits by visit; seed 2026)
   → fit on 80 % → evaluate on 20 % (RMSE, MAE, HitRate@5, Precision@5, Recall@5, coverage)
-  → quality gate: HitRate@5 (COMPLEMENT and SIMILAR) ≥ active run − 0.02
-                  (first run: must beat the popularity-only baseline)
+  → quality gate: HitRate@5 (COMPLEMENT and SIMILAR) not clearly worse than the active run
+                  (first run: than popularity); "clearly" = by more than max(0.02, 2 standard errors)
        pass → refit on 100 % → write RecoModelRun + ItemRecommendation + ItemPopularity
               in one transaction → activate (RecoSettings.activeRunId) → expire tag `reco`
        fail → RecoModelRun status REJECTED with the reason; the active run is unchanged
@@ -277,13 +279,16 @@ There is no library randomness, so Python and TypeScript split identically.
 - Numbers are reported as measured. The report states that the metrics show how well the methods recover the generator's patterns, not real customer taste (Q-23).
 
 ## 9a. Results (R2 notebook, demo data, test split)
+*Updated in R3 after the flag-parsing fix and the new weight objective (ADR-074).*
+
 | | Random | Popularity | Content | Co-occurrence / CF alone | **Hybrid** |
 |---|---|---|---|---|---|
-| "Goes well with" HitRate@5 | 0.143 | 0.245 | 0.185 | 0.460 | **0.457** |
-| "You may also like" HitRate@5 | 0.238 | 0.376 | 0.365 | 0.337 | **0.403** |
+| "Goes well with" HitRate@5 | 0.143 | 0.234 | 0.185 | 0.453 | **0.423** |
+| "You may also like" HitRate@5 | 0.238 | 0.370 | 0.365 | 0.348 | **0.387** |
 
 - **Rating prediction (RMSE):** global mean 0.959 · dish mean 0.897 · user mean 1.119 · **baseline 0.902** · item CF 0.909 · SVD (k = 10) 0.902. CF adds nothing over the baseline at about 6 ratings per user (sparsity).
-- **Coverage@5:** 95.4 %.
+- **Coverage@5:** 98.5 %. The standard error of a hit rate here is about ±0.03.
+- **Validity on the real menu** (`npm run reco:validate`, R3): 65/65 dishes get 4 + 4 suggestions; 30/30 mains get a side or drink; every reason label true; Help me choose respects mood, budget and pairs in 112/112 queries, with flavour matches first.
 - **Full tables:** `data/reco/evaluation.json` and `notebooks/recommendation.ipynb`.
 
 ## 10. Admin

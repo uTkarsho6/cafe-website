@@ -549,3 +549,39 @@ Prisma parameterises `contains`, but it does **not** escape `%`, `_` and `\`. A 
 - **Artifact scan** (`npm run scan:build -- <file>`, `scripts/scan-build.mjs`): after a build, checks that no server-secret value appears in `.next/static` or prerendered pages. Negative-tested with a planted value (detected).
 - **Production command pattern.** Production values live in a git-ignored `.env.prod-admin`, loaded only in a subshell with `VERCEL_ENV=production` so the scripts' guards stay on; `.env.production(.local)` is forbidden because Next.js and the Prisma CLI load it automatically. `db:import-menu` now follows the same rule as the admin and gallery scripts: refused in production unless `--production` is given (it was refused with no supported path before). Verified with a dry run against the local test database.
 - **Not done (needs the team):** creating the production Supabase project, production migrations, the Vercel project and deployment (CLAUDE.md rule 14).
+
+## ADR-067 Production go-live recorded; preflight and runbook follow-ups — Accepted (2026-10-30, Phase R0)
+- **Go-live.** The team deployed in the early hours of 2026-10-29 (IST) following DEPLOYMENT §14: production Supabase project (Mumbai), migrations and RLS, real menu import (16 categories, 65 items), one allowlisted admin, Vercel project `zorko-sangli` (region `bom1`) at `https://zorko-sangli.vercel.app`. Live checks (pages, health, security headers, QR URL, robots, public-artifact secret scan) passed the same night and `/api/health` still reported `db: ok` on 2026-10-30. The team's own manual checks (login, sold-out toggle, upload, feedback, QR scan) are recorded by the team.
+- **Follow-ups found during go-live, fixed now.** (1) Preflight accepted a Supabase URL ending in `/rest/v1/` (the dashboard's "API URL"); it now requires the bare project URL, with a regression test. (2) DEPLOYMENT §14 C omitted `--production` on `admin:list`, which the script refuses without it.
+
+## ADR-068 Food recommendations: demo feedback data, hybrid model, precomputed runs — Accepted (2026-10-30, Phase R0)
+- **Context.** The project guide asked for a recommendation system built on dummy data. The site has no ordering or accounts (CLAUDE.md §3.0), so there is no real behaviour data, and ratings or sales figures must never be invented (§6.2, ADR-026).
+- **Decision.**
+  - Train on a **demo feedback dataset** (about 400 demo users, 2,400 ratings grouped into visits) generated deterministically from the real menu (RECOMMENDATION §3, ADR-071); stored in separate demo tables, never shown. (An earlier draft the same day used synthetic bills; the team rejected bills because the site has no ordering or billing.)
+  - **Hybrid** of content similarity, rating-based item-to-item collaborative filtering (taste), visit co-occurrence (association rules, pairing) and a Bayesian quality score, producing two lists per item (COMPLEMENT, SIMILAR) plus a request-time scorer for Help me choose.
+  - **Precomputed, versioned model runs** with a quality gate, atomic activation, rollback and an on/off switch; read-time filtering keeps availability fresh.
+  - **TypeScript in the app; Python notebook as reference and for the report,** tied together by a parity test.
+  - **Honest wording:** reasons from a fixed list of real menu facts only.
+- **Alternatives rejected.**
+  - Python microservice (scikit-learn at runtime): extra service, cold starts, a second deployment; rule 13.
+  - Matrix factorisation / neural models: 65 items and synthetic data do not justify them, and they are harder to explain in a viva.
+  - Showing ratings, counts or "frequently bought together" for algorithmic results: would present demo data as real reviews or sales facts.
+  - User-based CF online: there are no accounts; Help me choose's answers act as a temporary profile instead.
+  - Tracking real visitor clicks as behaviour data: needs consent and a privacy design, and is not requested.
+  - Computing everything per request: wasteful; the precomputed table is one indexed read.
+- **Consequences.** Metrics measure how well the methods recover the generator's patterns, not real taste; the report states this. Replacing the data source with real item feedback or POS data later changes one module (RECOMMENDATION §7).
+
+## ADR-069 Flavour tags on items and meal roles on categories — Accepted (2026-10-30, Phase R0)
+- **Context.** The outlet is pure veg, so a diet filter cannot drive Help me choose; the recommender also needs to know which dishes complete a meal.
+- **Decision.** `MenuItem.flavorTags` (13 fixed values, enum array, max 5, like ADR-062) and `MenuCategory.mealRole` (MAIN/SIDE/DRINK/DESSERT). Initial values are proposed by a keyword rule from the real names and descriptions, written by a create-only script, and reviewed by the team in the admin. Tags are shown as chips on cards only where they help the guest choose (UI_SPEC §7.4); they are descriptive, not dietary or health claims.
+- **Alternatives rejected.** Free-text tags (inconsistent, injection-prone, impossible to match); a tag table with admin-defined tags (more UI for no benefit at this size; can be migrated later); inferring tags at runtime from text only (unreviewable).
+
+## ADR-070 Help me choose is a server-rendered page — Accepted (2026-10-30, Phase R0)
+- **Decision.** `/help-me-choose` is a normal page with a GET form (mood, budget, tags as chip radios/checkboxes) and results below it, in the menu's layout and components. It is linked from the menu (desktop sidebar card; mobile button next to "Filters") and from the item page's recommendation caption. It works without JavaScript, results are shareable URLs, and the back button works.
+- **Alternatives rejected.** A client-side bottom-sheet wizard (proposed in chat on 2026-10-30): more client JavaScript, focus-trap complexity, and no shareable state. A route under `/menu/…` (would collide with item slugs).
+
+## ADR-071 Training data: generated demo feedback in the team's format, with visits — Accepted (2026-10-30, Phase R0)
+- **Context.** The team asked for a dataset "based on feedback, as the website doesn't have any order or billing section", and supplied `feedback.csv` (2,386 ratings) to use or cross-check. The cross-check (RECOMMENDATION §3.0) found 11 of 36 dish names matching the Sangli menu exactly, about 14 dishes not on the menu, 29 real dishes without data, 39 comment templates, cold drinks described as "fresh and hot", and "Best X in Sangli" claims. Each row rates one dish, so pairing cannot be learned from it.
+- **Decision (team's choice of the options offered).** Generate a new demo dataset in the **same columns** (`feedback_id, user_id, item_id, item_name, rating, comment, sentiment, timestamp`) plus `visit_id` and `item_slug`. It covers all 65 real dishes with their exact names, uses taste-profiled demo users, visits built from meal patterns, a documented rating model calibrated to the team file's distribution, and role/temperature-aware comments without place superlatives. The team's file is kept as a reference only.
+- **Alternatives offered and not chosen.** Fixing the team's CSV only (renames, dropping about 700 rows, 29 dishes without data); fixing it and topping it up with generated rows (mixed origin, harder to explain). Pairing from meal-role rules only, without visits (less data-driven).
+- **Consequences.** Demo ratings live in `DemoVisit`/`DemoRating`, never in `Feedback`, so they cannot reach the public reviews or the moderation queue. No star ratings appear anywhere (ADR-026 unchanged).

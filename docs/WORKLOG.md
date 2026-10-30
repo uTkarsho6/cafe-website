@@ -12,13 +12,13 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 8 — Deployment readiness |
-| **Phase status** | AWAITING TEAM VERIFICATION. Phase 7 approved 2026-10-29 (`phase-7-approved`). Production deploy needs Vercel + a production Supabase project + written approval. |
-| **Git** | Branch `phase-8` (from `main`). Local commits only unless the team says push. |
-| **Last task completed** | Phase 8 (2026-10-29): ADR-066, preflight, artifact scan, DEPLOYMENT §14 runbook, README; report `phase-8.md`. |
-| **Next action** | Team verifies Phase 8; with accounts + approval, follow DEPLOYMENT §14 A–E. |
-| **Waiting on the team** | Round 2A check; delete 2 broken gallery rows in Admin → Gallery; rotate the password in the unofficial copy's README-FOR-TEAM.md; Q-21. |
-| **Note** | This Mac runs under very high load (BTLEServer ~97 % CPU), so E2E with 4 workers can time out on static files. Run `npx playwright test --workers=2` locally. The current network uses NAT64 (`64:ff9b::`), so Next's image optimizer refuses Supabase Storage images locally (SSRF guard) and DNS/Supabase calls fail now and then; re-run affected tests. |
+| **Current phase** | Phase R0 — Recommendation system: requirements and design (post-release, requested by the guide) |
+| **Phase status** | AWAITING TEAM VERIFICATION. Phase 8 approved and live since 2026-10-29 IST (https://zorko-sangli.vercel.app). |
+| **Git** | Branch `phase-r0` (from `main`). Pushing to `main` deploys to production via Vercel, so push only with the team's explicit OK. |
+| **Last task completed** | R0 (2026-10-30): `docs/RECOMMENDATION.md` (design + demo feedback dataset spec, cross-check of the team's feedback.csv), PRD §5.3 FR-060…069 + NFR-013/014, TRD §14, ADR-067…071, SECURITY AB-17…21 / R-14…16, TEST_PLAN §4.9, TRACEABILITY rows, UI_SPEC chips/§12.3/§12.12/§13, Q-22…24; preflight bare-URL fix + test; DEPLOYMENT `admin:list --production`. |
+| **Next action** | On "approved, go to Phase R1": schema migration (flavorTags, mealRole, DemoVisit, DemoRating, RecoModelRun, ItemRecommendation, ItemPopularity, RecoSettings + RLS), `reco-tags.ts`, `reco-generate.ts`, `reco:export`, tests TC-UNIT-130…134, TC-INT-092/093, TC-SEC-135. Dev DB only. |
+| **Waiting on the team** | R0 review; Q-22 (tags after R1), Q-23 (guide), Q-24; hero photo licence/veg (ADR-065). |
+| **Note** | Chat history for the deployment lives in a session opened from `~/projects` (not `~/projects/zorko-sangli`). This Mac runs under very high load, so run E2E with `--workers=2`. NAT64 network: Next's image optimiser refuses Supabase Storage images locally; re-run flaky network tests. |
 
 ### On approval (the CLAUDE.md §0.2 step 8 routine)
 1. In `PROGRESS.md`: add a row to "Approved phases" (date + quoted message), set the current phase and status to `IN PROGRESS`, and update the branch.
@@ -80,6 +80,12 @@ npm run test:e2e -- --workers=2         # Docker test DB + Playwright, expect 31
 ---
 
 ## Task history (newest first)
+
+### Phase R0 — Recommendation requirements and design (2026-10-30) — AWAITING TEAM VERIFICATION
+- [x] Recorded Phase 8 approval and the production go-live (PROGRESS, ADR-067, NFR-011 Verified).
+- [x] Go-live follow-ups: preflight rejects a Supabase URL with a path (TC-UNIT-142); DEPLOYMENT §14 C `admin:list -- --production`.
+- [x] `docs/RECOMMENDATION.md`; PRD, TRD, DECISIONS, SECURITY, TEST_PLAN, TRACEABILITY, UI_SPEC, OPEN_QUESTIONS updated.
+- [x] Report `docs/PHASE_REPORTS/phase-r0.md`.
 
 ### Phase 2 — Application foundation (2026-10-13) — AWAITING TEAM VERIFICATION
 - [x] Created `docs/WORKLOG.md` (this file), at the team's request.

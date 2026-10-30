@@ -310,3 +310,89 @@ flowchart LR
 | Time-based revalidate fallback (≤30 s) | Small extra render load; guarantees freshness even if an on-demand call is missed. |
 | No ratings in feedback | Less "social proof"; avoids misleading aggregates (Q-11). |
 | Keyless map embed | No API key management; less control over styling; contacts Google. |
+
+## 14. Recommendation system (Phase R0 design; RECOMMENDATION.md)
+
+### 14.1 Architecture
+
+```mermaid
+flowchart LR
+  subgraph Offline["Training (script, admin action or after() hook)"]
+    SRC[sources.ts<br/>DemoFeedbackSource]
+    FEAT[features.ts<br/>tags, roles, TF-IDF, price band]
+    ALG[content.ts · taste-cf.ts<br/>cooccurrence.ts · quality.ts]
+    HYB[hybrid.ts<br/>weights, MMR diversity]
+    EVAL[evaluate.ts<br/>80/20 split, RMSE, HitRate@5…]
+    GATE{quality gate}
+  end
+  subgraph DB["PostgreSQL (RLS deny-all)"]
+    MENU[(MenuItem · MenuCategory<br/>flavorTags · mealRole)]
+    RATINGS[(DemoVisit · DemoRating)]
+    RUN[(RecoModelRun)]
+    REC[(ItemRecommendation<br/>ItemPopularity)]
+    SET[(RecoSettings<br/>enabled, weights, activeRunId, lock)]
+  end
+  subgraph Online["Page view / API"]
+    PD[public-data.ts<br/>'use cache' 30 s, tag reco]
+    RS[services/recommendations.ts<br/>read-time filter, curated first, fallback]
+    UI[Item page sections<br/>/help-me-choose]
+    API["/api/v1/…/recommendations<br/>/api/v1/recommendations/suggest"]
+  end
+  NB[[notebooks/recommendation.ipynb<br/>reference + report]]
+  MENU --> SRC
+  RATINGS --> SRC --> FEAT --> ALG --> HYB --> EVAL --> GATE
+  GATE -->|pass| RUN & REC
+  GATE -->|pass| SET
+  GATE -->|fail| RUN
+  RATINGS -.->|CSV export| NB
+  NB -.->|reference scores| EVAL
+  UI --> PD --> RS
+  API --> RS
+  RS --> SET & REC & MENU
+```
+
+### 14.2 Modules
+| Path | Responsibility |
+|---|---|
+| `src/server/reco/sources.ts` | Feedback source interface; `DemoFeedbackSource` (only reader of `DemoVisit`/`DemoRating`). |
+| `src/server/reco/{features,content,taste-cf,cooccurrence,quality,hybrid,evaluate}.ts` | Pure functions over plain arrays (no Prisma), unit-tested and compared with the notebook. |
+| `src/server/reco/train.ts` | Lock, load, split, fit, evaluate, gate, persist in one transaction, activate, expire tag. |
+| `src/server/services/recommendations.ts` | Read path: active run lists + curated links + read-time filters + fallback + reason chips; Help-me-choose scoring. |
+| `src/lib/validation/reco.ts` | Zod: suggest query, weights form, flavour tags, meal role. |
+| `prisma/reco-generate.ts`, `prisma/reco-tags.ts`, `scripts/reco-export.mjs` | Demo feedback generator (RECOMMENDATION §3), initial tags/roles (create-only), CSV export. |
+| `src/app/(public)/help-me-choose/`, `src/features/reco/` | Public UI (R4). |
+| `src/app/(admin)/admin/(shell)/recommendations/` | Admin UI and Server Actions (R5). |
+
+### 14.3 Schema additions (migration in R1)
+| Model | Key fields | Constraints |
+|---|---|---|
+| **MenuItem** (+) | `flavorTags FlavorTag[] @default([])` | enum array; ≤5 (Zod + CHECK `cardinality(…) <= 5`) |
+| **MenuCategory** (+) | `mealRole MealRole @default(MAIN)` | enum |
+| **DemoVisit** | demoUserNo SmallInt 1–9999 (no personal data), visitedAt, daypart enum LUNCH/AFTERNOON/EVENING, pattern VarChar(40), generatorVersion Int, isDemo Bool default true | index (visitedAt), (demoUserNo) |
+| **DemoRating** | visitId FK cascade, demoUserNo SmallInt, menuItemId FK **cascade** (demo rows must not block an admin's hard delete), rating SmallInt, sentiment enum POSITIVE/NEUTRAL/NEGATIVE, comment VarChar(200), ratedAt | unique (demoUserNo, menuItemId); unique (visitId, menuItemId); CHECK rating 1–5; CHECK sentiment matches rating; index (menuItemId). **Separate from `Feedback`**: never shown publicly |
+| **RecoModelRun** | version Int unique (autoincrement), status enum TRAINING/ACTIVE/ARCHIVED/REJECTED/FAILED, dataSource enum DEMO_FEEDBACK/REAL_FEEDBACK/POS, weights (6 × Int per-mille), ratingCount, visitCount, itemCount, rmse/mae/hitRate5Complement/hitRate5Similar/precision5/recall5/coverage Float?, baselineHitRate5 Float?, gateReason VarChar(200)?, durationMs Int?, startedById FK AdminUser SetNull?, trainedAt, activatedAt? | index (status, createdAt) |
+| **ItemRecommendation** | runId FK cascade, fromItemId FK cascade, toItemId FK cascade, kind enum COMPLEMENT/SIMILAR, rank SmallInt 1–10, score Float, components (contentScore, tasteScore, coocScore, qualityScore Float), reasons RecoReason[] | PK (runId, fromItemId, kind, rank); unique (runId, fromItemId, kind, toItemId); CHECK from ≠ to |
+| **ItemPopularity** | runId FK cascade, menuItemId FK cascade, daypart enum (+ ALL), score Float | PK (runId, menuItemId, daypart) |
+| **RecoSettings** | singleton id="reco"; enabled Bool default false (switched on in R4 after review); weights (per-mille Int, CHECK 0–1000); activeRunId FK SetNull?; trainingLockUntil DateTime?; retrainPending Bool | CHECK id = 'reco' |
+
+RLS: the R1 migration adds `ENABLE ROW LEVEL SECURITY` + `REVOKE ALL` for `anon`/`authenticated` on every new table (same pattern as `…_security_rls`), and TC-SEC-020 is extended to them. Floats are fine here: these are model scores, not money (NFR-012 covers money).
+
+### 14.4 API contracts
+| Method & path | Auth | Request | Response `data` | Errors |
+|---|---|---|---|---|
+| GET `/api/v1/menu/[slug]/recommendations` | — | slug `^[a-z0-9-]{1,90}$` | `{goesWellWith: RecoCard[≤4], youMayAlsoLike: RecoCard[≤4]}` | 400, 404, 429 |
+| GET `/api/v1/recommendations/suggest` | — | `mood` (`meal`\|`snack`\|`drink`\|`sweet`, required), `budget` (`under-100`\|`100-200`\|`200-plus`\|`any`, default `any`), `tags` (comma list, ≤3 known tags, duplicates dropped) | `{suggestions: [{item: RecoCard, pairWith: RecoCard\|null}] (≤5)}` | 400, 429 |
+
+`RecoCard = MenuItemCard + {reasons: [{code, label}] (≤2)}`. No scores, ratings, demo comments, run IDs or weights are returned publicly. Rate limit: 60 requests/min per IP hash for each endpoint (shared Postgres limiter, ADR-014). Admin operations are Server Actions: `reco.setEnabled`, `reco.retrain`, `reco.saveWeights`, `reco.activateRun`, `item.setFlavorTags` (inside the item form), `category.setMealRole` (inside the category form); same pattern as TRD §6 (requireAdmin → Zod strict → service → audit → expire tags).
+
+### 14.5 Caching and freshness
+`getItemRecommendations(slug)` and `getSuggestions(params)` are `'use cache'` loaders (30 s, tags `menu`, `item:<slug>`, `reco`). Retrain, activation, weights and the on/off switch expire `reco`; existing menu mutations already expire `menu`, so a sold-out toggle leaves recommendations within the same ≤30 s window (NFR-008). The suggest cache key is the normalised parameter set (finite: enums only).
+
+### 14.6 Trade-offs
+| Choice | Trade-off |
+|---|---|
+| Precomputed lists | Fast and simple reads; up to one training cycle stale for new rating data (not an issue with a static demo dataset). |
+| TypeScript engine + Python notebook | Two implementations to keep in sync; parity test (TC-UNIT-140) catches drift. Avoids running a Python service. |
+| Hand-written TF-IDF | ~40 lines instead of a dependency; must match scikit-learn's formula exactly (tested). |
+| Quality gate on demo data | Protects against a bad run, but metrics on synthetic data only show the method works on the generator's patterns; the report says so. |
+| Demo ratings instead of bills | Matches a site without ordering (team decision); visits restore the "eaten together" signal that plain ratings lack. |

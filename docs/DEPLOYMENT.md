@@ -202,7 +202,7 @@ Later migrations: `pg_dump` backup first (§9), then `prod npm run db:migrate:de
 
 ### C. First production admin
 1. Production Supabase → Authentication → Users → Add user (Auto Confirm), strong password; copy the User UID.
-2. `prod npm run admin:add -- --user-id <UID> --email <email> --name "Name" --production`, then `prod npm run admin:list`.
+2. `prod npm run admin:add -- --user-id <UID> --email <email> --name "Name" --production`, then `prod npm run admin:list -- --production` (the script refuses every command on production without the flag).
 
 ### D. Vercel
 1. **Add New → Project →** import `uTkarsho6/cafe-website`. Framework: Next.js (auto). Production branch: `main`. Build and install commands: defaults (`npm run build` runs `prisma generate`).

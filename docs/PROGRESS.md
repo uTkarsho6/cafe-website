@@ -8,11 +8,14 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 | Field | Value |
 |---|---|
-| Current phase | **Phase 8 — Deployment readiness** |
-| Status | **AWAITING TEAM VERIFICATION** (deployment itself waits for accounts + written approval) |
-| Branch | `phase-8` (from `main`) |
-| Latest report | `docs/PHASE_REPORTS/phase-8.md` |
-| Last updated | 2026-10-29 |
+| Current phase | **Phase R0 — Recommendation system: requirements and design** (post-release addition requested by the guide, 2026-10-30) |
+| Status | **AWAITING TEAM VERIFICATION** |
+| Branch | `phase-r0` (from `main`) |
+| Latest report | `docs/PHASE_REPORTS/phase-r0.md` |
+| Live site | https://zorko-sangli.vercel.app (deployed 2026-10-29 IST; auto-deploys from GitHub `main`) |
+| Last updated | 2026-10-30 |
+
+**Recommendation phases** (RECOMMENDATION.md; same loop as CLAUDE.md §0.2, one approval each): R0 design → R1 schema + demo feedback dataset → R2 Python notebook → R3 TypeScript engine + APIs → R4 public UI → R5 admin + go-live. Nothing reaches production before R5, and only with written approval.
 
 ## Approved phases
 
@@ -29,6 +32,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Phase 5C | 2026-10-16 | "approved, go to Phase 6" |
 | Phase 6 | 2026-10-16 | "approved, go to Phase 7" |
 | Phase 7 | 2026-10-29 | "approved, go to Phase 8" (incl. Rounds 2A–2G) |
+| Phase 8 | 2026-10-29 | "approved, go to deployment" (merged as `90ae600`; recorded 2026-10-30, ADR-067) |
+
+**Production go-live:** 2026-10-29 (IST, about 02:10), https://zorko-sangli.vercel.app (Vercel `bom1` + production Supabase, Mumbai). Started for R0 on 2026-10-30 with "sure add falvour tags as it is pure veg, and proceedRo".
 
 ## Team-requested changes (Phase 7 Round 2, 2026-10-28)
 

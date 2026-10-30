@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { checkProductionEnv, parseEnvFile, projectRef } from '../../scripts/preflight.mjs'
 
-/** Production preflight (TC-UNIT-125, Phase 8). Fake values only. */
+/** Production preflight (TC-UNIT-125, Phase 8; bare-URL case TC-UNIT-142, R0). Fake values only. */
 const PROD = {
   NEXT_PUBLIC_SITE_URL: 'https://zorko-sangli.example',
   DATABASE_URL:
@@ -31,6 +31,22 @@ describe('production preflight (TC-UNIT-125)', () => {
     )
     expect(errors).toContain('SUPABASE_SECRET_KEY is missing')
     expect(errors).toContain('RATE_LIMIT_SALT is missing')
+  })
+  it('refuses a Supabase URL with a path such as /rest/v1/ (go-live regression)', () => {
+    for (const bad of [
+      'https://prodref123.supabase.co/rest/v1/',
+      'https://prodref123.supabase.co/x',
+    ])
+      expect(checkProductionEnv({ ...PROD, NEXT_PUBLIC_SUPABASE_URL: bad }, DEV).errors).toContain(
+        'NEXT_PUBLIC_SUPABASE_URL must be the bare project URL (remove /rest/v1/ etc.)',
+      )
+    // A trailing slash alone is fine.
+    expect(
+      checkProductionEnv(
+        { ...PROD, NEXT_PUBLIC_SUPABASE_URL: 'https://prodref123.supabase.co/' },
+        DEV,
+      ).errors,
+    ).toEqual([])
   })
   it('refuses http, localhost and IP site URLs', () => {
     for (const bad of ['http://zorko.example', 'https://localhost:3000', 'https://192.168.1.20'])

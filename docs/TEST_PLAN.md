@@ -267,6 +267,50 @@ Phase 5B note: uploads go through a Server Action, so TC-SEC-060…063 are refus
 | TC-PERF-001 | Lighthouse mobile on `/`, `/menu`, `/menu/[slug]` (production build) | Targets in NFR-003; measured numbers only |
 | TC-PERF-002 | Query count per menu request (Prisma query log in test) | ≤3 queries; no N+1 |
 
+### 4.9 Recommendations (Phases R1–R5; RECOMMENDATION.md)
+
+| ID | Level | Case | Expected | Phase |
+|---|---|---|---|---|
+| TC-UNIT-130 | Unit | Generator with a fixed menu fixture and seed 2026, run twice | Identical CSV; 400 users, ~1,100 visits, ~2,400 ratings; every row is a fixture dish with its exact name | R1 |
+| TC-UNIT-131 | Unit | Generator never picks unavailable, unpublished or archived items; visits fit the user's budget (+10 %); no empty visit; no repeated user–dish pair; sentiment matches rating; no comment contains "best … in", "hot" for cold drinks or "chilled" for hot food | Pass | R1 |
+| TC-UNIT-132 | Unit | Rating distribution vs the team's reference file; pattern and daypart shares | Within ±3 percentage points of RECOMMENDATION §3.0/§3.4 | R1 |
+| TC-UNIT-133 | Unit | Initial tag rule on the real menu file: Korean items get KOREAN, "Peri Peri" items PERI_PERI, ≤5 tags each; category → meal role mapping | Matches the reviewed table in R1 report | R1 |
+| TC-UNIT-134 | Unit | Zod: flavour tags (unknown, duplicate, 6 tags), meal role, suggest query (`mood=evil`, `tags=a,b,c,d`, `budget=1e9`), weights (−1, 1001, all zero, 1.5) | Rejected or normalised per TRD §14.4 | R1, R3 |
+| TC-UNIT-135 | Unit | TF-IDF and cosine on a small fixture | Equal to hand-computed scikit-learn values (1e-9) | R3 |
+| TC-UNIT-136 | Unit | Visit co-occurrence: only pairs rated ≥ 3, shrinkage, `n_ij < 3` and `lift ≤ 1` dropped, per-source normalisation; taste CF: mean-centring, shrinkage β, ≥3 common raters, negatives dropped | Pass | R3 |
+| TC-UNIT-137 | Unit | Hybrid: COMPLEMENT only other roles, SIMILAR same role, never self, ≤2 per category after MMR, top 10 | Pass | R3 |
+| TC-UNIT-138 | Unit | Evaluation metrics on a fixture with known answers | Exact RMSE, MAE, HitRate@5, Precision@5, Recall@5, coverage | R3 |
+| TC-UNIT-139 | Unit | Help-me-choose scoring: tag Jaccard, budget bands, daypart from an injected IST clock, meal pairing within budget | Pass | R3 |
+| TC-UNIT-140 | Unit | **Parity:** TypeScript lists for every item vs `data/reco/reference_scores.json` from the notebook | Same order; scores within 1e-6 | R3 |
+| TC-UNIT-141 | Unit | Reason chips: only codes from RECOMMENDATION §6; labels built from item data; no digits except prices | Pass | R3 |
+| TC-UNIT-142 | Unit | Preflight refuses a Supabase URL with a path (`/rest/v1/`) and accepts a trailing slash (go-live regression, ADR-067) | Pass | R0 |
+| TC-COMP-030 | Component | Recommendation section: 4 cards, reason chip, caption, hidden when empty, no ordering controls | Pass | R4 |
+| TC-COMP-031 | Component | Help-me-choose form: chips are native radios/checkboxes, max 3 tags enforced with a message, labels associated | Pass | R4 |
+| TC-COMP-032 | Component | Admin weights form: shows normalised values, field errors linked with `aria-describedby` | Pass | R5 |
+| TC-INT-092 | Integration | Migration: new tables, enums, CHECKs (partySize, quantity, rank, from ≠ to, weights 0–1000, ≤5 tags) | Violations refused by the DB | R1 |
+| TC-INT-093 | Integration | `reco:generate` against the test DB: counts, `isDemo`, `--production` guard, `--replace` only touches `DemoVisit`/`DemoRating`, `Feedback` row count unchanged | Pass | R1 |
+| TC-INT-094 | Integration | Train end to end: run stored with metrics, ACTIVE, lists for every published item; failing gate → REJECTED, active run unchanged; rollback re-activates an earlier run | Pass | R3 |
+| TC-INT-095 | Integration | Training ignores the real `Feedback` table, query params and unpublished items (no public input reaches training); `reco:generate` never writes to `Feedback` | Pass | R1, R3 |
+| TC-INT-096 | Integration | Two concurrent retrains: one runs, the other sets `retrainPending`; exactly one extra run follows | Pass | R3 |
+| TC-INT-097 | Integration | Read path: curated links first, then model, then fallback; sold-out/archived filtered; `enabled=false` → curated only; ≤1 query per section (query log) | Pass | R3 |
+| TC-INT-098 | Integration | API contracts for both endpoints (`.strict()` Zod), 400/404/429 shapes | Pass | R3 |
+| TC-SEC-131 | Security | Suggest/recommendation endpoints: injection and oversized values in `tags`/`slug`, unknown params | 400 or ignored; no stack traces | R3 |
+| TC-SEC-132 | Security | Rate limit: 61st request in a minute | 429 | R3 |
+| TC-SEC-133 | Security | Anonymous and non-admin calls to every reco Server Action (replayed action IDs) | Refused; no state change | R5 |
+| TC-SEC-134 | Security | Mass assignment on weights/activate (`status`, `activeRunId`, `dataSource`, unknown run ID) | 400; no change | R5 |
+| TC-SEC-135 | Security | Direct Supabase REST read/write on each new table with the publishable key | Denied (extends TC-SEC-020) | R1 |
+| TC-E2E-093 | E2E | Item page shows "Goes well with" and "You may also like" with reason chips; links open the item | Pass | R4 |
+| TC-E2E-094 | E2E | Admin marks a recommended item sold out → it leaves the recommendations within 30 s | Pass | R4 |
+| TC-E2E-095 | E2E | Help me choose: mood + budget + tags → 5 suggestions within budget; meal pairings within budget; works with JavaScript disabled; shareable URL | Pass | R4 |
+| TC-E2E-096 | E2E | Honesty: no stars, ratings, counts, "% of", "people who liked", "frequently bought" or demo comment text on any public page | None found | R4 |
+| TC-E2E-097 | E2E | Admin: switch off → sections show curated links only; retrain → new version listed; activate earlier run; audit entries | Pass | R5 |
+| TC-E2E-098 | E2E | Admin tags/meal role edits persist and trigger one retrain | Pass | R5 |
+| TC-A11Y-007 | A11y | axe on `/help-me-choose` (empty and with results), item page with sections, `/admin/recommendations` | 0 serious/critical | R4, R5 |
+| TC-RESP-005 | Responsive | `/help-me-choose`, item page sections and admin page at 375/430/768/1024/1440 | No horizontal scroll; 48 px targets | R4, R5 |
+| TC-VIS-101…106 | Visual | Baselines desktop + mobile: item page with sections, Help me choose with results, admin recommendations | Comparisons run | R4, R5 |
+| TC-PERF-003 | Performance | Training time (100 items × 5,000 ratings) and suggest latency | NFR-013 targets; measured only | R3 |
+| TC-NB-001 | Notebook | `jupyter nbconvert --execute` from a clean venv | Runs without errors; exports `reference_scores.json` identical to the committed one | R2 |
+
 ## 5. Commands (from Phase 2 on)
 
 Notes from Phase 2:

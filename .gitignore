@@ -40,3 +40,8 @@ blob-report/
 
 # Prisma generated client (rebuilt by `prisma generate`)
 /src/generated/
+
+# Python notebook environment (Phase R2)
+notebooks/.venv/
+__pycache__/
+.ipynb_checkpoints/

@@ -1,0 +1,9 @@
+# Python packages for notebooks/recommendation.ipynb (Phase R2). Tested on Python 3.14.7.
+# Install: python3 -m venv notebooks/.venv && notebooks/.venv/bin/pip install -r notebooks/requirements.txt
+pandas==3.1.0
+numpy==2.5.4
+scikit-learn==1.9.1
+matplotlib==3.11.2
+nbformat==5.11.1
+nbconvert==7.17.2
+ipykernel==7.4.0

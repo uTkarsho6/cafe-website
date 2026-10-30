@@ -12,12 +12,12 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase R1 — Recommendation: schema and demo feedback dataset |
-| **Phase status** | AWAITING TEAM VERIFICATION. R0 approved 2026-10-30 (`phase-r0-approved`). Live site unchanged (nothing pushed). |
-| **Git** | Branch `phase-r1` (from `main`). Pushing `main` deploys production via Vercel, and from R1 on production also needs the migration first: push only with the team's explicit OK. |
-| **Last task completed** | R1 (2026-10-30): migration `20261030120000_recommendations` (applied to test DB and **dev** Supabase, not production); `src/lib/reco/{demo-feedback,tag-rules}.ts`; `reco:tags`, `reco:generate`, `reco:export`; `data/reco/*` (dev export + team reference file); tests `tests/unit/reco-data.test.ts`, `tests/integration/reco.test.ts`, REST check extended; ADR-072; report `phase-r1.md`. |
-| **Next action** | On "approved, go to Phase R2": Python notebook `notebooks/recommendation.ipynb` + `requirements.txt` (venv, Q-24), reading `data/reco/*.csv`; export `reference_scores.json`. |
-| **Waiting on the team** | R1 check; Q-22 (review the tags, list in phase-r1.md), Q-23 (guide), Q-24; hero photo (ADR-065). |
+| **Current phase** | Phase R2 — Recommendation: Python/ML notebook |
+| **Phase status** | AWAITING TEAM VERIFICATION. R1 approved 2026-10-30 (`phase-r1-approved`, merged into LOCAL `main`). |
+| **Git** | Branch `phase-r2`. **Local `main` now contains the R1 migration: never push `main` before the production migration (R5).** |
+| **Last task completed** | R2 (2026-10-30): `notebooks/` (reco_lib.py reference implementation, build_notebook.py, executed recommendation.ipynb + .html, figures, requirements.txt for Python 3.14.7); `data/reco/{reference_scores.json, evaluation.json, stopwords.txt}`; ADR-073 (baseline-residual CF, coverage-constrained weights 600/300/100 + 600/100/300, MMR rules); `.prettierignore`/ESLint ignore notebooks; report `phase-r2.md`. |
+| **Next action** | On "approved, go to Phase R3": TypeScript engine `src/server/reco/*` reproducing `notebooks/reco_lib.py` exactly (TC-UNIT-140 vs `reference_scores.json`), `reco:train` with model runs + quality gate, migration changing RecoSettings defaults to the chosen weights, read path + APIs. |
+| **Waiting on the team** | R2 check; Q-22 (tags), Q-23 (guide: synthetic data OK?), Q-25; hero photo (ADR-065). |
 | **Note** | Chat history for the deployment lives in a session opened from `~/projects` (not `~/projects/zorko-sangli`). This Mac runs under very high load, so run E2E with `--workers=2`. NAT64 network: Next's image optimiser refuses Supabase Storage images locally; re-run flaky network tests. |
 
 ### On approval (the CLAUDE.md §0.2 step 8 routine)
@@ -80,6 +80,13 @@ npm run test:e2e -- --workers=2         # Docker test DB + Playwright, expect 31
 ---
 
 ## Task history (newest first)
+
+### Phase R2 — Python/ML notebook (2026-10-30) — AWAITING TEAM VERIFICATION
+- [x] R1 approval recorded, merged to local `main`, tagged `phase-r1-approved`, branch `phase-r2`.
+- [x] Python 3.14.7 venv `notebooks/.venv` (git-ignored); pinned `notebooks/requirements.txt`.
+- [x] `notebooks/reco_lib.py` (exact algorithms) + notebook (31 cells, 7 charts); executed; HTML copy.
+- [x] Findings: CF needs baseline residuals and still ≈ baseline (sparsity); popularity bias fixed with coverage ≥ 60 % rule (ADR-073).
+- [x] TC-NB-001: rerun and a truly clean venv give byte-identical `reference_scores.json`; removed a user-level Jupyter kernelspec I had registered by mistake.
 
 ### Phase R1 — Schema and demo feedback dataset (2026-10-30) — AWAITING TEAM VERIFICATION
 - [x] R0 approval recorded, merged to `main`, tagged `phase-r0-approved`, branch `phase-r1`.

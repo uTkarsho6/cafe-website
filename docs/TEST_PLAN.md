@@ -271,8 +271,8 @@ Phase 5B note: uploads go through a Server Action, so TC-SEC-060…063 are refus
 
 | ID | Level | Case | Expected | Phase |
 |---|---|---|---|---|
-| TC-UNIT-130 | Unit | Generator with a fixed menu fixture and seed 2026, run twice | Identical CSV; 400 users, ~1,100 visits, ~2,400 ratings; every row is a fixture dish with its exact name | R1 |
-| TC-UNIT-131 | Unit | Generator never picks unavailable, unpublished or archived items; visits fit the user's budget (+10 %); no empty visit; no repeated user–dish pair; sentiment matches rating; no comment contains "best … in", "hot" for cold drinks or "chilled" for hot food | Pass | R1 |
+| TC-UNIT-130 | Unit | Generator with a fixed menu fixture and seed 2026, run twice | Identical CSV; 400 users, ~1,400 visits, ~2,400 ratings; every row is a fixture dish with its exact name | R1 |
+| TC-UNIT-131 | Unit | Generator uses only the dishes it is given (the script passes published, non-archived dishes; a sold-out dish is still included); visits fit the user's budget (+10 %); no empty visit; no repeated user–dish pair; sentiment matches rating; no comment contains "best … in", "hot" for cold drinks or "chilled" for hot food | Pass | R1 |
 | TC-UNIT-132 | Unit | Rating distribution vs the team's reference file; pattern and daypart shares | Within ±3 percentage points of RECOMMENDATION §3.0/§3.4 | R1 |
 | TC-UNIT-133 | Unit | Initial tag rule on the real menu file: Korean items get KOREAN, "Peri Peri" items PERI_PERI, ≤5 tags each; category → meal role mapping | Matches the reviewed table in R1 report | R1 |
 | TC-UNIT-134 | Unit | Zod: flavour tags (unknown, duplicate, 6 tags), meal role, suggest query (`mood=evil`, `tags=a,b,c,d`, `budget=1e9`), weights (−1, 1001, all zero, 1.5) | Rejected or normalised per TRD §14.4 | R1, R3 |

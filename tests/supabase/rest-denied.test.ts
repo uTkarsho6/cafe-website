@@ -35,6 +35,13 @@ const TABLES = [
   'AdminUser',
   'AuditLog',
   'RateLimitBucket',
+  // Phase R1 (TC-SEC-135)
+  'DemoVisit',
+  'DemoRating',
+  'RecoModelRun',
+  'ItemRecommendation',
+  'ItemPopularity',
+  'RecoSettings',
   '_prisma_migrations',
 ]
 

@@ -359,7 +359,8 @@ flowchart LR
 | `src/server/reco/train.ts` | Lock, load, split, fit, evaluate, gate, persist in one transaction, activate, expire tag. |
 | `src/server/services/recommendations.ts` | Read path: active run lists + curated links + read-time filters + fallback + reason chips; Help-me-choose scoring. |
 | `src/lib/validation/reco.ts` | Zod: suggest query, weights form, flavour tags, meal role. |
-| `prisma/reco-generate.ts`, `prisma/reco-tags.ts`, `scripts/reco-export.mjs` | Demo feedback generator (RECOMMENDATION §3), initial tags/roles (create-only), CSV export. |
+| `src/lib/reco/demo-feedback.ts`, `src/lib/reco/tag-rules.ts` | Pure, seeded demo-feedback generator and CSV writer; keyword rule for initial tags and meal roles (unit-tested, no database). |
+| `prisma/reco-generate.ts`, `prisma/reco-tags.ts`, `prisma/reco-export.ts`, `prisma/reco-menu.ts` | CLI scripts (`npm run reco:generate`, `reco:tags`, `reco:export`) with the production guard; shared menu loader. |
 | `src/app/(public)/help-me-choose/`, `src/features/reco/` | Public UI (R4). |
 | `src/app/(admin)/admin/(shell)/recommendations/` | Admin UI and Server Actions (R5). |
 

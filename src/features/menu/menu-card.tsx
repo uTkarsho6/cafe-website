@@ -1,6 +1,7 @@
 import { Flame } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import { AvailabilityLabel, Badge } from '@/components/ui/badge'
 import { Price } from '@/components/ui/price'
 import { VegMark, type DietType } from '@/components/ui/veg-mark'
@@ -37,11 +38,14 @@ export function MenuCard({
   variant = 'grid',
   priority = false,
   headingLevel: H = 'h3',
+  extra,
 }: {
   item: MenuItemCardDto
   variant?: Variant
   priority?: boolean
   headingLevel?: 'h2' | 'h3'
+  /** Content under the title, e.g. reason and flavour chips on Help me choose (R4). */
+  extra?: ReactNode
 }) {
   const list = variant === 'list'
   return (
@@ -112,6 +116,7 @@ export function MenuCard({
             {item.name}
           </Link>
         </H>
+        {extra}
         <p
           className={cn(
             'line-clamp-2 text-body-sm text-on-surface-variant',

@@ -1,7 +1,6 @@
 import { CircleCheck, Flame } from 'lucide-react'
 import type { Metadata } from 'next'
 import { NO_INDEX, pageMetadata } from '@/lib/site/seo'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
@@ -12,11 +11,11 @@ import { formatDateIST } from '@/lib/format'
 import { isLive } from '@/lib/site/nav'
 import { slugSchema } from '@/lib/validation/public'
 import { BackToMenu } from '@/features/menu/back-to-menu'
-import { ImageFallback } from '@/features/menu/category-icon'
 import { ItemGallery } from '@/features/menu/item-gallery'
 import { ItemDetailSkeleton } from '@/features/menu/skeletons'
-import { cachedItem } from '@/server/public-data'
-import type { MenuItemCardDto, MenuItemDetailDto } from '@/server/services/menu'
+import { FlavourChips, RecoSection, RecoSectionsSkeleton } from '@/features/reco/reco-parts'
+import { cachedItem, cachedItemRecommendations } from '@/server/public-data'
+import type { MenuItemDetailDto } from '@/server/services/menu'
 
 async function loadItem(params: PageProps<'/menu/[slug]'>['params']) {
   const { slug } = await params
@@ -145,6 +144,7 @@ function ItemContent({ item }: { item: MenuItemDetailDto }) {
               )}
             </div>
             <p className="text-body-md text-on-surface-variant">{item.description}</p>
+            <FlavourChips flavours={item.flavours} />
             {item.images.some((i) => i.url.startsWith('/stock/')) && (
               <p className="text-body-sm text-on-surface-variant">
                 Photo is illustrative —{' '}
@@ -169,8 +169,9 @@ function ItemContent({ item }: { item: MenuItemDetailDto }) {
           </section>
 
           <AddOns groups={item.addOnGroups} />
-          <CompactList title="Frequently bought together" items={item.frequentlyBoughtTogether} />
-          <CompactList title="Related items" items={item.related} />
+          <Suspense fallback={<RecoSectionsSkeleton />}>
+            <Recommendations slug={item.slug} />
+          </Suspense>
           <Combos combos={item.combos} />
         </div>
       </div>
@@ -219,37 +220,41 @@ function AddOns({ groups }: { groups: MenuItemDetailDto['addOnGroups'] }) {
   )
 }
 
-function CompactList({ title, items }: { title: string; items: MenuItemCardDto[] }) {
-  if (items.length === 0) return null
+/**
+ * "Goes well with" / "You may also like" (UI_SPEC §12.3, FR-063/064). Café picks come first; only
+ * available dishes are listed; each section is hidden when empty. Streams in after the item.
+ */
+async function Recommendations({ slug }: { slug: string }) {
+  const reco = await cachedItemRecommendations(slug)
+  if (!reco) return null
+  const { goesWellWith, youMayAlsoLike } = reco
+  if (goesWellWith.length === 0 && youMayAlsoLike.length === 0) return null
+  const caption = (
+    <p className="mt-space-sm flex flex-wrap items-center gap-x-1 text-body-sm text-on-surface-variant">
+      Suggestions are generated automatically from our menu.
+      <Link
+        href="/help-me-choose"
+        className="inline-flex min-h-12 items-center font-semibold text-primary underline-offset-2 hover:underline lg:min-h-0"
+      >
+        Help me choose
+      </Link>
+    </p>
+  )
   return (
-    <section className="rounded-3xl bg-surface-container-lowest p-space-lg shadow-sm">
-      <h2 className="text-headline-sm">{title}</h2>
-      <ul className="mt-space-sm flex flex-col gap-1">
-        {items.map((i) => (
-          <li key={i.id}>
-            <Link
-              href={`/menu/${i.slug}`}
-              className="flex min-h-12 items-center gap-space-sm rounded-xl p-1 hover:bg-surface-container-low"
-            >
-              <span className="relative size-14 shrink-0 overflow-hidden rounded-xl">
-                {i.image ? (
-                  <Image src={i.image.url} alt="" fill sizes="56px" className="object-cover" />
-                ) : (
-                  <ImageFallback />
-                )}
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-label-lg">{i.name}</span>
-                {!i.isAvailable && <span className="text-body-sm text-error">Out of stock</span>}
-              </span>
-              <span className="font-heading text-headline-sm font-extrabold text-primary">
-                {i.priceLabel}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <>
+      <RecoSection
+        id="reco-goes-well"
+        title="Goes well with"
+        items={goesWellWith}
+        footer={youMayAlsoLike.length === 0 ? caption : undefined}
+      />
+      <RecoSection
+        id="reco-also-like"
+        title="You may also like"
+        items={youMayAlsoLike}
+        footer={caption}
+      />
+    </>
   )
 }
 

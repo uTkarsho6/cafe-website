@@ -6,6 +6,7 @@ import { PRICE_BANDS } from '@/lib/validation/public'
 import {
   FLAVOR_TAG_KEYS,
   FLAVOR_TAGS,
+  flavourLabels,
   type BudgetKey,
   type FlavorTagKey,
   type MealRoleKey,
@@ -40,6 +41,8 @@ export type RecoCardDto = MenuItemCardDto & { reasons: RecoReasonDto[] }
 export type ItemRecommendationsDto = { goesWellWith: RecoCardDto[]; youMayAlsoLike: RecoCardDto[] }
 export type SuggestionDto = {
   item: RecoCardDto
+  /** Display labels of the dish's flavour tags (public menu information, shown as chips; R4). */
+  flavours: string[]
   pairWith: RecoCardDto | null
   pairTotalPaise: number | null
   pairTotalLabel: string | null
@@ -347,6 +350,7 @@ export async function getSuggestions(
     const total = pair ? d.card.pricePaise + pair.card.pricePaise : null
     return {
       item: { ...d.card, reasons: reasons(d) },
+      flavours: flavourLabels(d.tags),
       pairWith: pair
         ? {
             ...pair.card,

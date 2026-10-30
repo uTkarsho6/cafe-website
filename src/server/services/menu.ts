@@ -3,6 +3,7 @@ import type { Prisma } from '@/generated/prisma/client'
 import { formatRupees } from '@/lib/format'
 import { mediaUrl } from '@/lib/media'
 import { PRICE_BANDS, type MenuQuery, type PriceBand } from '@/lib/validation/public'
+import { flavourLabels } from '@/lib/validation/reco'
 import { getDb } from '../db'
 import type { PageMeta } from '../http'
 import { activeOfferWhere, publicItemWhere } from './visibility'
@@ -37,6 +38,8 @@ export type OfferSummaryDto = {
 
 export type MenuItemDetailDto = Omit<MenuItemCardDto, 'image'> & {
   images: ImageDto[]
+  /** Display labels of the flavour tags, in canonical order (R4, UI_SPEC §7.3). */
+  flavours: string[]
   addOnGroups: {
     name: string
     minSelect: number
@@ -195,6 +198,7 @@ export async function getMenuItemBySlug(
     where: { AND: [publicItemWhere, { slug }] },
     select: {
       ...card,
+      flavorTags: true,
       images: { orderBy: { sortOrder: 'asc' }, select: { storagePath: true, altText: true } },
       addOnGroups: {
         orderBy: { sortOrder: 'asc' },
@@ -244,6 +248,7 @@ export async function getMenuItemBySlug(
     hasActiveOffer: offers.length > 0,
     category: row.category,
     images: row.images.map((i) => toImage(i)).filter((i): i is ImageDto => i !== null),
+    flavours: flavourLabels(row.flavorTags),
     addOnGroups: row.addOnGroups.map((g) => ({
       ...g,
       options: g.options.map((o) => ({ ...o, priceLabel: `+${formatRupees(o.priceDeltaPaise)}` })),

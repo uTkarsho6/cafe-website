@@ -304,7 +304,7 @@ Phase 5B note: uploads go through a Server Action, so TC-SEC-060…063 are refus
 | TC-SEC-135 | Security | Direct Supabase REST read/write on each new table with the publishable key | Denied (extends TC-SEC-020) | R1 |
 | TC-E2E-093 | E2E | Item page shows "Goes well with" and "You may also like" with reason chips; links open the item | Pass | R4 |
 | TC-E2E-094 | E2E | Admin marks a recommended item sold out → it leaves the recommendations within 30 s | Pass | R4 |
-| TC-E2E-095 | E2E | Help me choose: mood + budget + tags → 5 suggestions within budget; meal pairings within budget; works with JavaScript disabled; shareable URL | Pass | R4 |
+| TC-E2E-095 | E2E | Help me choose: mood + budget + tags → ≤ 5 suggestions within budget; meal pairings real and within budget; plain GET form, results in the server HTML, shareable URL (JavaScript-disabled display is a known site-wide limitation, ADR-075) | Pass | R4 |
 | TC-E2E-096 | E2E | Honesty: no stars, ratings, counts, "% of", "people who liked", "frequently bought" or demo comment text on any public page | None found | R4 |
 | TC-E2E-097 | E2E | Admin: switch off → sections show curated links only; retrain → new version listed; activate earlier run; audit entries | Pass | R5 |
 | TC-E2E-098 | E2E | Admin tags/meal role edits persist and trigger one retrain | Pass | R5 |

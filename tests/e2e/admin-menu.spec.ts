@@ -81,6 +81,31 @@ test('price and availability edits persist and reach the public item page within
   await warm.waitForTimeout(2_000)
   await warm.close()
 
+  // TC-E2E-094: find a dish whose recommendations currently list the target.
+  const slugs = await testDb(async (db) => {
+    const { rows } = await db.query<{ slug: string }>(
+      `SELECT slug FROM "MenuItem" WHERE "isPublished" AND NOT "isArchived" AND id <> $1 ORDER BY slug`,
+      [target.id],
+    )
+    return rows.map((r) => r.slug)
+  })
+  let source: string | undefined
+  for (const slug of slugs) {
+    const res = await page.request.get(`/api/v1/menu/${slug}/recommendations`, {
+      headers: { 'x-forwarded-for': '198.51.100.94' },
+    })
+    if (!res.ok()) continue
+    const { data } = await res.json()
+    const listed = [...data.goesWellWith, ...data.youMayAlsoLike].map(
+      (c: { slug: string }) => c.slug,
+    )
+    if (listed.includes(target.slug)) {
+      source = slug
+      break
+    }
+  }
+  expect(source, 'some dish recommends the target before it is sold out').toBeDefined()
+
   // Quick toggle in the list.
   await row.getByRole('switch', { name: `Available: ${target.name}` }).click()
   await expect(page.getByText(`"${target.name}" is now out of stock.`)).toBeVisible()
@@ -88,6 +113,12 @@ test('price and availability edits persist and reach the public item page within
     await expect(p.getByRole('main').getByText('Out of stock').first()).toBeVisible({
       timeout: 2_000,
     })
+  })
+  // ... and it leaves the recommendations within the same window (list refills, no retraining).
+  await expectPublic(page, `/menu/${source}`, async (p) => {
+    const sections = p.getByTestId('reco-section')
+    await expect(sections.first()).toBeVisible({ timeout: 2_000 })
+    await expect(sections.getByText(target.name, { exact: true })).toHaveCount(0)
   })
 
   // Full edit form: new price, available again.
@@ -197,7 +228,8 @@ test('add-ons and linked items save and show on the public page', async ({ page 
   await links.getByRole('button', { name: 'Save linked items' }).click()
   await expect(page.getByText('Linked items saved.')).toBeVisible()
   await expectPublic(page, `/menu/${target.slug}`, async (p) => {
-    const related = p.locator('section', { has: p.getByRole('heading', { name: 'Related items' }) })
+    // R4: admin "related" links are café picks at the top of "You may also like".
+    const related = p.getByRole('region', { name: 'You may also like' })
     await expect(related.getByRole('link', { name: new RegExp(linkedName) })).toBeVisible({
       timeout: 2_000,
     })

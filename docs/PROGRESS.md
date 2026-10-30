@@ -9,9 +9,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Field | Value |
 |---|---|
 | Current phase | **Phase R4 — Recommendation: customer-facing UI** (post-release addition requested by the guide) |
-| Status | **IN PROGRESS** |
+| Status | **AWAITING TEAM VERIFICATION** |
 | Branch | `phase-r4` (from `main`) |
-| Latest report | `docs/PHASE_REPORTS/phase-r3.md` |
+| Latest report | `docs/PHASE_REPORTS/phase-r4.md` |
 | Live site | https://zorko-sangli.vercel.app (deployed 2026-10-29 IST; auto-deploys from GitHub `main`) |
 | Last updated | 2026-10-30 |
 
@@ -70,6 +70,7 @@ None open. Fixed in Phase 6 Round 2: admin stayed signed in across visits (ADR-0
 - Page-level caching + on-demand revalidation (≤30 s freshness) is designed with the pages in 4A/5B (ADR-035).
 - Real menu, prices, address, phone and map are in (ADR-044, ADR-046). Opening hours (Q-05), real offers (Q-07), WhatsApp/email/social (Q-03/Q-04) are still placeholders.
 - Visual baselines exist only for macOS (`-darwin`); record Linux baselines when CI is set up (Q-16).
+- **No-JavaScript rendering (found in R4, ADR-075):** with JavaScript disabled, streamed page content (menu, item pages, Help me choose) stays hidden, because React reveals it with inline scripts. Pre-existing since Phase 4A. Fixing it needs a rendering change on all public pages; team to decide whether it matters for the project.
 - Structured data (JSON-LD, FR-023) once hours and the remaining café facts are confirmed (ADR-047).
 - Gallery lightbox E2E with real uploaded photos once Storage is set up.
 - New admin actions: use `expirePublic()` from `action-utils.ts` and return `redirectTo` instead of calling `redirect()` (ADR-050).

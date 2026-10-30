@@ -1,6 +1,7 @@
 import 'server-only'
 import { cacheLife, cacheTag } from 'next/cache'
 import type { MenuQuery, OffersQuery } from '@/lib/validation/public'
+import type { SuggestQuery } from '@/lib/validation/reco'
 import { getCafeInfo } from './services/cafe'
 import { listCategories } from './services/categories'
 import {
@@ -11,6 +12,7 @@ import {
 } from './services/home'
 import { getMenuItemBySlug, listMenuItems } from './services/menu'
 import { getOfferBySlug, listOffers } from './services/offers'
+import { getItemRecommendations, getSuggestions } from './services/recommendations'
 import { listSitemapEntries } from './services/sitemap'
 
 /**
@@ -28,6 +30,7 @@ export const TAGS = {
   offers: 'offers',
   cafe: 'cafe', // café info + opening hours
   home: 'home', // banners, approved reviews, gallery
+  reco: 'reco', // recommendation settings and the active model run (Phase R4)
 } as const
 
 const FRESH = { stale: 30, revalidate: 30, expire: 300 }
@@ -102,4 +105,23 @@ export async function cachedSitemapEntries() {
   cacheLife(FRESH)
   cacheTag(TAGS.menu, TAGS.offers)
   return listSitemapEntries()
+}
+
+/**
+ * Item-page recommendations (FR-063/064). Tagged `menu` too, so a sold-out change leaves the lists
+ * as fast as it leaves the menu; `reco` is refreshed when a model run is activated (R5).
+ */
+export async function cachedItemRecommendations(slug: string) {
+  'use cache'
+  cacheLife(FRESH)
+  cacheTag(TAGS.reco, TAGS.menu, TAGS.offers, `item:${slug}`)
+  return getItemRecommendations(slug)
+}
+
+/** Help me choose (FR-065). The query has fixed values only, so the set of cache keys is finite. */
+export async function cachedSuggestions(query: SuggestQuery) {
+  'use cache'
+  cacheLife(FRESH)
+  cacheTag(TAGS.reco, TAGS.menu, TAGS.offers)
+  return getSuggestions(query)
 }

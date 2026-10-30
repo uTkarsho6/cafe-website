@@ -362,6 +362,7 @@ describe('recommendation APIs (TC-INT-098, TC-SEC-131/132)', async () => {
               z
                 .object({
                   item: card,
+                  flavours: z.array(z.string()).max(5),
                   pairWith: card.nullable(),
                   pairTotalPaise: z.number().int().nullable(),
                   pairTotalLabel: z.string().nullable(),

@@ -148,10 +148,15 @@ Cosine similarity of an item vector made of weighted blocks, each L2-normalised 
 TF-IDF follows scikit-learn's defaults so the TypeScript port matches the notebook: tokens = lowercase `[a-z0-9]{2,}`, a fixed committed English stop-word list, `idf = ln((1 + n) / (1 + df)) + 1`, L2 row normalisation.
 
 ### 4.2 Taste similarity `T(i, j)` (item-based collaborative filtering on ratings)
-- Ratings are mean-centred per user: `r'(u, i) = r(u, i) − mean(u)`.
-- **Adjusted cosine** over users who rated both dishes, shrunk towards 0 for small overlaps: `T = cos'(i, j) · n_ij / (n_ij + β)`, with `β = 10`.
-- Pairs with fewer than 3 common raters, or a negative similarity, become 0; the rest is divided by the maximum for source `i`.
-- The same similarities give the **rating prediction** used for RMSE/MAE in the evaluation (§9): `pred(u, j) = mean(u) + Σ T·r' / Σ |T|` over the user's rated dishes.
+*Revised in R2 (ADR-073): residuals of a baseline predictor instead of plain user-mean centring.*
+- **Baseline predictor** `b_ui = μ + b_u + b_i`, damped towards 0 for users and dishes with few ratings:
+  - `b_i = Σ(r − μ) / (10 + n_i)`;
+  - `b_u = Σ(r − μ − b_i) / (15 + n_u)`.
+- **Residuals:** `e(u, i) = r(u, i) − b_ui`.
+- **Taste similarity:** the cosine of the residuals over users who rated both dishes, shrunk for small overlaps: `T = cos(i, j) · n_ij / (n_ij + 10)`.
+  - Pairs with fewer than 3 common raters, or a negative value, become 0.
+  - The rest is divided by the maximum for source `i`.
+- **Rating prediction** (§9 only): `pred(u, j) = b_uj + Σ s·e / (Σ s + 2)` over the user's 20 most similar rated dishes with `s > 0`, clipped to 1–5.
 
 ### 4.3 Visit co-occurrence `K(i → j)` (what is eaten together)
 - From visits where **both** dishes were rated ≥ 3 (eaten together and enjoyed):
@@ -168,12 +173,16 @@ A **Bayesian average rating** `B(j) = (m · μ + Σ r) / (m + n_j)` with `m = 10
 
 | List | Candidates | Score (default weights) |
 |---|---|---|
-| **COMPLEMENT** ("Goes well with") | `mealRole(j) ≠ mealRole(i)` | `0.60·K + 0.25·P + 0.15·C` |
-| **SIMILAR** ("You may also like") | `mealRole(j) = mealRole(i)`, `j ≠ i` | `0.50·C + 0.30·T + 0.20·P` |
+| **COMPLEMENT** ("Goes well with") | `mealRole(j) ≠ mealRole(i)` | `0.60·K + 0.25·P + 0.15·C` (R0 default; R2 chose `0.6·K + 0.3·P + 0.1·C`) |
+| **SIMILAR** ("You may also like") | `mealRole(j) = mealRole(i)`, `j ≠ i` | `0.50·C + 0.30·T + 0.20·P` (R0 default; R2 chose `0.6·C + 0.1·T + 0.3·P`) |
 
-- Weights are tuned in R2 on the validation split, then fixed as defaults. They are stored as integer per-mille (0–1000) and renormalised to sum to 1.
-- **Diversity** (MMR re-ranking, λ = 0.7): at most 2 items per category in SIMILAR; COMPLEMENT prefers covering different roles (a side **and** a drink for a main).
-- Top **10** per item and list are stored, so read-time filtering still leaves at least 4.
+- **Weights (R2, ADR-073)** were chosen by grid search on the validation split. The rule is the highest HitRate@5 among weights with **catalogue coverage@5 ≥ 60 %**, which avoids a popularity-only list; ties go to the closest to the defaults.
+  - **COMPLEMENT** `0.6·K + 0.3·P + 0.1·C`.
+  - **SIMILAR** `0.6·C + 0.1·T + 0.3·P`.
+  - Stored as integer per-mille (600/300/100 and 600/100/300) and renormalised to sum to 1. These become the `RecoSettings` defaults in R3.
+- **Diversity (MMR re-ranking):** each next pick maximises `0.7·score − 0.3·max C(candidate, already picked)`, with at most **2** dishes per category in SIMILAR and **3** in COMPLEMENT. Ties are broken by slug.
+- Top **10** per dish and list are stored, so read-time filtering still leaves at least 4.
+- The stored `score` is the hybrid score (not the MMR value); `rank` is the MMR order.
 
 ### 4.6 Help me choose
 Inputs are fixed choices, validated on the server:
@@ -252,16 +261,30 @@ reco:train / admin "Retrain" / automatically after a menu change
 - **Exports** `data/reco/reference_scores.json`: the top-10 COMPLEMENT and SIMILAR lists for every dish with the chosen weights. The TypeScript tests require identical order and scores within `1e-6` (TC-UNIT-140).
 
 ## 9. Evaluation protocol
-Split with the fixed seed: 20 % of each user's ratings (at least 1) and 20 % of visits are held out.
-- **Rating prediction:** RMSE and MAE of item-based CF against the global-mean and item-mean baselines (and SVD in the notebook).
-- **SIMILAR (taste):** for each test user, hide one dish they rated ≥ 4; query with another dish they rated ≥ 4. HitRate@5 = share of queries where the hidden dish is in the SIMILAR top 5.
-- **COMPLEMENT (pairing):** for each held-out visit with ≥ 2 dishes, each dish in turn is the query and the rest of the visit `R` is the target:
+**Split (R2):**
+- **Test:** a visit is held out when `FNV-1a("2026:test:<visit_id>") mod 5 == 0` (20 %; all ratings of that visit are test ratings).
+- **Validation:** an independent second split with salt `valid` inside the rest, used for every tuning choice.
+
+There is no library randomness, so Python and TypeScript split identically.
+- **Rating prediction:** RMSE and MAE of item-based CF against the global mean, dish mean, user mean and baseline predictor (and SVD in the notebook).
+- **SIMILAR (taste):** pairs (query = a dish the user rated ≥ 4 in training, target = a dish the same user rated ≥ 4 in a test visit, same meal role). HitRate@5 = share of pairs where the target is in the query's SIMILAR top 5.
+- **COMPLEMENT (pairing):** for each held-out visit with ≥ 2 dishes rated ≥ 3, each such dish in turn is the query and the rest of those dishes `R` is the target:
   - HitRate@5 = share of queries whose COMPLEMENT top 5 contains at least one dish of `R`;
   - Precision@5 = `|top5 ∩ R| / 5`;
   - Recall@5 = `|top5 ∩ R| / |R|`.
 - **Coverage** = distinct dishes recommended anywhere / catalogue size.
 - **Baselines:** random (seeded), popularity-only, content-only, CF-only / co-occurrence-only.
 - Numbers are reported as measured. The report states that the metrics show how well the methods recover the generator's patterns, not real customer taste (Q-23).
+
+## 9a. Results (R2 notebook, demo data, test split)
+| | Random | Popularity | Content | Co-occurrence / CF alone | **Hybrid** |
+|---|---|---|---|---|---|
+| "Goes well with" HitRate@5 | 0.143 | 0.245 | 0.185 | 0.460 | **0.457** |
+| "You may also like" HitRate@5 | 0.238 | 0.376 | 0.365 | 0.337 | **0.403** |
+
+- **Rating prediction (RMSE):** global mean 0.959 · dish mean 0.897 · user mean 1.119 · **baseline 0.902** · item CF 0.909 · SVD (k = 10) 0.902. CF adds nothing over the baseline at about 6 ratings per user (sparsity).
+- **Coverage@5:** 95.4 %.
+- **Full tables:** `data/reco/evaluation.json` and `notebooks/recommendation.ipynb`.
 
 ## 10. Admin
 `/admin/recommendations` (allowlisted admins only; every action audited):

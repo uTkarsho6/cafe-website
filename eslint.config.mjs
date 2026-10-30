@@ -25,6 +25,8 @@ const eslintConfig = defineConfig([
     'playwright-report/**',
     'test-results/**',
     'design/**',
+    // Python notebook environment and outputs (Phase R2): third-party JS inside the venv.
+    'notebooks/**',
     'next-env.d.ts',
     'src/generated/**',
     '.claude/**', // Claude Code worktrees: separate checkouts, linted in their own tree

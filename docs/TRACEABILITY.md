@@ -73,7 +73,7 @@ Requirement → design/module → implementation location (planned) → tests �
 | FR-066 Recommendation APIs | M | TRD §14.4 | `src/app/api/v1/…` | TC-INT-098, TC-SEC-131/132 | R3 | Planned | — |
 | FR-067 Admin recommendations | M | RECOMMENDATION §10; UI_SPEC §13 | `admin/(shell)/recommendations/` | TC-COMP-032, TC-SEC-133/134, TC-E2E-097 | R5 | Planned | — |
 | FR-068 Automatic retrain | S | RECOMMENDATION §5 | `train.ts` + admin menu actions | TC-INT-096, TC-E2E-098 | R3, R5 | Planned | — |
-| FR-069 Evaluation notebook | M | RECOMMENDATION §8–9 | `notebooks/recommendation.ipynb` | TC-NB-001, TC-UNIT-140 | R2 | Planned | — |
+| FR-069 Evaluation notebook | M | RECOMMENDATION §8–9a; ADR-073 | `notebooks/recommendation.ipynb`, `notebooks/reco_lib.py` | TC-NB-001, TC-UNIT-140 | R2, R3 | In progress (notebook runs top to bottom, reports RMSE/MAE and HitRate/Precision/Recall/coverage against baselines, exports byte-identical `reference_scores.json` on rerun: verified in R2; app parity TC-UNIT-140 in R3) | phase-r2.md |
 | NFR-013 Recommendation performance | S | TRD §14.5 | — | TC-PERF-003, TC-INT-097 | R3 | Planned | — |
 | NFR-014 Recommendation honesty | M | RECOMMENDATION §6 | reason codes | TC-UNIT-141, TC-E2E-096 | R3, R4 | Planned | — |
 

@@ -77,11 +77,11 @@ The team supplied a 2,386-row ratings file. It was checked against the real menu
 **Decision:** the file is kept as a **reference** (`data/reco/reference/feedback_team_v1.csv`, R1) for its format and rating distribution. The training data is **generated fresh** in the same format for the real menu (ADR-071).
 
 ### 3.1 Principles
-- **Real dishes only.** The generator reads published, non-archived items from the database, so every row uses the exact names and IDs on the website.
+- **Real dishes only.** The generator reads published, non-archived items from the database (availability is ignored: "sold out" is temporary and is filtered when suggestions are shown, §4.7), so every row uses the exact names and IDs on the website.
 - **Same format as the team's file, plus two columns:** `visit_id` (dishes eaten on the same visit) and `item_slug` (stable join key).
 - **Deterministic.** Seeded PRNG (mulberry32, seed `2026`), fixed window **2026-08-01 → 2026-10-29, 11:00–21:59 IST** (the same span as the team's file; this is **not** a claim about opening hours, Q-05), generator version `1`. Same menu + same seed → byte-identical CSV.
 - **Clearly demo.** Separate tables (`DemoVisit`, `DemoRating`), `isDemo = true`, `dataSource = DEMO_FEEDBACK` on every model run. Never written to the real `Feedback` table, never returned by a public API or page. Demo "users" are numbers 1–400 with no personal data.
-- **Volume.** 400 demo users, about 1,100 visits, about 2,400 ratings (in line with the team's file).
+- **Volume.** 400 demo users, about 1,400 visits, about 2,400 ratings (in line with the team's file; R1 measured 1,384 visits and 2,392 ratings on the dev menu).
 - **Guarded.** On production the script refuses to run without `--production`, and never deletes demo rows unless `--replace` is given (then it replaces only the demo tables, in one transaction).
 
 ### 3.2 Output format (`data/reco/demo_feedback.csv`)
@@ -93,7 +93,7 @@ Each of the 400 users is given, at random:
 - 1–3 **liked flavour tags** (weighted: Cheesy 20 %, Peri Peri 14 %, Korean 12 %, Spicy 12 %, Coffee 10 %, Chocolate 10 %, Fruity 8 %, Italian 6 %, Mexican 4 %, Paneer 4 %);
 - 0–1 **disliked tag** (Spicy 40 %, Coffee 20 %, Minty 20 %, Creamy 20 %; never one of the liked tags);
 - a **budget band** (student < ₹150 per person 50 %, regular ₹150–₹300 35 %, treat > ₹300 15 %);
-- a **visit count** of 1–6 (median 3), which gives each user 2–12 ratings, like the team's file.
+- a **visit count** of 1–6 (weights 8/20/25/20/15/12 %), capped at 12 ratings and topped up to at least 2, so each user has 2–12 ratings like the team's file.
 
 ### 3.4 Visits and meal patterns
 Each visit picks a daypart (11–14 → 35 %, 14–17 → 30 %, 17–22 → 35 %) and a meal pattern, then fills the pattern's slots with the dishes eaten together (`a|b` = one of the categories; `%` = chance the slot is filled):
@@ -112,15 +112,15 @@ Each visit picks a daypart (11–14 → 35 %, 14–17 → 30 %, 17–22 → 35 %
 | P10 | Just a drink | Mojito\|Ice Tea\|Cold Coffee\|Milk Shakes | 12 | 13 | 8 |
 | P11 | Korean craving | KOREAN main · Korean Cheesy Fries 70 % · Korean Mojito 70 % | 3 | 2 | 8 |
 
-**Dish choice inside a category:** weight `w = (1 + 1.5·isBestSeller + 0.8·isTrending) × (3 if the dish has a liked tag) × (0.2 if it has the disliked tag) × themeBoost`. `themeBoost` = 2 when the dish shares a tag with the visit's first dish (Peri Peri pasta → Peri Peri fries). The visit total must fit the user's budget (+10 %); otherwise the slot is redrawn up to 5 times, then the last optional slot is dropped. A user never rates the same dish twice (a repeat is redrawn), matching the team's file. **Noise:** 10 % of visits add one random dish; 5 % swap one dish for a random one.
+**Dish choice inside a category:** weight `w = (1 + 1.5·isBestSeller + 0.8·isTrending) × (3 if the dish has a liked tag) × (0.2 if it has the disliked tag) × themeBoost`. `themeBoost` = 2 when the dish shares a tag with the visit's first dish (Peri Peri pasta → Peri Peri fries). The visit total must fit the user's budget (+10 %); otherwise the slot is redrawn up to 5 times, then the last optional slot is dropped. A user never rates the same dish twice (a repeat is redrawn), matching the team's file. **Noise:** 10 % of visits add one random dish; 5 % swap one dish for a random one. Both stay within the budget; only a visit's first dish may exceed it, when nothing in that category fits (then the cheapest is taken).
 
 ### 3.5 Rating model
-`rating = round(clip(3.4 + q(dish) + 0.9·liked − 1.2·disliked + 0.3·sameThemeAsVisit + ε, 1, 5))`
+`score = 3.1 + q(dish) + 0.9·liked − 1.2·disliked + 0.3·sameThemeAsVisit + ε`, then stars by fixed cut-points (an ordinal model): `< 1.5` → 1★, `< 2.5` → 2★, `< 3.42` → 3★, `< 4.52` → 4★, else 5★
 - `q(dish)`: a hidden per-dish quality offset, seeded normal(0, 0.35), +0.25 for best sellers;
 - `liked` / `disliked`: 1 if the dish has one of the user's liked / disliked tags;
-- `ε`: normal(0, 0.75).
+- `ε`: normal(0, 0.78).
 
-The constants are tuned in R1 so that the distribution lands within ±3 points of the team's file (§3.0). `sentiment` follows the rating exactly like the team's file: 4–5 positive, 3 neutral, 1–2 negative.
+Plain rounding always produced too many 3★, so R1 calibrated the base, noise and cut-points. The result on the real menu file is 1★ 2.7 % · 2★ 15.0 % · 3★ 34.5 % · 4★ 34.4 % · 5★ 13.4 %, against the team's 3 · 15 · 34 · 34 · 13 % (TC-UNIT-132 keeps it within ±3 points). `sentiment` follows the rating exactly like the team's file: 4–5 positive, 3 neutral, 1–2 negative.
 
 ### 3.6 Comments
 - About 80 templates per sentiment, chosen by meal role and temperature ("chilled and refreshing" only for cold drinks, "hot and fresh" only for hot food and hot beverages), plus an optional add-on ("Great value for money", "A bit overpriced"). Some Hinglish is kept ("ekdum mast").

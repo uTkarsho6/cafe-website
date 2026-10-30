@@ -1,0 +1,66 @@
+item_id,item_slug,item_name,category,meal_role,price_rupees,is_best_seller,is_trending,flavor_tags,description
+1,classic-burger,Classic Burger,burgers,MAIN,49,false,false,,"Burger layered with a vegetable patty, veggies and ZORKO special sauces."
+2,korean-burger,Korean Burger,burgers,MAIN,59,false,true,SPICY|KOREAN,"Veg patty, fresh veggies, ZORKO special sauces and spicy Korean sauce."
+3,spicy-salsa-barbeque-burger,Spicy Salsa Barbeque Burger,burgers,MAIN,79,false,false,SPICY|MEXICAN|SMOKY,"Veg patty, fresh veggies, spicy BBQ salsa and ZORKO special sauce."
+4,double-tikki-burger,Double Tikki Burger,burgers,MAIN,79,false,false,CREAMY,Two vegetable patties with veggies and creamy sauces.
+5,mexican-king-burger,Mexican King Burger,burgers,MAIN,89,true,false,MEXICAN,"Patty, veggies and ZORKO special sauces with a punch of Mexican flavour."
+6,royal-paneer-grilled-burger,Royal Paneer Grilled Burger,burgers,MAIN,139,false,true,PANEER|CREAMY,Creamy burger layered with freshly grilled paneer and ZORKO special sauces.
+7,margherita,Margherita,pizza,MAIN,99,false,false,CHEESY|ITALIAN,Classic pizza with tomato-based sauce and mozzarella.
+8,golden-harvest-pizza,Golden Harvest Pizza,pizza,MAIN,109,false,false,CHEESY|CREAMY,"Cheesy pizza with sweet corn in cream cheese, mixed herbs and mozzarella. Kids special."
+9,hot-to-hell-pizza,Hot To Hell Pizza,pizza,MAIN,149,false,false,SPICY|CHEESY,"Loaded with spicy sauce, veggies, red paprika and mozzarella."
+10,korean-pizza,Korean Pizza,pizza,MAIN,159,false,false,SPICY|CHEESY|KOREAN,"Topped with Korean sauce, jalapeños, mozzarella and fresh veggies."
+11,veg-exotica-pizza,Veg Exotica Pizza,pizza,MAIN,159,true,false,,Loaded with exotic veggies and ZORKO special sauces.
+12,paneer-barbeque-pizza,Paneer Barbeque Pizza,pizza,MAIN,189,false,true,CHEESY|SMOKY|PANEER,"Paneer and onion tossed in ZORKO BBQ sauce, topped with pizza cheese."
+13,pizza-di-sicilia,Pizza Di Sicilia,pizza,MAIN,129,false,false,ITALIAN,Thin-crust pizza (the menu calls it the world's thinnest) with exotic veggies and red paprika.
+14,cheese-loaded-kulhad-pizza,Cheese Loaded Kulhad Pizza,pizza,MAIN,149,false,true,CHEESY,"Pan-tossed pizza ingredients loaded into a kulhad, covered with mozzarella and baked."
+15,steam-momos,Steam Momos,momos,SIDE,89,false,false,,"Steamed momos spiced with ginger, garlic and other spices, served with dip. 6 pieces."
+16,fried-momos,Fried Momos,momos,SIDE,89,false,false,,Fried momos served with a dip. 6 pieces.
+17,cheese-volcano-kulhad-momos,Cheese Volcano Kulhad Momos,momos,SIDE,149,false,false,CHEESY|CREAMY,"Fried momos tossed in creamy sauces, stuffed in a kulhad, topped with mozzarella and baked."
+18,salted-french-fries,Salted French Fries,fries,SIDE,49,false,false,,"Potato fries fried golden and seasoned with salt, with cheese dip."
+19,peri-peri-french-fries,Peri Peri French Fries,fries,SIDE,59,false,false,SPICY|PERI_PERI,"Fries seasoned with salt and tossed with peri peri powder, with cheese dip."
+20,korean-cheesy-fries,Korean Cheesy Fries,fries,SIDE,149,false,false,CHEESY|KOREAN,Crispy fries loaded with Korean sauce and rich orange cheese sauce.
+21,sizzling-italian-fries,Sizzling Italian Fries,fries,SIDE,159,false,true,SPICY|CHEESY|ITALIAN,"Fries topped with cheese sauce, ZORKO special sauces, jalapeños, paprika, olives and cheese."
+22,classic-veg-wrap,Classic Veg Wrap,wraps,MAIN,109,false,false,,"Tortilla wrapped with a veg patty, fresh veggies, ZORKO special sauces and red paprika."
+23,mexican-salsa-wrap,Mexican Salsa Wrap,wraps,MAIN,129,false,false,MEXICAN,"Grilled tortilla with fresh tomato salsa, exotic veggies, potato patty, special sauces and crispy nachos."
+24,alfredo-white-sauce,Alfredo (White Sauce),pasta,MAIN,139,false,false,CHEESY|ITALIAN|CREAMY,"Penne tossed with creamy, cheesy white sauce with veggies. Regular or baked."
+25,arrabbiata-red-sauce,Arrabbiata (Red Sauce),pasta,MAIN,139,false,false,SPICY|ITALIAN,"Penne in tomato sauce infused with special spices, veggies and chilli flakes. Regular or baked."
+26,ala-rosey-pink-sauce,Ala Rosey (Pink Sauce),pasta,MAIN,139,true,false,ITALIAN|CREAMY,Pasta in a cocktail of red and white sauces with a creamy texture. Regular or baked.
+27,peri-peri-pasta,Peri Peri Pasta,pasta,MAIN,139,false,false,SPICY|CHEESY|PERI_PERI|ITALIAN|CREAMY,"Penne in cheesy, creamy peri peri sauce with golden corn and Italian herbs. Regular or baked."
+28,cheese-garlic-bread,Cheese Garlic Bread,garlic-bread,SIDE,89,false,false,CHEESY|ITALIAN,Baked garlic bread topped with mozzarella cheese. 3 slices.
+29,supreme-treat-garlic-bread,Supreme Treat Garlic Bread,garlic-bread,SIDE,99,false,false,SPICY|CHEESY|ITALIAN,"Garlic bread loaded with golden corn, jalapeño, onion, special seasoning and mozzarella. 3 slices."
+30,italian-treat,Italian Treat,toastie,MAIN,79,false,false,CHEESY|ITALIAN,"ZORKO-style marinated veggies on toast, crowned with cheesy goodness."
+31,korean-spicy-paneer,Korean Spicy Paneer,toastie,MAIN,89,false,false,SPICY|CHEESY|KOREAN|PANEER,"Paneer and veggies marinated in Korean sauce, topped with cheese on toasted bread."
+32,peri-peri-cheese-blast,Peri Peri Cheese Blast,toastie,MAIN,99,false,true,SPICY|CHEESY|PERI_PERI,Peri peri-spiced cheese cubes and onions with orange cheese sauce and a cheesy topping.
+33,cheese-pull-and-tear-garlic-bun,Cheese Pull & Tear Garlic Bun,special-buns,MAIN,149,true,false,CHEESY,"Bun stuffed with orange cheese sauce, herbs, mozzarella and garlic butter."
+34,korean-jalapeno-bun,Korean Jalapeno Bun,special-buns,MAIN,149,false,false,SPICY|CHEESY|KOREAN,"Bun stuffed with jalapeño, orange cheese sauce, herbs, mozzarella, garlic butter and Korean sauce."
+35,nachos-with-cheese-dip,Nachos with Cheese Dip,nachos,SIDE,79,false,false,CHEESY|MEXICAN|CREAMY,"Crispy, flavourful nachos chips served with a special creamy dip."
+36,cheesy-delight-nachos,Cheesy Delight Nachos,nachos,SIDE,129,false,true,CHEESY|MEXICAN,"Crunchy nachos tossed with cheese, ZORKO special sauces and grated cheese."
+37,plain-maggie,Plain Maggie,maggi,MAIN,49,false,false,,Classic Maggi noodles.
+38,double-masala-maggi,Double Masala Maggi,maggi,MAIN,59,false,false,SPICY,"A blend of finely ground spices, herbs and double Maggi masala."
+39,hot-passion-spicy-maggi,Hot Passion Spicy Maggi,maggi,MAIN,69,false,false,SPICY,Chatakedaar Maggi with a punch of sauces and veggies.
+40,veg-masala-maggi,Veg. Masala Maggi,maggi,MAIN,79,false,false,,Maggi prepared with veggies and Maggi masala.
+41,kulhad-maggi,Kulhad Maggi,maggi,MAIN,99,true,false,,Maggi served in a kulhad.
+42,surprise-mojito,Surprise Mojito,mojito,DRINK,49,true,false,,Mojito (non-alcoholic).
+43,korean-mojito,Korean Mojito,mojito,DRINK,49,false,false,KOREAN,Mojito (non-alcoholic).
+44,strawberry-mojito,Strawberry Mojito,mojito,DRINK,49,false,false,FRUITY,Strawberry mojito (non-alcoholic).
+45,tangy-mango-mojito,Tangy Mango Mojito,mojito,DRINK,49,false,false,FRUITY,Mango mojito (non-alcoholic).
+46,pineapple-punch-mojito,Pineapple Punch Mojito,mojito,DRINK,49,false,false,FRUITY,Pineapple mojito (non-alcoholic).
+47,mary-litchi-mojito,Mary Litchi Mojito,mojito,DRINK,49,false,false,FRUITY,Litchi mojito (non-alcoholic).
+48,mint-mojito,Mint Mojito,mojito,DRINK,49,false,false,MINTY,Mint and lime mojito (non-alcoholic).
+49,orange-cindrella-mojito,Orange Cindrella Mojito,mojito,DRINK,49,false,false,FRUITY,Orange mojito (non-alcoholic).
+50,blue-heaven-mojito,Blue Heaven Mojito,mojito,DRINK,49,false,false,FRUITY,Blue mojito (non-alcoholic).
+51,premium-cold-coffee,Premium Cold Coffee,cold-coffee,DRINK,49,true,false,COFFEE,Chilled cold coffee.
+52,strong-cold-coffee,Strong Cold Coffee,cold-coffee,DRINK,59,false,false,COFFEE,Cold coffee with a stronger coffee taste.
+53,chocolate-cold-coffee,Chocolate Cold Coffee,cold-coffee,DRINK,79,false,true,CHOCOLATE|COFFEE,Cold coffee with chocolate.
+54,rose-delight-shake,Rose Delight Shake,milk-shakes,DRINK,79,false,false,CREAMY,Rose milkshake.
+55,strawberry-shake,Strawberry Shake,milk-shakes,DRINK,79,false,false,CREAMY|FRUITY,Strawberry milkshake.
+56,oreo-chocolate-shake,Oreo Chocolate Shake,milk-shakes,DRINK,99,false,false,CREAMY|CHOCOLATE,Chocolate milkshake with Oreo.
+57,kitkat-chocolate-shake,KitKat Chocolate Shake,milk-shakes,DRINK,109,false,false,CREAMY|CHOCOLATE,Chocolate milkshake with KitKat.
+58,lemon-ice-tea,Lemon Ice Tea,ice-tea,DRINK,49,false,false,FRUITY,Chilled lemon ice tea.
+59,peach-ice-tea,Peach Ice Tea,ice-tea,DRINK,49,false,false,FRUITY,Chilled peach ice tea.
+60,passion-fruit-ice-tea,Passion Fruit Ice Tea,ice-tea,DRINK,49,false,false,FRUITY,Chilled passion fruit ice tea.
+61,cranberry-ice-tea,Cranberry Ice Tea,ice-tea,DRINK,49,false,false,FRUITY,Chilled cranberry ice tea.
+62,american-blue-ice-tea,American Blue Ice Tea,ice-tea,DRINK,49,true,false,FRUITY,Chilled blue ice tea.
+63,special-tea,Special Tea,hot-beverages,DRINK,19,false,false,,Hot tea.
+64,hot-coffee,Hot Coffee,hot-beverages,DRINK,29,false,false,COFFEE,Hot coffee.
+65,hot-chocolate,Hot Chocolate,hot-beverages,DRINK,39,true,false,CHOCOLATE,Hot chocolate.

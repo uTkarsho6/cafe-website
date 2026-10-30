@@ -9,9 +9,9 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 | Field | Value |
 |---|---|
 | Current phase | **Phase R1 — Recommendation: schema and demo feedback dataset** (post-release addition requested by the guide) |
-| Status | **IN PROGRESS** |
+| Status | **AWAITING TEAM VERIFICATION** |
 | Branch | `phase-r1` (from `main`) |
-| Latest report | `docs/PHASE_REPORTS/phase-r0.md` |
+| Latest report | `docs/PHASE_REPORTS/phase-r1.md` |
 | Live site | https://zorko-sangli.vercel.app (deployed 2026-10-29 IST; auto-deploys from GitHub `main`) |
 | Last updated | 2026-10-30 |
 

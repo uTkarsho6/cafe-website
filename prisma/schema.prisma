@@ -63,12 +63,90 @@ enum FeedbackTag {
   STUDENT_FRIENDLY
 }
 
+/// Descriptive flavour/style tags on menu items (recommendations, ADR-069). Not dietary claims.
+enum FlavorTag {
+  SPICY
+  CHEESY
+  KOREAN
+  PERI_PERI
+  ITALIAN
+  MEXICAN
+  SMOKY
+  PANEER
+  CREAMY
+  FRUITY
+  CHOCOLATE
+  COFFEE
+  MINTY
+}
+
+/// What a category's dishes are in a meal; "Goes well with" pairs different roles (ADR-069).
+enum MealRole {
+  MAIN
+  SIDE
+  DRINK
+  DESSERT
+}
+
+/// Time of day of a demo visit (IST): LUNCH 11–14, AFTERNOON 14–17, EVENING 17–22.
+enum Daypart {
+  LUNCH
+  AFTERNOON
+  EVENING
+}
+
+/// Popularity window: one of the dayparts, or ALL.
+enum RecoWindow {
+  ALL
+  LUNCH
+  AFTERNOON
+  EVENING
+}
+
+enum RatingSentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+enum RecoRunStatus {
+  TRAINING
+  ACTIVE
+  ARCHIVED
+  REJECTED
+  FAILED
+}
+
+/// Where a model run's training data came from (RECOMMENDATION §7). Only DEMO_FEEDBACK exists now.
+enum RecoDataSource {
+  DEMO_FEEDBACK
+  REAL_FEEDBACK
+  POS
+}
+
+enum RecoListKind {
+  COMPLEMENT
+  SIMILAR
+}
+
+/// Fixed public reason codes (RECOMMENDATION §6). Labels are built from real menu data only.
+enum RecoReason {
+  PAIRS_WITH_ROLE
+  SHARED_TAGS
+  SAME_CATEGORY
+  IN_BUDGET
+  BEST_SELLER
+  TRENDING
+  ADMIN_PICK
+}
+
 model MenuCategory {
   id          String       @id @default(cuid())
   name        String       @db.VarChar(60)
   slug        String       @unique @db.VarChar(70)
   description String?      @db.VarChar(200)
   iconKey     CategoryIcon @default(GENERAL)
+  mealRole    MealRole     @default(MAIN)
   sortOrder   Int          @default(0)
   isArchived  Boolean      @default(false)
   isDemo      Boolean      @default(false)
@@ -81,30 +159,36 @@ model MenuCategory {
 }
 
 model MenuItem {
-  id           String   @id @default(cuid())
+  id           String      @id @default(cuid())
   categoryId   String
-  name         String   @db.VarChar(80)
-  slug         String   @unique @db.VarChar(90)
-  description  String   @db.VarChar(600)
+  name         String      @db.VarChar(80)
+  slug         String      @unique @db.VarChar(90)
+  description  String      @db.VarChar(600)
   pricePaise   Int
-  dietType     DietType @default(VEG)
-  isAvailable  Boolean  @default(true)
-  isPublished  Boolean  @default(true)
-  isArchived   Boolean  @default(false)
-  isBestSeller Boolean  @default(false)
-  isTrending   Boolean  @default(false)
-  isFeatured   Boolean  @default(false)
-  sortOrder    Int      @default(0)
-  isDemo       Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  dietType     DietType    @default(VEG)
+  isAvailable  Boolean     @default(true)
+  isPublished  Boolean     @default(true)
+  isArchived   Boolean     @default(false)
+  isBestSeller Boolean     @default(false)
+  isTrending   Boolean     @default(false)
+  isFeatured   Boolean     @default(false)
+  sortOrder    Int         @default(0)
+  /// Max 5 (Zod + CHECK). Descriptive only (ADR-069).
+  flavorTags   FlavorTag[] @default([])
+  isDemo       Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
-  category      MenuCategory    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  category      MenuCategory         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   images        MenuItemImage[]
   addOnGroups   AddOnGroup[]
-  relationsFrom ItemRelation[]  @relation("RelationFrom")
-  relationsTo   ItemRelation[]  @relation("RelationTo")
+  relationsFrom ItemRelation[]       @relation("RelationFrom")
+  relationsTo   ItemRelation[]       @relation("RelationTo")
   offers        OfferMenuItem[]
+  demoRatings   DemoRating[]
+  recoFrom      ItemRecommendation[] @relation("RecoFrom")
+  recoTo        ItemRecommendation[] @relation("RecoTo")
+  popularity    ItemPopularity[]
 
   @@index([isPublished, isArchived, categoryId, sortOrder])
   @@index([isBestSeller, isTrending])
@@ -319,6 +403,7 @@ model AdminUser {
 
   auditLogs         AuditLog[]
   moderatedFeedback Feedback[]
+  recoRuns          RecoModelRun[]
 }
 
 /// Append-only record of admin actions (no updatedAt). Never contains secrets.
@@ -348,4 +433,144 @@ model RateLimitBucket {
 
   @@unique([key, scope, windowStart])
   @@index([windowStart])
+}
+
+// ---------------------------------------------------------------- Recommendations (Phase R1)
+// Demo feedback dataset (RECOMMENDATION §3, ADR-071). Generated, never shown publicly and kept
+// apart from the real `Feedback` table. Demo users are plain numbers (no personal data).
+// Rows are immutable (replaced as a whole by `reco:generate --replace`), so no updatedAt.
+
+model DemoVisit {
+  id               String   @id @default(cuid())
+  /// `visit_id` in the CSV export.
+  visitNo          Int      @unique
+  demoUserNo       Int      @db.SmallInt
+  visitedAt        DateTime
+  daypart          Daypart
+  pattern          String   @db.VarChar(40)
+  generatorVersion Int      @db.SmallInt
+  isDemo           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  ratings DemoRating[]
+
+  @@index([visitedAt])
+  @@index([demoUserNo])
+}
+
+model DemoRating {
+  id         String          @id @default(cuid())
+  /// `feedback_id` in the CSV export.
+  feedbackNo Int             @unique
+  visitId    String
+  demoUserNo Int             @db.SmallInt
+  menuItemId String
+  rating     Int             @db.SmallInt
+  sentiment  RatingSentiment
+  comment    String          @db.VarChar(200)
+  ratedAt    DateTime
+  isDemo     Boolean         @default(true)
+  createdAt  DateTime        @default(now())
+
+  visit    DemoVisit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  // Cascade: demo rows must never block an admin's hard delete of a dish.
+  menuItem MenuItem  @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@unique([demoUserNo, menuItemId])
+  @@unique([visitId, menuItemId])
+  @@index([menuItemId])
+}
+
+/// One training run (RECOMMENDATION §5). Weights are per-mille (0–1000), renormalised when used.
+model RecoModelRun {
+  id                 String         @id @default(cuid())
+  version            Int            @unique @default(autoincrement())
+  status             RecoRunStatus  @default(TRAINING)
+  dataSource         RecoDataSource
+  compCoocPm         Int            @db.SmallInt
+  compQualityPm      Int            @db.SmallInt
+  compContentPm      Int            @db.SmallInt
+  simContentPm       Int            @db.SmallInt
+  simTastePm         Int            @db.SmallInt
+  simQualityPm       Int            @db.SmallInt
+  ratingCount        Int
+  visitCount         Int
+  itemCount          Int
+  rmse               Float?
+  mae                Float?
+  hitRate5Complement Float?
+  hitRate5Similar    Float?
+  precision5         Float?
+  recall5            Float?
+  coverage           Float?
+  baselineHitRate5   Float?
+  gateReason         String?        @db.VarChar(200)
+  durationMs         Int?
+  startedById        String?
+  trainedAt          DateTime?
+  activatedAt        DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  startedBy       AdminUser?           @relation(fields: [startedById], references: [id], onDelete: SetNull)
+  recommendations ItemRecommendation[]
+  popularity      ItemPopularity[]
+  activeIn        RecoSettings?
+
+  @@index([status, createdAt])
+}
+
+/// Precomputed top-10 lists per dish and kind for one run.
+model ItemRecommendation {
+  runId        String
+  fromItemId   String
+  toItemId     String
+  kind         RecoListKind
+  rank         Int          @db.SmallInt
+  score        Float
+  contentScore Float
+  tasteScore   Float
+  coocScore    Float
+  qualityScore Float
+  reasons      RecoReason[] @default([])
+
+  run      RecoModelRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  fromItem MenuItem     @relation("RecoFrom", fields: [fromItemId], references: [id], onDelete: Cascade)
+  toItem   MenuItem     @relation("RecoTo", fields: [toItemId], references: [id], onDelete: Cascade)
+
+  @@id([runId, fromItemId, kind, rank])
+  @@unique([runId, fromItemId, kind, toItemId])
+  @@index([toItemId])
+}
+
+/// Quality/popularity score per dish and window for one run (Help me choose, fallbacks).
+model ItemPopularity {
+  runId      String
+  menuItemId String
+  window     RecoWindow
+  score      Float
+
+  run      RecoModelRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  menuItem MenuItem     @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@id([runId, menuItemId, window])
+  @@index([menuItemId])
+}
+
+/// Singleton (id = "reco"). Off until the team switches it on (R4/R5).
+model RecoSettings {
+  id                String    @id @default("reco")
+  enabled           Boolean   @default(false)
+  compCoocPm        Int       @default(600) @db.SmallInt
+  compQualityPm     Int       @default(250) @db.SmallInt
+  compContentPm     Int       @default(150) @db.SmallInt
+  simContentPm      Int       @default(500) @db.SmallInt
+  simTastePm        Int       @default(300) @db.SmallInt
+  simQualityPm      Int       @default(200) @db.SmallInt
+  activeRunId       String?   @unique
+  trainingLockUntil DateTime?
+  retrainPending    Boolean   @default(false)
+  updatedAt         DateTime  @updatedAt
+
+  activeRun RecoModelRun? @relation(fields: [activeRunId], references: [id], onDelete: SetNull)
 }

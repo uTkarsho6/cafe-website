@@ -171,6 +171,8 @@ Scales: L(ikelihood) and I(mpact) are 1–3; Risk = L×I.
 | Client bundle scan for `DATABASE_URL`, `DIRECT_URL`, `postgresql://`, `PrismaClient`, `SUPABASE_SECRET` (TC-SEC-100) | 3 | PASS: 0 matches in `.next/static` |
 | gitleaks `dir` scan | 3 | PASS for project files; 12 hits only in git-ignored `.next/` (per-build keys, as in Phase 2) |
 | `npm audit --omit=dev` (TC-SEC-102) | 3 | PASS: 0. Full audit: only the accepted dev-only `braces` chain (ADR-032). Prisma CLI advisories fixed with overrides (ADR-036) |
+| Recommendation tables: RLS on, `anon` has no privileges (test DB) and the Supabase REST API cannot read/insert/update/delete `DemoVisit`, `DemoRating`, `RecoModelRun`, `ItemRecommendation`, `ItemPopularity`, `RecoSettings` on the dev project (TC-SEC-022, TC-SEC-020/135) | R1 | PASS (12 REST checks + RLS test) |
+| Demo data isolation: `reco:generate` never changes the real `Feedback` table; refuses production without `--production` and existing demo rows without `--replace` (TC-INT-093) | R1 | PASS |
 
 Manual threat-model review: initial version written in Phase 1; to be re-reviewed with the team in Phase 7. Automated scans cannot prove security.
 | **Phase 7 regression and hardening (2026-10-16)** | 7 | |

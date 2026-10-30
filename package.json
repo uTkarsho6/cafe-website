@@ -34,7 +34,10 @@
     "admin:add": "tsx prisma/admin-allowlist.ts add",
     "admin:disable": "tsx prisma/admin-allowlist.ts disable",
     "admin:list": "tsx prisma/admin-allowlist.ts list",
-    "gallery:outlet-photos": "tsx prisma/outlet-photos.ts"
+    "gallery:outlet-photos": "tsx prisma/outlet-photos.ts",
+    "reco:tags": "tsx prisma/reco-tags.ts",
+    "reco:generate": "tsx prisma/reco-generate.ts",
+    "reco:export": "tsx prisma/reco-export.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",

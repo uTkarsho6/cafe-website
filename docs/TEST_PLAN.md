@@ -310,7 +310,7 @@ Phase 5B note: uploads go through a Server Action, so TC-SEC-060…063 are refus
 | TC-E2E-098 | E2E | Admin tags/meal role edits persist and trigger one retrain | Pass | R5 |
 | TC-A11Y-007 | A11y | axe on `/help-me-choose` (empty and with results), item page with sections, `/admin/recommendations` | 0 serious/critical | R4, R5 |
 | TC-RESP-005 | Responsive | `/help-me-choose`, item page sections and admin page at 375/430/768/1024/1440 | No horizontal scroll; 48 px targets | R4, R5 |
-| TC-VIS-101…106 | Visual | Baselines desktop + mobile: item page with sections, Help me choose with results, admin recommendations | Comparisons run | R4, R5 |
+| TC-VIS-101…106 | Visual | Baselines desktop + mobile: Help me choose start/results (101–104, result cards masked), admin recommendations overview (105/106, summary cards masked); item page via TC-VIS-001…003 | Comparisons run | R4, R5a |
 | TC-PERF-003 | Performance | Training time (100 items × 5,000 ratings) and suggest latency | NFR-013 targets; measured only | R3 |
 | TC-NB-001 | Notebook | `jupyter nbconvert --execute` from a clean venv | Runs without errors; exports `reference_scores.json` identical to the committed one | R2 |
 

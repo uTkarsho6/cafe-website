@@ -8,10 +8,11 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 | Field | Value |
 |---|---|
-| Current phase | **Phase R5 — Recommendation: admin and go-live** (post-release addition requested by the guide) |
-| Status | **IN PROGRESS** |
+| Current phase | **Phase R5a — Recommendation: admin page, tag/meal-role editors, automatic retrain** (R5 split into R5a local work + R5b production go-live, 2026-10-30, to keep each step small) |
+| Status | **AWAITING TEAM VERIFICATION** (R5a) |
 | Branch | `phase-r5` (from `main`) |
-| Latest report | `docs/PHASE_REPORTS/phase-r4.md` |
+| R5a task list | 1. `/admin/recommendations` (Overview: cards, switch, retrain, weights; Runs: table + activate; Inspect: per-item lists with components) · 2. Server Actions with allowlist + audit + `updateTag('reco')` · 3. Flavour-tag chips in the item editor, meal-role select in the category editor · 4. Auto-retrain after menu-structure edits (coalesced) · 5. Tests TC-COMP-032, TC-SEC-133/134, TC-E2E-097/098, TC-A11Y-007, TC-RESP-005, TC-VIS-105/106 · 6. Report |
+| Latest report | `docs/PHASE_REPORTS/phase-r5a.md` |
 | Live site | https://zorko-sangli.vercel.app (deployed 2026-10-29 IST; auto-deploys from GitHub `main`) |
 | Last updated | 2026-10-30 |
 
@@ -71,6 +72,7 @@ None open. Fixed in Phase 6 Round 2: admin stayed signed in across visits (ADR-0
 - Page-level caching + on-demand revalidation (≤30 s freshness) is designed with the pages in 4A/5B (ADR-035).
 - Real menu, prices, address, phone and map are in (ADR-044, ADR-046). Opening hours (Q-05), real offers (Q-07), WhatsApp/email/social (Q-03/Q-04) are still placeholders.
 - Visual baselines exist only for macOS (`-darwin`); record Linux baselines when CI is set up (Q-16).
+- Category edit dialog closes on save before its "Category saved." toast shows (pre-existing since 5B, found in R5a, ADR-076); the save works.
 - **No-JavaScript rendering (found in R4, ADR-075):** with JavaScript disabled, streamed page content (menu, item pages, Help me choose) stays hidden, because React reveals it with inline scripts. Pre-existing since Phase 4A. Fixing it needs a rendering change on all public pages; team to decide whether it matters for the project.
 - Structured data (JSON-LD, FR-023) once hours and the remaining café facts are confirmed (ADR-047).
 - Gallery lightbox E2E with real uploaded photos once Storage is set up.

@@ -178,13 +178,34 @@ export async function createItem(input: ItemInput) {
 export async function updateItem(id: string, input: ItemInput) {
   return getDb().$transaction(async (tx) => {
     await assertCategory(tx, input.categoryId)
-    const existing = await tx.menuItem.findUnique({ where: { id }, select: { id: true } })
+    const existing = await tx.menuItem.findUnique({
+      where: { id },
+      select: {
+        name: true,
+        description: true,
+        categoryId: true,
+        isPublished: true,
+        isBestSeller: true,
+        isTrending: true,
+        flavorTags: true,
+      },
+    })
     if (!existing) throw new AdminRuleError('This item no longer exists.')
-    return tx.menuItem.update({
+    const item = await tx.menuItem.update({
       where: { id },
       data: itemData(input),
       select: { id: true, slug: true, name: true, pricePaise: true, isAvailable: true },
     })
+    // FR-068: fields the recommender learns from. Price and availability are applied at read time.
+    const retrain =
+      existing.name !== input.name ||
+      existing.description !== input.description ||
+      existing.categoryId !== input.categoryId ||
+      existing.isPublished !== input.isPublished ||
+      existing.isBestSeller !== input.isBestSeller ||
+      existing.isTrending !== input.isTrending ||
+      existing.flavorTags.join() !== input.flavorTags.join()
+    return { ...item, retrain }
   })
 }
 
@@ -409,6 +430,7 @@ export async function listAdminCategories() {
     slug: c.slug,
     description: c.description,
     iconKey: c.iconKey,
+    mealRole: c.mealRole,
     sortOrder: c.sortOrder,
     isArchived: c.isArchived,
     isDemo: c.isDemo,

@@ -12,11 +12,11 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase R4 — Recommendation: customer-facing UI |
-| **Phase status** | AWAITING TEAM VERIFICATION. R3 approved 2026-10-30 (`phase-r3-approved`, merged into LOCAL `main`). |
-| **Git** | Branch `phase-r4`. **Local `main` and `phase-r4` contain migrations production lacks: never push before the R5 production migration.** |
-| **Last task completed** | R4 (2026-10-30): item-page "Goes well with" / "You may also like" (`src/features/reco/reco-parts.tsx`), `/help-me-choose` (page + `choose-form.tsx` + `choose-params.ts`), menu entry points, `cachedItemRecommendations` / `cachedSuggestions`, `flavours` labels on DTOs, `npm run test:db:reco` in `test:e2e`, tests (component 12, `tests/e2e/reco.spec.ts`, TC-E2E-094 in admin-menu). Full E2E 366 passed / 0 failed. Finding: streamed pages need JavaScript (ADR-075, backlog). |
-| **Next action** | On "approved, go to Phase R5": admin recommendations page (switch, retrain, weights, runs/rollback, inspect; `updateTag('reco')` on activation), flavour-tag and meal-role editors, auto-retrain hooks; then, with written approval only, production migration + generate + train, push → Vercel, live `reco:validate`. |
+| **Current phase** | Phase R5a — Recommendation admin (R5 split: R5a local admin work, R5b production go-live) |
+| **Phase status** | AWAITING TEAM VERIFICATION (R5a). R4 approved 2026-10-30 (`phase-r4-approved`, merged into LOCAL `main`). |
+| **Git** | Branch `phase-r5` (R5a complete; commit only with the team's permission). **Never push before the R5b production migration.** |
+| **Last task completed** | R5a code written, typecheck/lint clean, tested (full E2E 373 passed / 0 failed; report `docs/PHASE_REPORTS/phase-r5a.md`): `src/app/(admin)/admin/(shell)/recommendations/page.tsx` (Overview/Versions/Inspect), `src/features/admin/reco-actions.ts`, `src/features/admin/reco/reco-controls.tsx`, `src/server/services/admin-reco.ts`, `src/server/reco/auto.ts` (`scheduleRetrain` via `after()`), `recoWeightsSchema`; flavour-tag chips in the item form, meal-role select in the category form (schemas + services), sidebar entry. |
+| **Next action** | On "approved, go to Phase R5b": merge, tag `phase-r5a-approved`; then R5b go-live steps (phase-r5a.md §9), each production step only with written approval. |
 | **Waiting on the team** | R4 check; decision on the no-JavaScript limitation (ADR-075); Q-22 (tags), Q-23 (guide), Q-25; hero photo (ADR-065). |
 | **Note** | Chat history for the deployment lives in a session opened from `~/projects` (not `~/projects/zorko-sangli`). This Mac runs under very high load, so run E2E with `--workers=2`. NAT64 network: Next's image optimiser refuses Supabase Storage images locally; re-run flaky network tests. |
 

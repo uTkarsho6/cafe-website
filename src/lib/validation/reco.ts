@@ -91,3 +91,43 @@ export const suggestQuerySchema = z.object({
   ),
 })
 export type SuggestQuery = z.infer<typeof suggestQuerySchema>
+
+// ---------------------------------------------------------------- admin weights (FR-067, R5)
+
+const weight = (label: string) =>
+  z.coerce
+    .number({ error: `${label}: enter a whole number from 0 to 1000.` })
+    .int(`${label}: enter a whole number from 0 to 1000.`)
+    .min(0, `${label}: enter a whole number from 0 to 1000.`)
+    .max(1000, `${label}: enter a whole number from 0 to 1000.`)
+
+/**
+ * The six blend weights in per-mille (RECOMMENDATION §4.4). They are normalised when training, so
+ * only their ratio matters; each list needs at least one weight above 0. Unknown fields (status,
+ * activeRunId, dataSource, …) are dropped, never written (mass assignment, TC-SEC-134).
+ */
+export const recoWeightsSchema = z
+  .object({
+    compCoocPm: weight('Co-occurrence'),
+    compQualityPm: weight('Quality'),
+    compContentPm: weight('Content'),
+    simContentPm: weight('Content'),
+    simTastePm: weight('Taste'),
+    simQualityPm: weight('Quality'),
+  })
+  .strip()
+  .superRefine((w, ctx) => {
+    if (w.compCoocPm + w.compQualityPm + w.compContentPm === 0)
+      ctx.addIssue({
+        code: 'custom',
+        path: ['compCoocPm'],
+        message: '"Goes well with" needs at least one weight above 0.',
+      })
+    if (w.simContentPm + w.simTastePm + w.simQualityPm === 0)
+      ctx.addIssue({
+        code: 'custom',
+        path: ['simContentPm'],
+        message: '"You may also like" needs at least one weight above 0.',
+      })
+  })
+export type RecoWeights = z.infer<typeof recoWeightsSchema>

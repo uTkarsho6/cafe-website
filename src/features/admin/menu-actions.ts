@@ -19,6 +19,7 @@ import { recordAudit, type AuditAction } from '@/server/audit'
 import { itemImagePath, processImageUpload } from '@/server/media/image-upload'
 import { getMediaStore } from '@/server/media/storage'
 import { TAGS } from '@/server/public-data'
+import { scheduleRetrain } from '@/server/reco/auto'
 import * as menu from '@/server/services/admin-menu'
 import {
   expirePublic,
@@ -62,7 +63,10 @@ export async function saveItemAction(_prev: FormState, form: FormData): Promise<
   const admin = await requireAdmin(rawId ? `/admin/menu/${rawId}` : '/admin/menu/new')
   const id = rawId ? parseId(rawId) : null
   if (id && !id.success) return fail('Invalid item.')
-  const parsed = itemInputSchema.safeParse(Object.fromEntries(form))
+  const parsed = itemInputSchema.safeParse({
+    ...Object.fromEntries(form),
+    flavorTags: form.getAll('flavorTags'),
+  })
   if (!parsed.success) return fail('Please fix the highlighted fields.', fieldErrors(parsed.error))
   const input = parsed.data
 
@@ -71,11 +75,13 @@ export async function saveItemAction(_prev: FormState, form: FormData): Promise<
       const item = await menu.updateItem(id.data, input)
       await audit(admin.id, 'UPDATE', 'menu_item', item.id, `Updated item "${item.name}"`)
       expireMenu(item.slug)
+      if (item.retrain) scheduleRetrain(admin.id)
       return { ok: true, message: 'Item saved.', errors: {} }
     }
     const item = await menu.createItem(input)
     await audit(admin.id, 'CREATE', 'menu_item', item.id, `Created item "${item.name}"`)
     expireMenu(item.slug)
+    scheduleRetrain(admin.id)
     return ok('Item created.', `/admin/menu/${item.id}?created=1`)
   })
 }
@@ -151,6 +157,7 @@ export async function setItemArchivedAction(itemId: string, archived: boolean) {
       `${value.data ? 'Archived' : 'Restored'} item "${item.name}"`,
     )
     expireMenu(item.slug)
+    scheduleRetrain(admin.id)
     return {
       ok: true,
       message: value.data ? 'Item archived: hidden from the public site.' : 'Item restored.',
@@ -168,6 +175,7 @@ export async function deleteItemAction(itemId: string): Promise<FormState> {
     await removeStoredFiles(item.paths)
     await audit(admin.id, 'DELETE', 'menu_item', id.data, `Deleted item "${item.name}"`)
     expireMenu(item.slug)
+    scheduleRetrain(admin.id)
     return ok('Item deleted.', '/admin/menu?deleted=1')
   })
 }
@@ -336,6 +344,7 @@ export async function saveCategoryAction(_prev: FormState, form: FormData): Prom
       await audit(admin.id, 'CREATE', 'menu_category', cat.id, `Created category "${cat.name}"`)
     }
     expireMenu()
+    scheduleRetrain(admin.id) // a meal-role or name change alters the pairings
     return { ok: true, message: id ? 'Category saved.' : 'Category created.', errors: {} }
   })
 }
@@ -355,6 +364,7 @@ export async function setCategoryArchivedAction(categoryId: string, archived: bo
       `${value.data ? 'Archived' : 'Restored'} a category`,
     )
     expireMenu()
+    scheduleRetrain(admin.id)
     return {
       ok: true,
       message: value.data

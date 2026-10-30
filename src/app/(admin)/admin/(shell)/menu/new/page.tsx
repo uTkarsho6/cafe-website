@@ -40,6 +40,7 @@ async function NewItem() {
           isBestSeller: false,
           isTrending: false,
           isFeatured: false,
+          flavorTags: [],
           sortOrder: 0,
         }}
       />

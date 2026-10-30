@@ -61,6 +61,7 @@ describe('item input (TC-ADM-002, TC-SEC-012 mass assignment)', () => {
         'categoryId',
         'description',
         'dietType',
+        'flavorTags', // Phase R5a
         'isAvailable',
         'isBestSeller',
         'isFeatured',
@@ -101,7 +102,13 @@ describe('category input', () => {
       isDemo: 'true',
       slug: 'x',
     })
-    expect(r).toEqual({ name: 'Wraps', description: null, iconKey: 'SANDWICH', sortOrder: 0 })
+    expect(r).toEqual({
+      name: 'Wraps',
+      description: null,
+      iconKey: 'SANDWICH',
+      mealRole: 'MAIN', // Phase R5a default
+      sortOrder: 0,
+    })
   })
   it('rejects an unknown icon', () =>
     expect(categoryInputSchema.safeParse({ name: 'Wraps', iconKey: 'SKULL' }).success).toBe(false))

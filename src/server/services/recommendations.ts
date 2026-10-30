@@ -292,8 +292,12 @@ export async function getSuggestions(
   const matchShare = (d: Dish) =>
     query.tags.length ? sharedTags(query.tags, d.tags).length / query.tags.length : 0
   const quality = (d: Dish) => (0.35 * (popularity.get(d.id) ?? 0) + 0.2 * flagScore(d.card)) / 0.55
+  // Chosen flavours are a requirement, not only a preference (R5b fix, ADR-077): a dish must have
+  // at least one of them. Otherwise "meal + minty" listed non-minty best sellers; now it shows the
+  // "Nothing matches" state with "Remove flavours".
   const ranked = dishes
     .map((d) => ({ d, m: matchShare(d), q: quality(d) }))
+    .filter((x) => query.tags.length === 0 || x.m > 0)
     .sort(
       (a, b) =>
         b.m - a.m ||

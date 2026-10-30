@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
-import { suggestQuerySchema } from '@/lib/validation/reco'
+import { FLAVOR_TAG_KEYS, FLAVOR_TAGS, suggestQuerySchema } from '@/lib/validation/reco'
 import { activateRun, trainAndActivate } from '@/server/reco/train'
 import {
   getItemRecommendations,
@@ -290,6 +290,24 @@ describe('Help me choose (FR-065)', () => {
     // Every matching dish is listed before any non-matching dish.
     const matches = s.map((x) => x.item.reasons.some((r) => r.code === 'SHARED_TAGS'))
     expect(matches).toEqual([...matches].sort((a, b) => Number(b) - Number(a)))
+  })
+
+  it('regression (R5b): every dish has a chosen flavour; a flavour no meal has gives no results', async () => {
+    const mains = await db().menuItem.findMany({
+      where: { isAvailable: true, isPublished: true, category: { mealRole: 'MAIN' } },
+      select: { flavorTags: true },
+    })
+    const present = new Set(mains.flatMap((m) => m.flavorTags))
+    for (const tag of present)
+      for (const x of await ask({ mood: 'meal', tags: tag }))
+        expect(x.flavours, `${tag}: ${x.item.name}`).toContain(FLAVOR_TAGS[tag])
+    const absent = FLAVOR_TAG_KEYS.find((t) => !present.has(t))
+    expect(absent).toBeDefined() // the test menu has no minty-style main
+    expect(await ask({ mood: 'meal', tags: absent! })).toEqual([])
+    // Several flavours: at least one of them on every dish.
+    const two = [...present].slice(0, 2)
+    for (const x of await ask({ mood: 'meal', tags: two.join(',') }))
+      expect(two.some((t) => x.flavours.includes(FLAVOR_TAGS[t]))).toBe(true)
   })
 })
 

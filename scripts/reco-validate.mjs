@@ -168,6 +168,9 @@ for (const mood of ['meal', 'snack', 'drink', 'sweet'])
         problems.push(`${q}: more than 2 from one category`)
       if (tag) {
         const has = list.map((x) => tags(x.item.slug).has(tag))
+        // R5b: a chosen flavour is required (ADR-077), not only ranked first.
+        for (const x of list)
+          if (!tags(x.item.slug).has(tag)) problems.push(`${q}: ${x.item.slug} lacks ${tag}`)
         if (has.some(Boolean)) {
           stats.flavourQueries++
           if (has.every((h, i) => i === 0 || !h || has[i - 1])) stats.flavourFirst++

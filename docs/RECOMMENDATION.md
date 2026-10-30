@@ -192,6 +192,7 @@ Inputs are fixed choices, validated on the server:
 - `tags`: 0–3 flavour tags.
 
 The daypart comes from the server clock in IST.
+- **Filter (R5b, ADR-077):** with flavours chosen, only dishes that have at least one of them are suggested.
 - **Ranking (revised in R3, ADR-074):** first by the share of the chosen flavours the dish has (so "spicy" puts spicy dishes first), then by `0.35 · P_d(j) + 0.20 · flag(j)`, then menu order. Without tags, only the second key applies.
 - The suggest API works whether or not the item-page sections are switched on; it only ranks real menu dishes by the guest's answers.
 - **Diversity:** max 2 per category.

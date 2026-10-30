@@ -8,10 +8,10 @@ Single source of truth for project state (CLAUDE.md Section 0.1).
 
 | Field | Value |
 |---|---|
-| Current phase | **Phase R5b — Recommendation: production go-live** (after R5a: admin page, tag/meal-role editors, automatic retrain; (R5 split into R5a local work + R5b production go-live, 2026-10-30, to keep each step small) |
-| Status | **IN PROGRESS** — every production step needs the team's written go-ahead |
+| Current phase | **Phase R5b — Recommendation: production go-live** (R5 split into R5a local admin work + R5b go-live, 2026-10-30, ADR-076) |
+| Status | **IN PROGRESS** — Stage 1 (database) DONE 2026-10-30 with written go-ahead ("go ahead with stage 1"): backup `~/zorko-backups/prod-before-reco-20261030-1930.dump` (verified), 2 migrations applied, RLS denial verified on the 6 new tables, tags/demo data/training done (v1 ACTIVE, switch OFF). The DB password was rotated first (exposed fragment, see WORKLOG). Waiting for the go-ahead for Stage 2 (push → deploy). |
 | Branch | `phase-r5b` (from `main`) |
-| R5a task list | 1. `/admin/recommendations` (Overview: cards, switch, retrain, weights; Runs: table + activate; Inspect: per-item lists with components) · 2. Server Actions with allowlist + audit + `updateTag('reco')` · 3. Flavour-tag chips in the item editor, meal-role select in the category editor · 4. Auto-retrain after menu-structure edits (coalesced) · 5. Tests TC-COMP-032, TC-SEC-133/134, TC-E2E-097/098, TC-A11Y-007, TC-RESP-005, TC-VIS-105/106 · 6. Report |
+| R5b plan (each stage needs the team's written go-ahead) | **Stage 1 database:** `pg_dump` backup of production → `prod npm run db:migrate:deploy` (2 additive migrations) → status + RLS check → `reco:tags`, `reco:generate`, `reco:train` with `--production` (switch stays off; live site unaffected). **Stage 2 deploy:** push local `main` (18 commits, R0–R5a) to GitHub → Vercel auto-deploys → health + headers check. **Stage 3 switch on:** admin switch on → `reco:validate <live> --delay 1100` → phone check. Rollback: switch off / Vercel Promote previous deployment. |
 | Latest report | `docs/PHASE_REPORTS/phase-r5a.md` |
 | Live site | https://zorko-sangli.vercel.app (deployed 2026-10-29 IST; auto-deploys from GitHub `main`) |
 | Last updated | 2026-10-30 |

@@ -5,6 +5,7 @@
  *
  *   npm run reco:validate                          # http://localhost:3000
  *   npm run reco:validate -- http://localhost:3100
+ *   npm run reco:validate -- https://zorko-sangli.vercel.app --delay 1100   # live site (R5b)
  *
  * For every dish on data/reco/menu_items.csv it calls /api/v1/menu/<slug>/recommendations, and it
  * calls /api/v1/recommendations/suggest for every mood × budget × flavour combination. It checks:
@@ -14,10 +15,14 @@
  * - Help me choose respects mood, budget, pair totals, diversity, and lists flavour matches first.
  * Exit code 1 if any problem is found. Each request uses its own X-Forwarded-For value so the
  * 60/min rate limit is not hit (works on a local server only; production ignores client values).
+ * Against the live site use `--delay <ms>` (1100 keeps under 60 requests/min; ~3.5 minutes).
  */
 import { readFileSync } from 'node:fs'
 
 const BASE = (process.argv[2] ?? 'http://localhost:3000').replace(/\/$/, '')
+const di = process.argv.indexOf('--delay')
+const DELAY_MS = di > 0 ? Math.max(0, Number(process.argv[di + 1]) || 0) : 0
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 function readCsv(path) {
   const [header, ...lines] = readFileSync(path, 'utf8').trimEnd().split('\n')
@@ -54,6 +59,7 @@ const TAGWORD = {
 let n = 0
 async function get(path) {
   n++
+  if (DELAY_MS) await sleep(DELAY_MS)
   const res = await fetch(BASE + path, { headers: { 'x-forwarded-for': `198.51.100.${n % 250}` } })
   return { status: res.status, body: await res.json() }
 }

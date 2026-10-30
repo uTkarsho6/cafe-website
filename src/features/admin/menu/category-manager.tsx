@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog'
 import { Select, TextField } from '@/components/ui/field'
+import { MEAL_ROLE_KEYS, MEAL_ROLES } from '@/lib/validation/reco'
 import { CATEGORY_ICONS } from '@/lib/validation/admin-menu'
 import {
   deleteCategoryAction,
@@ -21,6 +22,7 @@ export type CategoryRow = {
   name: string
   description: string | null
   iconKey: string
+  mealRole: string
   sortOrder: number
   isArchived: boolean
   isDemo: boolean
@@ -58,6 +60,19 @@ function CategoryForm({ value, onSaved }: { value?: CategoryRow; onSaved?: () =>
         {CATEGORY_ICONS.map((k) => (
           <option key={k} value={k}>
             {iconLabel(k)}
+          </option>
+        ))}
+      </Select>
+      <Select
+        label="Meal role"
+        name="mealRole"
+        defaultValue={value?.mealRole ?? 'MAIN'}
+        hint="Used by recommendations: “Goes well with” pairs different roles"
+        error={e.mealRole}
+      >
+        {MEAL_ROLE_KEYS.map((k) => (
+          <option key={k} value={k}>
+            {MEAL_ROLES[k]}
           </option>
         ))}
       </Select>

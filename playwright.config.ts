@@ -23,12 +23,12 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      testIgnore: /admin-(menu|content|feedback)|security/,
+      testIgnore: /admin-(menu|content|feedback|reco)|security/,
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      testIgnore: /admin-(menu|content|feedback)|security/,
+      testIgnore: /admin-(menu|content|feedback|reco)|security/,
     },
     // Menu and content admin tests change shared test data (prices, availability, new items) and sign in
     // many times, so they run after the read-only suites instead of in parallel with them.
@@ -74,6 +74,13 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       testMatch: /security\.spec\.ts/,
       dependencies: ['admin-feedback-webkit'],
+    },
+    {
+      // Phase R5a: recommendation admin changes the switch, versions and tags; runs last.
+      name: 'admin-reco-chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /admin-reco\.spec\.ts/,
+      dependencies: ['security-chromium'],
     },
   ],
   webServer: {

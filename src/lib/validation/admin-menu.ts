@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { flavorTagsSchema, mealRoleSchema } from './reco'
 import './zod-setup'
 import { cleanText } from './public'
 
@@ -124,6 +125,8 @@ export const categoryInputSchema = z
     name: text(2, 60, 'Name'),
     description: optionalText(200, 'Description'),
     iconKey: z.enum(CATEGORY_ICONS, { error: 'Choose an icon.' }),
+    // Phase R5: the course this category belongs to ("Goes well with" pairs different courses).
+    mealRole: mealRoleSchema.default('MAIN'),
     sortOrder,
   })
   .strip()
@@ -143,6 +146,8 @@ export const itemInputSchema = z
     isBestSeller: checkbox,
     isTrending: checkbox,
     isFeatured: checkbox,
+    // Phase R5: descriptive flavour tags (max 5, known keys only), sent as repeated `flavorTags`.
+    flavorTags: flavorTagsSchema.default([]),
     sortOrder,
   })
   .strip()

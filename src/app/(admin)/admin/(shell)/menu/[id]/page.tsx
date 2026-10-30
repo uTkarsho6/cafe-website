@@ -112,6 +112,7 @@ async function EditItem({
             isBestSeller: item.isBestSeller,
             isTrending: item.isTrending,
             isFeatured: item.isFeatured,
+            flavorTags: item.flavorTags,
             sortOrder: item.sortOrder,
           }}
         />

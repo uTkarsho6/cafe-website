@@ -39,6 +39,7 @@ describe('admin navigation (no dead links)', () => {
       '/admin/gallery',
       '/admin/feedback',
       '/admin/qr',
+      '/admin/recommendations', // Phase R5a
     ])
   })
   it('marks the dashboard exactly and modules by prefix', () => {

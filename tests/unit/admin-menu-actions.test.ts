@@ -11,6 +11,8 @@ vi.mock('@/server/auth/admin', () => ({ requireAdmin: (...a: unknown[]) => requi
 vi.mock('next/cache', () => ({ updateTag: vi.fn(), revalidatePath: vi.fn() }))
 vi.mock('@/server/audit', () => ({ recordAudit: vi.fn() }))
 vi.mock('@/server/media/storage', () => ({ getMediaStore: vi.fn() }))
+// `after()` needs a real request; the retrain trigger is tested in tests/e2e (TC-E2E-098).
+vi.mock('@/server/reco/auto', () => ({ scheduleRetrain: vi.fn() }))
 vi.mock('@/server/services/admin-menu', () => {
   class AdminRuleError extends Error {}
   const fns = [

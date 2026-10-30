@@ -283,6 +283,8 @@ Phase 5B note: uploads go through a Server Action, so TC-SEC-060…063 are refus
 | TC-UNIT-139 | Unit | Help-me-choose scoring: tag Jaccard, budget bands, daypart from an injected IST clock, meal pairing within budget | Pass | R3 |
 | TC-UNIT-140 | Unit | **Parity:** TypeScript lists for every item vs `data/reco/reference_scores.json` from the notebook | Same order; scores within 1e-6 | R3 |
 | TC-UNIT-141 | Unit | Reason chips: only codes from RECOMMENDATION §6; labels built from item data; no digits except prices | Pass | R3 |
+| TC-UNIT-143 | Unit | **Validity on the real menu** (team request, R3): every dish has ≥ 7 stored suggestions; no self or duplicates; ≥ 55 dishes in some top 4; every main gets a side or drink (≥ 95 % a drink), every drink gets food; burger/pizza/Maggi meal patterns learned; Korean mains get a Korean partner; SIMILAR same role, ≥ 60 % share category or tag; coffees ↔ coffees; stored reason codes true | Pass (thresholds = measured values rounded down) | R3 |
+| TC-INT-099 | Live check | `npm run reco:validate <url>` against a running site on the real menu: 65 item pages and 112 Help-me-choose queries; reasons true, roles, budget, pairs, diversity, flavour matches first, no internal fields | `PASS all recommendations are valid` | R3, R5 |
 | TC-UNIT-142 | Unit | Preflight refuses a Supabase URL with a path (`/rest/v1/`) and accepts a trailing slash (go-live regression, ADR-067) | Pass | R0 |
 | TC-COMP-030 | Component | Recommendation section: 4 cards, reason chip, caption, hidden when empty, no ordering controls | Pass | R4 |
 | TC-COMP-031 | Component | Help-me-choose form: chips are native radios/checkboxes, max 3 tags enforced with a message, labels associated | Pass | R4 |
@@ -292,6 +294,7 @@ Phase 5B note: uploads go through a Server Action, so TC-SEC-060…063 are refus
 | TC-INT-094 | Integration | Train end to end: run stored with metrics, ACTIVE, lists for every published item; failing gate → REJECTED, active run unchanged; rollback re-activates an earlier run | Pass | R3 |
 | TC-INT-095 | Integration | Training ignores the real `Feedback` table, query params and unpublished items (no public input reaches training); `reco:generate` never writes to `Feedback` | Pass | R1, R3 |
 | TC-INT-096 | Integration | Two concurrent retrains: one runs, the other sets `retrainPending`; exactly one extra run follows | Pass | R3 |
+| TC-INT-094b | Integration | Gate margin: on a small held-out set a run within 2 standard errors of the reference is accepted; a run clearly worse than the active run is rejected | Pass | R3 |
 | TC-INT-097 | Integration | Read path: curated links first, then model, then fallback; sold-out/archived filtered; `enabled=false` → curated only; ≤1 query per section (query log) | Pass | R3 |
 | TC-INT-098 | Integration | API contracts for both endpoints (`.strict()` Zod), 400/404/429 shapes | Pass | R3 |
 | TC-SEC-131 | Security | Suggest/recommendation endpoints: injection and oversized values in `tags`/`slug`, unknown params | 400 or ignored; no stack traces | R3 |

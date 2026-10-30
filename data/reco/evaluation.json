@@ -1,11 +1,11 @@
 {
  "description": "Phase R2 notebook results on DEMO data (test split = 20 % of visits by hash).",
  "chosen_weights_pm": {
-  "compCoocPm": 600,
-  "compQualityPm": 300,
-  "compContentPm": 100,
-  "simContentPm": 600,
-  "simTastePm": 100,
+  "compCoocPm": 500,
+  "compQualityPm": 0,
+  "compContentPm": 500,
+  "simContentPm": 500,
+  "simTastePm": 200,
   "simQualityPm": 300
  },
  "rating_prediction": [
@@ -37,7 +37,7 @@
   {
    "method": "TruncatedSVD (k = 10)",
    "test RMSE": 0.9021,
-   "test MAE": NaN
+   "test MAE": 0.7286
   }
  ],
  "complement": [
@@ -51,9 +51,9 @@
   {
    "method": "Popularity",
    "queries": 265,
-   "hit_rate": 0.2453,
-   "precision": 0.0506,
-   "recall": 0.183
+   "hit_rate": 0.234,
+   "precision": 0.0491,
+   "recall": 0.1843
   },
   {
    "method": "Content only",
@@ -65,16 +65,16 @@
   {
    "method": "Co-occurrence only",
    "queries": 265,
-   "hit_rate": 0.4604,
-   "precision": 0.0989,
-   "recall": 0.3893
+   "hit_rate": 0.4528,
+   "precision": 0.0981,
+   "recall": 0.3855
   },
   {
    "method": "Hybrid (website)",
    "queries": 265,
-   "hit_rate": 0.4566,
-   "precision": 0.0981,
-   "recall": 0.3893
+   "hit_rate": 0.4226,
+   "precision": 0.0913,
+   "recall": 0.3686
   }
  ],
  "similar": [
@@ -86,7 +86,7 @@
   {
    "method": "Popularity",
    "pairs": 181,
-   "hit_rate": 0.3757
+   "hit_rate": 0.3702
   },
   {
    "method": "Content only",
@@ -96,15 +96,15 @@
   {
    "method": "CF (taste) only",
    "pairs": 181,
-   "hit_rate": 0.337
+   "hit_rate": 0.3481
   },
   {
    "method": "Hybrid (website)",
    "pairs": 181,
-   "hit_rate": 0.4033
+   "hit_rate": 0.3867
   }
  ],
- "coverage": 0.9538,
+ "coverage": 0.9846,
  "best_cf_damping": 2.0,
  "best_svd_components": 10
 }

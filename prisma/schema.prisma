@@ -557,16 +557,17 @@ model ItemPopularity {
   @@index([menuItemId])
 }
 
-/// Singleton (id = "reco"). Off until the team switches it on (R4/R5).
+/// Singleton (id = "reco"). Off until the team switches it on (R4/R5). Weight defaults = the
+/// values tuned on validation in the notebook (ADR-074).
 model RecoSettings {
   id                String    @id @default("reco")
   enabled           Boolean   @default(false)
-  compCoocPm        Int       @default(600) @db.SmallInt
-  compQualityPm     Int       @default(250) @db.SmallInt
-  compContentPm     Int       @default(150) @db.SmallInt
+  compCoocPm        Int       @default(500) @db.SmallInt
+  compQualityPm     Int       @default(0) @db.SmallInt
+  compContentPm     Int       @default(500) @db.SmallInt
   simContentPm      Int       @default(500) @db.SmallInt
-  simTastePm        Int       @default(300) @db.SmallInt
-  simQualityPm      Int       @default(200) @db.SmallInt
+  simTastePm        Int       @default(200) @db.SmallInt
+  simQualityPm      Int       @default(300) @db.SmallInt
   activeRunId       String?   @unique
   trainingLockUntil DateTime?
   retrainPending    Boolean   @default(false)

@@ -12,12 +12,12 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase R2 — Recommendation: Python/ML notebook |
-| **Phase status** | AWAITING TEAM VERIFICATION. R1 approved 2026-10-30 (`phase-r1-approved`, merged into LOCAL `main`). |
-| **Git** | Branch `phase-r2`. **Local `main` now contains the R1 migration: never push `main` before the production migration (R5).** |
-| **Last task completed** | R2 (2026-10-30): `notebooks/` (reco_lib.py reference implementation, build_notebook.py, executed recommendation.ipynb + .html, figures, requirements.txt for Python 3.14.7); `data/reco/{reference_scores.json, evaluation.json, stopwords.txt}`; ADR-073 (baseline-residual CF, coverage-constrained weights 600/300/100 + 600/100/300, MMR rules); `.prettierignore`/ESLint ignore notebooks; report `phase-r2.md`. |
-| **Next action** | On "approved, go to Phase R3": TypeScript engine `src/server/reco/*` reproducing `notebooks/reco_lib.py` exactly (TC-UNIT-140 vs `reference_scores.json`), `reco:train` with model runs + quality gate, migration changing RecoSettings defaults to the chosen weights, read path + APIs. |
-| **Waiting on the team** | R2 check; Q-22 (tags), Q-23 (guide: synthetic data OK?), Q-25; hero photo (ADR-065). |
+| **Current phase** | Phase R3 — Recommendation: TypeScript engine, training and APIs |
+| **Phase status** | AWAITING TEAM VERIFICATION. R2 approved 2026-10-30 (`phase-r2-approved`, merged into LOCAL `main`). |
+| **Git** | Branch `phase-r3`. **Local `main` and `phase-r3` contain migrations production lacks: never push before the R5 production migration.** |
+| **Last task completed** | R3 (2026-10-30): engine `src/lib/reco/engine.ts` (exact parity with `notebooks/reco_lib.py`), `src/server/reco/train.ts` + `npm run reco:train`, read path `src/server/services/recommendations.ts`, APIs `/api/v1/menu/[slug]/recommendations` + `/api/v1/recommendations/suggest`, migration `20261030140000_reco_tuned_weights` (applied to dev), `npm run reco:validate`; notebook flag bug fixed (ADR-074); dev DB: run v1 ACTIVE and `RecoSettings.enabled = true`. |
+| **Next action** | On "approved, go to Phase R4": item-page sections (reuse `CompactList`), `/help-me-choose` page, menu entry points, `cachedItemRecommendations`/`cachedSuggestions` in `public-data.ts` (tag `reco`), component/E2E/a11y/visual tests (TC-COMP-030/031, TC-E2E-093…096, TC-A11Y-007, TC-RESP-005, TC-VIS-101…). |
+| **Waiting on the team** | R3 check; Q-22 (tags), Q-23 (guide), Q-25; hero photo (ADR-065). |
 | **Note** | Chat history for the deployment lives in a session opened from `~/projects` (not `~/projects/zorko-sangli`). This Mac runs under very high load, so run E2E with `--workers=2`. NAT64 network: Next's image optimiser refuses Supabase Storage images locally; re-run flaky network tests. |
 
 ### On approval (the CLAUDE.md §0.2 step 8 routine)
@@ -80,6 +80,13 @@ npm run test:e2e -- --workers=2         # Docker test DB + Playwright, expect 31
 ---
 
 ## Task history (newest first)
+
+### Phase R3 — TypeScript engine, training, APIs (2026-10-30) — AWAITING TEAM VERIFICATION
+- [x] R2 committed, approval recorded, merged to local `main`, tagged `phase-r2-approved`, branch `phase-r3`.
+- [x] Engine + exact parity test (found the notebook's flag-parsing bug; notebook fixed and re-run; R2 report corrected).
+- [x] Weight objective HitRate × coverage on validation (500/0/500, 500/200/300); size-aware gate; flavour-first Help me choose (ADR-074).
+- [x] Training service, APIs, rate limit; dev migration + training (v1 ACTIVE, metrics = notebook); dev recommendations switched on.
+- [x] Validity: 13 unit tests on the real menu, 17 integration tests, live `npm run reco:validate` PASS on 65 dishes + 112 queries (team request).
 
 ### Phase R2 — Python/ML notebook (2026-10-30) — AWAITING TEAM VERIFICATION
 - [x] R1 approval recorded, merged to local `main`, tagged `phase-r1-approved`, branch `phase-r2`.

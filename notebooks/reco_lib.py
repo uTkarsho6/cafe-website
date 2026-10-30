@@ -72,8 +72,10 @@ def load_stopwords() -> list[str]:
 def load_menu() -> pd.DataFrame:
     m = pd.read_csv(DATA / "menu_items.csv", keep_default_na=False)
     m["flavor_tags"] = m["flavor_tags"].map(lambda s: [t for t in s.split("|") if t])
-    m["is_best_seller"] = m["is_best_seller"].astype(str) == "true"
-    m["is_trending"] = m["is_trending"].astype(str) == "true"
+    # pandas may already parse "true"/"false" as booleans; compare case-insensitively either way
+    # (found by the TypeScript parity test in R3: the flags were silently ignored before).
+    for col in ("is_best_seller", "is_trending"):
+        m[col] = m[col].astype(str).str.lower() == "true"
     return m.sort_values("item_slug").reset_index(drop=True)
 
 

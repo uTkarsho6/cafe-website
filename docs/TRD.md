@@ -357,7 +357,10 @@ flowchart LR
 | `src/server/reco/sources.ts` | Feedback source interface; `DemoFeedbackSource` (only reader of `DemoVisit`/`DemoRating`). |
 | `src/server/reco/{features,content,taste-cf,cooccurrence,quality,hybrid,evaluate}.ts` | Pure functions over plain arrays (no Prisma), unit-tested and compared with the notebook. |
 | `src/server/reco/train.ts` | Lock, load, split, fit, evaluate, gate, persist in one transaction, activate, expire tag. |
-| `src/server/services/recommendations.ts` | Read path: active run lists + curated links + read-time filters + fallback + reason chips; Help-me-choose scoring. |
+| `src/server/services/recommendations.ts` | Read path: active run lists + curated links + read-time filters + fallback + reason chips; Help-me-choose ranking. At most 4 queries per item page, no N+1. |
+| `src/lib/reco/engine.ts`, `src/lib/reco/stopwords.ts` | Pure engine: the TypeScript port of `notebooks/reco_lib.py` (parity-tested). |
+| `src/server/reco/train.ts`, `src/server/reco/limit.ts` | Training pipeline (lock, gate, activation, rollback, pruning); API rate limit (60/min/IP). |
+| `scripts/reco-validate.mjs` | `npm run reco:validate [base-url]`: read-only validity check of a running site's recommendations. |
 | `src/lib/validation/reco.ts` | Zod: suggest query, weights form, flavour tags, meal role. |
 | `src/lib/reco/demo-feedback.ts`, `src/lib/reco/tag-rules.ts` | Pure, seeded demo-feedback generator and CSV writer; keyword rule for initial tags and meal roles (unit-tested, no database). |
 | `prisma/reco-generate.ts`, `prisma/reco-tags.ts`, `prisma/reco-export.ts`, `prisma/reco-menu.ts` | CLI scripts (`npm run reco:generate`, `reco:tags`, `reco:export`) with the production guard; shared menu loader. |
@@ -382,7 +385,7 @@ RLS: the R1 migration adds `ENABLE ROW LEVEL SECURITY` + `REVOKE ALL` for `anon`
 | Method & path | Auth | Request | Response `data` | Errors |
 |---|---|---|---|---|
 | GET `/api/v1/menu/[slug]/recommendations` | — | slug `^[a-z0-9-]{1,90}$` | `{goesWellWith: RecoCard[≤4], youMayAlsoLike: RecoCard[≤4]}` | 400, 404, 429 |
-| GET `/api/v1/recommendations/suggest` | — | `mood` (`meal`\|`snack`\|`drink`\|`sweet`, required), `budget` (`under-100`\|`100-200`\|`200-plus`\|`any`, default `any`), `tags` (comma list, ≤3 known tags, duplicates dropped) | `{suggestions: [{item: RecoCard, pairWith: RecoCard\|null}] (≤5)}` | 400, 429 |
+| GET `/api/v1/recommendations/suggest` | — | `mood` (`meal`\|`snack`\|`drink`\|`sweet`, required), `budget` (`under-100`\|`100-200`\|`200-plus`\|`any`, default `any`), `tags` (comma list, ≤3 known tags, duplicates dropped) | `{suggestions: [{item: RecoCard, pairWith: RecoCard\|null, pairTotalPaise: int\|null, pairTotalLabel: string\|null}] (≤5)}` | 400, 429 |
 
 `RecoCard = MenuItemCard + {reasons: [{code, label}] (≤2)}`. No scores, ratings, demo comments, run IDs or weights are returned publicly. Rate limit: 60 requests/min per IP hash for each endpoint (shared Postgres limiter, ADR-014). Admin operations are Server Actions: `reco.setEnabled`, `reco.retrain`, `reco.saveWeights`, `reco.activateRun`, `item.setFlavorTags` (inside the item form), `category.setMealRole` (inside the category form); same pattern as TRD §6 (requireAdmin → Zod strict → service → audit → expire tags).
 

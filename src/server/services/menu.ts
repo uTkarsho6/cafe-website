@@ -51,7 +51,7 @@ export type MenuItemDetailDto = Omit<MenuItemCardDto, 'image'> & {
 }
 
 /** Explicit field list (DTO rule, TRD §6): internal flags never leave the server. */
-function cardSelect(now: Date) {
+export function cardSelect(now: Date) {
   return {
     id: true,
     slug: true,
@@ -73,14 +73,14 @@ function cardSelect(now: Date) {
   } satisfies Prisma.MenuItemSelect
 }
 
-type CardRow = Prisma.MenuItemGetPayload<{ select: ReturnType<typeof cardSelect> }>
+export type CardRow = Prisma.MenuItemGetPayload<{ select: ReturnType<typeof cardSelect> }>
 
 function toImage(row: { storagePath: string; altText: string } | undefined): ImageDto | null {
   const url = mediaUrl(row?.storagePath)
   return url && row ? { url, altText: row.altText } : null
 }
 
-function toCard(row: CardRow): MenuItemCardDto {
+export function toCard(row: CardRow): MenuItemCardDto {
   const { images, offers, ...rest } = row
   return {
     ...rest,

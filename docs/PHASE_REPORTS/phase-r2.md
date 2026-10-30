@@ -128,3 +128,20 @@
 - Nothing changes on the website in this phase.
 
 **If something fails:** send the command and its last 30 lines of output.
+
+---
+
+## Correction found in Phase R3 (2026-10-30)
+
+The R3 parity test (TypeScript engine vs this notebook) found a bug in `notebooks/reco_lib.py`: pandas read the `is_best_seller` / `is_trending` columns as booleans, and the code compared them to the text `"true"`, so **the notebook ignored all best-seller and trending flags**. It was fixed and the notebook re-run.
+
+The weight objective was also changed, from "best HitRate with coverage ≥ 60 %" to "maximise HitRate × coverage", because with the flags counted the old rule produced generic lists (ADR-074).
+
+**Results that replace §3 and §4 above:**
+- **Weights:** "Goes well with" co-occurrence / quality / content = 500 / 0 / 500; "You may also like" content / taste / quality = 500 / 200 / 300.
+- **"Goes well with" HitRate@5:** hybrid 0.423; co-occurrence alone 0.453; popularity 0.234; random 0.143.
+- **"You may also like" HitRate@5:** hybrid 0.387; popularity 0.370; content 0.365; CF 0.348; random 0.238.
+- **Coverage@5:** 98.5 %.
+- **Rating prediction:** unchanged.
+
+`notebooks/recommendation.ipynb` / `.html`, `data/reco/evaluation.json` and `reference_scores.json` are the corrected versions.

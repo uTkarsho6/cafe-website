@@ -8,7 +8,7 @@ import { buttonClasses } from '@/components/ui/button'
  */
 export function QrCard({ target }: { target: string }) {
   return (
-    <div className="mx-auto flex max-w-md flex-col items-center gap-space-md rounded-3xl bg-surface-container-lowest p-space-lg text-center shadow-sm md:p-space-xl">
+    <div className="mx-auto flex max-w-md flex-col items-center gap-space-md rounded-3xl bg-surface-container-lowest p-space-lg text-center shadow-sm md:p-space-xl print:shadow-none">
       {/* eslint-disable-next-line @next/next/no-img-element -- a generated SVG, no optimisation needed */}
       <img
         src="/api/v1/qr?format=svg"
@@ -21,7 +21,7 @@ export function QrCard({ target }: { target: string }) {
       <p className="text-body-sm text-on-surface-variant">
         Opens: <span className="font-bold break-all text-on-surface">{target}</span>
       </p>
-      <div className="flex flex-wrap justify-center gap-space-sm">
+      <div className="flex flex-wrap justify-center gap-space-sm print:hidden">
         <a
           href="/api/v1/qr?format=png&download=1"
           download
@@ -37,7 +37,7 @@ export function QrCard({ target }: { target: string }) {
           <Download aria-hidden="true" className="size-4" /> Download SVG
         </a>
       </div>
-      <Link href="/menu" className={buttonClasses({})}>
+      <Link href="/menu" className={buttonClasses({ className: 'print:hidden' })}>
         <UtensilsCrossed aria-hidden="true" className="size-4" /> Open the menu
       </Link>
     </div>

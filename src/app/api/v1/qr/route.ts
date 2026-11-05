@@ -1,37 +1,22 @@
 import { connection } from 'next/server'
-import { tableNumberSchema } from '@/features/qr/tables'
-import { ApiError, fail } from '@/server/http'
 import { qrPng, qrSvg, qrTarget } from '@/server/qr'
 
 /**
- * GET /api/v1/qr?format=svg|png[&table=1-20][&download=1] — the menu QR code (FR-018). Public: it
- * only encodes the public menu URL. `table` makes a table card's code (ADR-061); anything other
- * than 1–20 is refused with 400. `download=1` makes the browser save it as a file.
+ * GET /api/v1/qr?format=svg|png[&download=1] — the menu QR code (FR-018). Public: it only encodes
+ * the public menu URL. `download=1` makes the browser save it as a file. Other parameters
+ * (including the old `table`, ADR-078) are ignored, so there is exactly one code.
  */
 export async function GET(request: Request): Promise<Response> {
   await connection()
   const params = new URL(request.url).searchParams
   const format = params.get('format') === 'png' ? 'png' : 'svg'
-  const rawTable = params.get('table')
-  let table: number | undefined
-  if (rawTable !== null) {
-    const parsed = tableNumberSchema.safeParse(rawTable)
-    if (!parsed.success)
-      return fail(
-        new ApiError('VALIDATION_ERROR', 'Invalid query parameters.', {
-          table: parsed.error.issues[0]!.message,
-        }),
-      )
-    table = parsed.data
-  }
-  const target = qrTarget(undefined, table)
+  const target = qrTarget()
   const headers = new Headers({
     'Cache-Control': 'public, max-age=3600',
     'X-Content-Type-Options': 'nosniff',
   })
   if (params.get('download') === '1') {
-    const name = table ? `zorko-sangli-table-${table}-qr` : 'zorko-sangli-menu-qr'
-    headers.set('Content-Disposition', `attachment; filename="${name}.${format}"`)
+    headers.set('Content-Disposition', `attachment; filename="zorko-sangli-menu-qr.${format}"`)
   }
   if (format === 'png') {
     headers.set('Content-Type', 'image/png')

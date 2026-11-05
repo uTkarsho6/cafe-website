@@ -53,13 +53,8 @@ async function AdminQr() {
       )}
       <div className="flex max-w-3xl flex-col gap-space-md">
         <QrCard target={qrTarget()} />
-        <div className="flex flex-col items-center gap-space-sm print:hidden">
+        <div className="flex justify-center print:hidden">
           <PrintButton label="Print QR code" />
-          <p className="text-center text-body-sm text-on-surface-variant">
-            The address comes from NEXT_PUBLIC_SITE_URL. To change it, update that setting and
-            redeploy (DEPLOYMENT.md). Test the printed code with two different phones before using
-            it.
-          </p>
         </div>
       </div>
     </>
